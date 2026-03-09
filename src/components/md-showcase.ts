@@ -357,14 +357,14 @@ component('md-showcase', () => {
           <p class="section-subtitle">Material Design 3 uses a dynamic color system based on tonal palettes.</p>
           <div class="color-grid">
             <div class="color-chip" style="background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)">Primary</div>
-            <div class="color-chip" style="background:var(--md-sys-color-primary-container);color:var(--md-sys-color-on-primary-container)">Pri. Cont.</div>
+            <div class="color-chip" style="background:var(--md-sys-color-primary-container);color:var(--md-sys-color-on-primary-container)">Primary Container</div>
             <div class="color-chip" style="background:var(--md-sys-color-secondary);color:var(--md-sys-color-on-secondary)">Secondary</div>
-            <div class="color-chip" style="background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)">Sec. Cont.</div>
+            <div class="color-chip" style="background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)">Secondary Container</div>
             <div class="color-chip" style="background:var(--md-sys-color-tertiary);color:var(--md-sys-color-on-tertiary)">Tertiary</div>
-            <div class="color-chip" style="background:var(--md-sys-color-tertiary-container);color:var(--md-sys-color-on-tertiary-container)">Ter. Cont.</div>
+            <div class="color-chip" style="background:var(--md-sys-color-tertiary-container);color:var(--md-sys-color-on-tertiary-container)">Tertiary Container</div>
             <div class="color-chip" style="background:var(--md-sys-color-error);color:var(--md-sys-color-on-error)">Error</div>
             <div class="color-chip" style="background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant);color:var(--md-sys-color-on-surface)">Surface</div>
-            <div class="color-chip" style="background:var(--md-sys-color-surface-variant);color:var(--md-sys-color-on-surface-variant)">Sur. Var.</div>
+            <div class="color-chip" style="background:var(--md-sys-color-surface-variant);color:var(--md-sys-color-on-surface-variant)">Surface Variant</div>
             <div class="color-chip" style="background:var(--md-sys-color-inverse-surface);color:var(--md-sys-color-inverse-on-surface)">Inverse</div>
           </div>
         </div>
