@@ -1,0 +1,149 @@
+import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
+
+interface NavItem {
+  id: string;
+  label: string;
+  icon: string;
+  badge?: string | number;
+}
+
+component('md-navigation-bar', () => {
+  const props = useProps({
+    items: [] as NavItem[],
+    active: '',
+  });
+  const emit = useEmit();
+
+  useStyle(() => css`
+    :host { display: block; }
+
+    .nav-bar {
+      display: flex;
+      background: var(--md-sys-color-surface-container, #F3EDF7);
+      height: 80px;
+      align-items: stretch;
+      box-shadow: 0 -1px 0 var(--md-sys-color-surface-variant, #E7E0EC);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      font-family: var(--md-sys-typescale-font, 'Roboto', sans-serif);
+      color: var(--md-sys-color-on-surface-variant, #49454F);
+      outline: none;
+      position: relative;
+      overflow: hidden;
+      padding: 0;
+      transition: color 200ms;
+    }
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--md-sys-color-on-surface, #1C1B1F);
+      opacity: 0;
+      transition: opacity 200ms;
+    }
+    .nav-item:hover::before  { opacity: 0.08; }
+    .nav-item:focus::before  { opacity: 0.12; }
+    .nav-item:active::before { opacity: 0.04; }
+
+    .nav-item.active { color: var(--md-sys-color-on-secondary-container, #1D192B); }
+    .nav-item.active::before { background: var(--md-sys-color-primary, #6750A4); }
+
+    .indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 32px;
+      border-radius: 16px;
+      position: relative;
+      transition: background-color 200ms;
+    }
+    .active .indicator {
+      background: var(--md-sys-color-secondary-container, #E8DEF8);
+    }
+
+    .nav-icon {
+      font-family: 'Material Symbols Outlined';
+      font-size: 24px;
+      font-weight: normal;
+      font-style: normal;
+      line-height: 1;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .active .nav-icon {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .nav-label {
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 16px;
+      letter-spacing: 0.5px;
+    }
+    .active .nav-label { color: var(--md-sys-color-on-secondary-container, #1D192B); }
+
+    .badge {
+      position: absolute;
+      top: 0;
+      right: 8px;
+      min-width: 16px;
+      height: 16px;
+      background: var(--md-sys-color-error, #B3261E);
+      color: var(--md-sys-color-on-error, #fff);
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+    .badge-dot {
+      position: absolute;
+      top: 2px;
+      right: 12px;
+      width: 6px;
+      height: 6px;
+      background: var(--md-sys-color-error, #B3261E);
+      border-radius: 50%;
+    }
+  `);
+
+  return html`
+    <div class="nav-bar" role="navigation">
+      ${each(
+        Array.isArray(props.items) ? props.items : [],
+        (item: NavItem) => html`
+          <button
+            key="${item.id}"
+            :class="${{ 'nav-item': true, active: props.active === item.id }}"
+            aria-label="${item.label}"
+            aria-current="${props.active === item.id ? 'page' : 'false'}"
+            @click="${() => emit('change', item.id)}"
+          >
+            <div class="indicator">
+              <span class="nav-icon">${item.icon}</span>
+              ${when(!!item.badge, () => html`
+                <span :class="${{ 'badge-dot': typeof item.badge === 'boolean', badge: typeof item.badge !== 'boolean' }}">
+                  ${typeof item.badge === 'boolean' ? '' : String(item.badge)}
+                </span>
+              `)}
+            </div>
+            <span class="nav-label">${item.label}</span>
+          </button>
+        `,
+      )}
+    </div>
+  `;
+});
