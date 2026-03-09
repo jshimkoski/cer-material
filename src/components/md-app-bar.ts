@@ -153,7 +153,7 @@ component('md-app-bar', () => {
       <div class="top-row">
         ${when(!!props.leadingIcon, () => html`
           <button class="icon-btn" aria-label="Navigation" @click="${() => emit('nav')}">
-            <span class="nav-icon">${props.leadingIcon}</span>
+            <span class="nav-icon" aria-hidden="true">${props.leadingIcon}</span>
           </button>
         `)}
 
@@ -166,8 +166,8 @@ component('md-app-bar', () => {
         <div class="trailing-actions">
           <slot name="trailing"></slot>
           ${safeTrailingIcons.map((icon: string) => html`
-            <button class="icon-btn" @click="${() => emit('action', icon)}">
-              <span class="action-icon">${icon}</span>
+            <button class="icon-btn" aria-label="${icon}" @click="${() => emit('action', icon)}">
+              <span class="action-icon" aria-hidden="true">${icon}</span>
             </button>
           `)}
         </div>

@@ -158,8 +158,9 @@ component('md-side-sheet', () => {
     }, html`
       <div
         class="${props.variant === 'modal' ? 'side-sheet' : 'standard-side-sheet'}"
-        role="complementary"
+        role="${props.variant === 'modal' ? 'dialog' : 'complementary'}"
         aria-label="${props.headline || 'Side sheet'}"
+        :bind="${{ 'aria-modal': props.variant === 'modal' ? 'true' : null }}"
       >
         ${when(!!props.headline, () => html`
           <div class="sheet-header">

@@ -107,7 +107,7 @@ component('md-checkbox', () => {
           @change="${(e: Event) => emit('change', (e.target as HTMLInputElement).checked)}"
         />
         <div class="box">
-          <span class="check-icon">${props.indeterminate ? 'remove' : 'check'}</span>
+          <span class="check-icon" aria-hidden="true">${props.indeterminate ? 'remove' : 'check'}</span>
         </div>
       </div>
       ${props.label}

@@ -127,7 +127,7 @@ component('md-navigation-bar', () => {
   `);
 
   return html`
-    <div class="nav-bar" role="navigation" @keydown="${handleNavKeyDown}">
+    <div class="nav-bar" role="navigation" aria-label="Navigation bar" @keydown="${handleNavKeyDown}">
       ${each(
         Array.isArray(props.items) ? props.items : [],
         (item: NavItem) => html`
@@ -139,9 +139,9 @@ component('md-navigation-bar', () => {
             @click="${() => emit('change', item.id)}"
           >
             <div class="indicator">
-              <span class="nav-icon">${item.icon}</span>
+              <span class="nav-icon" aria-hidden="true">${item.icon}</span>
               ${when(!!item.badge, () => html`
-                <span :class="${{ 'badge-dot': typeof item.badge === 'boolean', badge: typeof item.badge !== 'boolean' }}">
+                <span :class="${{ 'badge-dot': typeof item.badge === 'boolean', badge: typeof item.badge !== 'boolean' }}" aria-hidden="true">
                   ${typeof item.badge === 'boolean' ? '' : String(item.badge)}
                 </span>
               `)}

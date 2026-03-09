@@ -121,7 +121,7 @@ component('md-button', () => {
       }}"
       :disabled="${props.disabled}"
     >
-      ${when(!!props.icon, () => html`<span class="icon">${props.icon}</span>`)}
+      ${when(!!props.icon, () => html`<span class="icon" aria-hidden="true">${props.icon}</span>`)}
       ${props.label}<slot></slot>
     </button>
   `;

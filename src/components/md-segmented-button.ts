@@ -14,6 +14,7 @@ component('md-segmented-button', () => {
     segments: [] as Segment[],
     selected: '' as string | string[],
     multiselect: false,
+    ariaLabel: '',
   });
   const emit = useEmit();
 
@@ -132,7 +133,7 @@ component('md-segmented-button', () => {
   `);
 
   return html`
-    <div class="segmented-btn-group" role="group" @keydown="${handleKeyDown}">
+    <div class="segmented-btn-group" role="${props.multiselect ? 'group' : 'radiogroup'}" :bind="${{ 'aria-label': props.ariaLabel || null }}" @keydown="${handleKeyDown}">
       ${each(
         Array.isArray(props.segments) ? props.segments : [],
         (seg: Segment) => html`
@@ -144,8 +145,8 @@ component('md-segmented-button', () => {
             aria-checked="${String(isSelected(seg.id))}"
             @click="${() => { if (!seg.disabled) handleClick(seg.id); }}"
           >
-            ${when(isSelected(seg.id), () => html`<span class="check-icon">check</span>`)}
-            ${when(!isSelected(seg.id) && !!seg.icon, () => html`<span class="seg-icon">${seg.icon}</span>`)}
+            ${when(isSelected(seg.id), () => html`<span class="check-icon" aria-hidden="true">check</span>`)}
+            ${when(!isSelected(seg.id) && !!seg.icon, () => html`<span class="seg-icon" aria-hidden="true">${seg.icon}</span>`)}
             ${when(!!seg.label, () => html`<span class="seg-label">${seg.label}</span>`)}
           </button>
         `,

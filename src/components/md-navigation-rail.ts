@@ -213,12 +213,12 @@ component('md-navigation-rail', () => {
       <nav class="nav-rail" aria-label="Navigation rail" @keydown="${handleNavKeyDown}">
       ${when(props.menuIcon, () => html`
         <button class="menu-btn" aria-label="Open navigation menu" @click="${() => emit('menu-click')}">
-          <span class="mat-icon">menu</span>
+          <span class="mat-icon" aria-hidden="true">menu</span>
         </button>
       `)}
       ${when(props.fab, () => html`
         <button class="fab" aria-label="Create" @click="${() => emit('fab-click')}">
-          <span class="mat-icon">${props.fabIcon}</span>
+          <span class="mat-icon" aria-hidden="true">${props.fabIcon}</span>
         </button>
       `)}
       ${each(
@@ -232,9 +232,9 @@ component('md-navigation-rail', () => {
             @click="${() => emit('change', item.id)}"
           >
             <div class="indicator">
-              <span class="nav-icon">${item.icon}</span>
+              <span class="nav-icon" aria-hidden="true">${item.icon}</span>
               ${when(!!item.badge, () => html`
-                <span :class="${{ 'badge-dot': typeof item.badge === 'boolean', badge: typeof item.badge !== 'boolean' }}">
+                <span :class="${{ 'badge-dot': typeof item.badge === 'boolean', badge: typeof item.badge !== 'boolean' }}" aria-hidden="true">
                   ${typeof item.badge === 'boolean' ? '' : String(item.badge)}
                 </span>
               `)}

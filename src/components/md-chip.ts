@@ -133,7 +133,7 @@ component('md-chip', () => {
       @click="${() => { if (!props.disabled) emit('click'); }}"
       @keydown="${(e: KeyboardEvent) => { if (!props.disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); emit('click'); } }}"
     >
-      ${when(!!checkIcon, () => html`<span class="icon">${checkIcon}</span>`)}
+      ${when(!!checkIcon, () => html`<span class="icon" aria-hidden="true">${checkIcon}</span>`)}
       ${props.label}
       ${when(props.variant === 'input', () => html`
         <span

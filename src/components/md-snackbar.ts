@@ -131,6 +131,7 @@ component('md-snackbar', () => {
       :class="${{ bar: true, open: props.open }}"
       role="status"
       aria-live="polite"
+      aria-atomic="true"
     >
       <span class="message">${props.message}</span>
       ${when(!!props.actionLabel, () => html`

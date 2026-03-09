@@ -132,6 +132,7 @@ component('md-list-item', () => {
       role="listitem"
       tabindex="${props.disabled ? -1 : 0}"
       @click="${() => !props.disabled && emit('click')}"
+      @keydown="${(e: KeyboardEvent) => { if (!props.disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); emit('click'); } }}"
     >
       ${when(!!props.leadingIcon, () => html`
         <div class="leading-slot">

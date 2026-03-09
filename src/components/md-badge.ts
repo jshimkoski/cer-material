@@ -46,7 +46,7 @@ component('md-badge', () => {
     <div class="host-wrapper">
       <slot></slot>
       ${when(props.small || !!props.value, () => html`
-        <span :class="${{ badge: true, small: props.small, large: !props.small }}">
+        <span :class="${{ badge: true, small: props.small, large: !props.small }}" aria-hidden="true">
           ${when(!props.small, () => html`${String(props.value)}`)}
         </span>
       `)}

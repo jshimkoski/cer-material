@@ -11,6 +11,7 @@ component('md-slider', () => {
     disabled: false,
     labeled: false,
     ticks: false,
+    ariaLabel: '',
   });
   const emit = useEmit();
   const internalValue = useControlledValue(() => props.value);
@@ -160,6 +161,7 @@ component('md-slider', () => {
         :step="${String(props.step)}"
         :value="${String(internalValue.value)}"
         :disabled="${props.disabled}"
+        :bind="${{ 'aria-label': props.ariaLabel || null }}"
         @input="${(e: Event) => {
           internalValue.value = Number((e.target as HTMLInputElement).value);
           emit('change', internalValue.value);

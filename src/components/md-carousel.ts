@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 interface CarouselItem {
@@ -14,6 +14,7 @@ component('md-carousel', () => {
     items: [] as CarouselItem[],
     variant: 'multi-browse' as 'multi-browse' | 'uncontained' | 'full-screen',
   });
+  const emit = useEmit();
 
   useStyle(() => css`
     :host { display: block; }
@@ -104,12 +105,12 @@ component('md-carousel', () => {
       ${each(
         Array.isArray(props.items) ? props.items : [],
         (item: CarouselItem) => html`
-          <div key="${item.id}" class="carousel-item" role="listitem">
+          <div key="${item.id}" class="carousel-item" role="listitem" tabindex="0" aria-label="${item.headline || item.id}" @click="${() => emit('select', item.id)}" @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); emit('select', item.id); } }}">
             ${item.image
               ? html`<img class="item-bg" src="${item.image}" alt="${item.headline || ''}" loading="lazy">`
               : html`
                 <div class="item-placeholder" style="${item.color ? 'background:' + item.color : ''}">
-                  <span class="placeholder-icon">image</span>
+                  <span class="placeholder-icon" aria-hidden="true">image</span>
                 </div>
               `
             }

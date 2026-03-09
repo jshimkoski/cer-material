@@ -135,6 +135,7 @@ component('md-switch', () => {
       }}"
     >
       <input
+        role="switch"
         type="checkbox"
         :checked="${props.selected}"
         :disabled="${props.disabled}"
@@ -142,7 +143,7 @@ component('md-switch', () => {
       />
       <div class="track">
         <div :class="${{ thumb: true, selected: props.selected }}">
-          ${when(props.icons, () => html`<span class="thumb-icon">${props.selected ? 'check' : 'close'}</span>`)}
+          ${when(props.icons, () => html`<span class="thumb-icon" aria-hidden="true">${props.selected ? 'check' : 'close'}</span>`)}
         </div>
       </div>
     </div>

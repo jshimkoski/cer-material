@@ -118,7 +118,7 @@ component('md-fab', () => {
       :bind="${{ 'aria-label': props.ariaLabel || props.label || props.icon }}"
       @click="${() => emit('click')}"
     >
-      <span class="icon">${props.icon}</span>
+      <span class="icon" aria-hidden="true">${props.icon}</span>
       ${when(!!props.label, () => html`<span class="label">${props.label}</span>`)}
     </button>
   `;

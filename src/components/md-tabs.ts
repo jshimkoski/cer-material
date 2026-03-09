@@ -149,13 +149,15 @@ component('md-tabs', () => {
           (tab: Tab) => html`
             <button
               key="${tab.id}"
+              id="tab-${tab.id}"
               :class="${{ tab: true, active: active.value === tab.id }}"
               role="tab"
               aria-selected="${String(active.value === tab.id)}"
+              aria-controls="tabpanel"
               tabindex="${active.value === tab.id ? '0' : '-1'}"
               @click="${() => { active.value = tab.id; emit('tab-change', tab.id); }}"
             >
-              ${when(!!tab.icon, () => html`<span class="tab-icon">${tab.icon}</span>`)}
+              ${when(!!tab.icon, () => html`<span class="tab-icon" aria-hidden="true">${tab.icon}</span>`)}
               ${tab.label}
               ${when(active.value === tab.id, () => html`<div class="tab-indicator"></div>`)}
               ${when(!!tab.badge, () => html`<span class="tab-badge">${tab.badge}</span>`)}
@@ -163,7 +165,7 @@ component('md-tabs', () => {
           `,
         )}
       </div>
-      <div class="content" role="tabpanel">
+      <div class="content" role="tabpanel" id="tabpanel" :bind="${{ 'aria-labelledby': active.value ? 'tab-' + active.value : null }}">
         <slot></slot>
       </div>
     </div>

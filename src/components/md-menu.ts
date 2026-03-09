@@ -146,7 +146,7 @@ component('md-menu', () => {
                   :disabled="${item.disabled || false}"
                   @click="${() => { emit('select', item.id); emit('close'); }}"
                 >
-                  ${when(!!item.icon, () => html`<span class="item-icon">${item.icon}</span>`)}
+                  ${when(!!item.icon, () => html`<span class="item-icon" aria-hidden="true">${item.icon}</span>`)}
                   ${item.label}
                 </button>
               `)}

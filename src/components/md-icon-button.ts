@@ -141,7 +141,7 @@ component('md-icon-button', () => {
         emit('click');
       }}"
     >
-      <span class="icon">${displayIcon}</span>
+      <span class="icon" aria-hidden="true">${displayIcon}</span>
     </button>
   `;
 });

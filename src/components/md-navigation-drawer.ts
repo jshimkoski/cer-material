@@ -210,8 +210,9 @@ component('md-navigation-drawer', () => {
     }, html`
       <div
         class="${props.variant === 'modal' ? 'drawer' : 'standard-drawer'}"
-        role="navigation"
-        aria-label="Navigation drawer"
+        role="${props.variant === 'modal' ? 'dialog' : 'navigation'}"
+        aria-label="${props.headline || 'Navigation drawer'}"
+        :bind="${{ 'aria-modal': props.variant === 'modal' ? 'true' : null }}"
       >
         ${when(!!props.headline, () => html`
           <div class="drawer-header">
@@ -234,7 +235,7 @@ component('md-navigation-drawer', () => {
                     :bind="${{ 'aria-current': props.active === item.id ? 'page' : null }}"
                     @click="${() => { if (item.id) { emit('change', item.id); if (props.variant === 'modal') emit('close'); } }}"
                   >
-                    ${when(!!item.icon, () => html`<span class="drawer-icon">${item.icon}</span>`)}
+                    ${when(!!item.icon, () => html`<span class="drawer-icon" aria-hidden="true">${item.icon}</span>`)}
                     <span class="drawer-label">${item.label}</span>
                   </button>
                 `,

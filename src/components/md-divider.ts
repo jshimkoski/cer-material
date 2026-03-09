@@ -36,5 +36,5 @@ component('md-divider', () => {
     inset: props.inset,
     'inset-start': props.insetStart,
     'inset-end': props.insetEnd,
-  }}" role="separator"></div>`;
+  }}" role="separator" :bind="${{ 'aria-orientation': props.vertical ? 'vertical' : null }}"></div>`;
 });

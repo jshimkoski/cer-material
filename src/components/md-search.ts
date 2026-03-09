@@ -135,7 +135,7 @@ component('md-search', () => {
 
   return html`
     <div class="search-bar" role="search">
-      <span class="lead-icon">${props.leadingIcon}</span>
+      <span class="lead-icon" aria-hidden="true">${props.leadingIcon}</span>
       <input
         type="search"
         class="search-input"
@@ -147,7 +147,7 @@ component('md-search', () => {
       >
       ${when(!!query.value, () => html`
         <button class="clear-btn" aria-label="Clear search" @click="${handleClear}">
-          <span class="clear-icon">close</span>
+          <span class="clear-icon" aria-hidden="true">close</span>
         </button>
       `)}
       ${when(props.showAvatar, () => html`
