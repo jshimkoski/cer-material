@@ -196,7 +196,6 @@ component('md-text-field', () => {
     .disabled .outlined { opacity: 0.38; }
   `);
 
-  const hasValue = internalValue.value !== '' || focused.value;
   const showError = props.error;
 
   return html`
@@ -205,7 +204,7 @@ component('md-text-field', () => {
         :class="${{
           [props.variant]: true,
           'has-leading': !!props.leadingIcon,
-          'is-active': hasValue,
+          'is-active': internalValue.value !== '' || focused.value,
           error: !!showError,
         }}"
       >

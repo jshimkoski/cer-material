@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 
@@ -9,6 +9,13 @@ component('md-side-sheet', () => {
     variant: 'modal' as 'modal' | 'standard',
   });
   const emit = useEmit();
+
+  const handleEscKey = (e: KeyboardEvent) => {
+    if (!props.open || props.variant !== 'modal') return;
+    if (e.key === 'Escape') { e.preventDefault(); emit('close'); }
+  };
+  useOnConnected(() => { document.addEventListener('keydown', handleEscKey); });
+  useOnDisconnected(() => { document.removeEventListener('keydown', handleEscKey); });
 
   useStyle(() => css`
     :host { display: contents; }

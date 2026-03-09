@@ -7,6 +7,7 @@ component('md-progress', () => {
     value: 0,
     indeterminate: false,
     buffer: 100,
+    ariaLabel: 'Loading',
   });
 
   useStyle(() => css`
@@ -17,12 +18,25 @@ component('md-progress', () => {
       width: 100%;
       height: 4px;
       border-radius: 2px;
-      background: var(--md-sys-color-secondary-container, #E8DEF8);
+      background: var(--md-sys-color-surface-container-high, #ECE6F0);
       overflow: hidden;
       position: relative;
     }
 
+    .linear-buffer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      border-radius: 2px;
+      background: var(--md-sys-color-primary-container, #EADDFF);
+      transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     .linear-indicator {
+      position: absolute;
+      left: 0;
+      top: 0;
       height: 100%;
       border-radius: 2px;
       background: var(--md-sys-color-primary, #6750A4);
@@ -38,7 +52,7 @@ component('md-progress', () => {
     .linear.indeterminate .linear-indicator {
       width: 50% !important;
       animation: linear-indeterminate 1.5s ease-in-out infinite;
-      transform-origin: center;
+      transform-origin: center left;
     }
 
     /* ── Circular ── */
@@ -85,7 +99,19 @@ component('md-progress', () => {
     ${when(
       props.variant === 'linear',
       () => html`
-        <div :class="${{ linear: true, indeterminate: props.indeterminate }}">
+        <div
+          :class="${{ linear: true, indeterminate: props.indeterminate }}"
+          role="progressbar"
+          aria-label="${props.ariaLabel}"
+          :bind="${{
+            'aria-valuenow': props.indeterminate ? null : String(props.value),
+            'aria-valuemin': '0',
+            'aria-valuemax': '100',
+          }}"
+        >
+          ${when(!props.indeterminate && props.buffer < 100, () => html`
+            <div class="linear-buffer" :style="${{ width: `${props.buffer}%` }}"></div>
+          `)}
           <div
             class="linear-indicator"
             :style="${{ width: props.indeterminate ? '50%' : `${props.value}%` }}"
@@ -96,7 +122,16 @@ component('md-progress', () => {
     ${when(
       props.variant === 'circular',
       () => html`
-        <div :class="${{ circular: true, indeterminate: props.indeterminate }}">
+        <div
+          :class="${{ circular: true, indeterminate: props.indeterminate }}"
+          role="progressbar"
+          aria-label="${props.ariaLabel}"
+          :bind="${{
+            'aria-valuenow': props.indeterminate ? null : String(props.value),
+            'aria-valuemin': '0',
+            'aria-valuemax': '100',
+          }}"
+        >
           <svg width="48" height="48" viewBox="0 0 48 48">
             <circle class="track-circle" cx="24" cy="24" r="${RADIUS}" />
             <circle

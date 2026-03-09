@@ -98,8 +98,21 @@ component('md-chip', () => {
       height: 18px;
       cursor: pointer;
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      position: relative;
+      overflow: hidden;
     }
-    .close-icon:hover { background: rgba(0,0,0,0.1); }
+    .close-icon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0;
+      transition: opacity 200ms;
+    }
+    .close-icon:hover::before  { opacity: 0.16; }
+    .close-icon:focus::before  { opacity: 0.24; }
+    .close-icon:active::before { opacity: 0.24; }
   `);
 
   const isElevated = props.variant === 'assist' || props.variant === 'suggestion';
@@ -125,7 +138,11 @@ component('md-chip', () => {
       ${when(props.variant === 'input', () => html`
         <span
           class="close-icon"
+          role="button"
+          tabindex="0"
+          aria-label="Remove ${props.label}"
           @click="${(e: Event) => { e.stopPropagation(); emit('remove'); }}"
+          @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); emit('remove'); } }}"
         >close</span>
       `)}
     </div>

@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 
@@ -94,6 +94,13 @@ component('md-bottom-sheet', () => {
     }
     sheetEl = null;
   }
+
+  const handleEscKey = (e: KeyboardEvent) => {
+    if (!props.open) return;
+    if (e.key === 'Escape') { e.preventDefault(); emit('close'); }
+  };
+  useOnConnected(() => { document.addEventListener('keydown', handleEscKey); });
+  useOnDisconnected(() => { document.removeEventListener('keydown', handleEscKey); });
 
   useStyle(() => css`
     :host { display: contents; }
@@ -222,6 +229,7 @@ component('md-bottom-sheet', () => {
         class="bottom-sheet"
         role="dialog"
         aria-modal="true"
+        :bind="${{ 'aria-labelledby': props.headline ? 'bottom-sheet-headline' : null }}"
       >
         ${when(props.showHandle, () => html`
           <div
@@ -240,7 +248,7 @@ component('md-bottom-sheet', () => {
         `)}
         ${when(!!props.headline, () => html`
           <div class="sheet-header">
-            <h2 class="sheet-headline">${props.headline}</h2>
+            <h2 class="sheet-headline" id="bottom-sheet-headline">${props.headline}</h2>
           </div>
         `)}
         <div class="sheet-content">

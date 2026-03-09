@@ -61,10 +61,17 @@ component('md-switch', () => {
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      position: relative;
     }
     .switch:hover .thumb:not(.selected) {
+      width: 20px;
+      height: 20px;
+      background: var(--md-sys-color-on-surface-variant, #49454F);
+    }
+    .switch:active .thumb:not(.selected) {
       width: 28px;
       height: 28px;
+      background: var(--md-sys-color-on-surface-variant, #49454F);
     }
     .selected .thumb {
       width: 24px;
@@ -72,15 +79,24 @@ component('md-switch', () => {
       background: var(--md-sys-color-on-primary, #fff);
       transform: translateX(20px);
     }
+    /* Selected hover: color → primary-container, size stays 24px */
     .switch.selected:hover .thumb {
+      background: var(--md-sys-color-primary-container, #EADDFF);
+    }
+    /* Selected pressed: 28px, primary-container */
+    .switch.selected:active .thumb {
       width: 28px;
       height: 28px;
+      background: var(--md-sys-color-primary-container, #EADDFF);
     }
 
     /* state layer */
     .thumb::before {
       content: '';
       position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       width: 40px;
       height: 40px;
       border-radius: 50%;
@@ -88,6 +104,9 @@ component('md-switch', () => {
       opacity: 0;
       transition: opacity 200ms;
       pointer-events: none;
+    }
+    .selected .thumb::before {
+      background: var(--md-sys-color-primary, #6750A4);
     }
     .switch:hover .thumb::before { opacity: 0.08; }
     .switch:focus-within .thumb::before { opacity: 0.12; }

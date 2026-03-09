@@ -51,7 +51,8 @@ component('md-app-bar', () => {
     }
     .medium .title {
       padding: 0 16px;
-      font-size: 28px;
+      font-size: 24px;
+      line-height: 32px;
     }
 
     /* ── Large ── */
@@ -69,7 +70,8 @@ component('md-app-bar', () => {
     }
     .large .title {
       padding: 0 16px;
-      font-size: 36px;
+      font-size: 28px;
+      line-height: 36px;
     }
 
     .icon-btn {

@@ -32,7 +32,7 @@ component('md-tabs', () => {
 
     .tabs-container {
       display: flex;
-      border-bottom: 1px solid var(--md-sys-color-surface-variant, #E7E0EC);
+      border-bottom: 1px solid var(--md-sys-color-outline-variant, #CAC4D0);
       overflow-x: auto;
       scrollbar-width: none;
       position: relative;
@@ -67,7 +67,7 @@ component('md-tabs', () => {
       content: '';
       position: absolute;
       inset: 0;
-      background: var(--md-sys-color-on-surface, #1C1B1F);
+      background: var(--md-sys-color-on-surface-variant, #49454F);
       opacity: 0;
       transition: opacity 200ms;
     }
@@ -128,18 +128,38 @@ component('md-tabs', () => {
     }
   `);
 
+  const handleTabKeyDown = (e: KeyboardEvent, idx: number) => {
+    const tabs = safeTabs();
+    let newIdx = idx;
+    if (e.key === 'ArrowRight') { newIdx = (idx + 1) % tabs.length; }
+    else if (e.key === 'ArrowLeft') { newIdx = (idx - 1 + tabs.length) % tabs.length; }
+    else if (e.key === 'Home') { newIdx = 0; }
+    else if (e.key === 'End') { newIdx = tabs.length - 1; }
+    else { return; }
+    e.preventDefault();
+    active.value = tabs[newIdx].id;
+    emit('tab-change', tabs[newIdx].id);
+    const container = (e.currentTarget as HTMLElement).parentElement;
+    if (container) {
+      const btns = container.querySelectorAll<HTMLElement>('[role="tab"]');
+      btns[newIdx]?.focus();
+    }
+  };
+
   return html`
     <div>
       <div :class="${{ 'tabs-container': true, [props.variant]: true }}" role="tablist">
         ${each(
           safeTabs(),
-          (tab: Tab) => html`
+          (tab: Tab, idx: number) => html`
             <button
               key="${tab.id}"
               :class="${{ tab: true, active: active.value === tab.id }}"
               role="tab"
               aria-selected="${String(active.value === tab.id)}"
+              tabindex="${active.value === tab.id ? '0' : '-1'}"
               @click="${() => { active.value = tab.id; emit('tab-change', tab.id); }}"
+              @keydown="${(e: KeyboardEvent) => handleTabKeyDown(e, idx)}"
             >
               ${when(!!tab.icon, () => html`<span class="tab-icon">${tab.icon}</span>`)}
               ${tab.label}

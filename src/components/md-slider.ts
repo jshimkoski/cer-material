@@ -1,5 +1,5 @@
 import { component, html, css, ref, computed, watch, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
-import { when } from '@jasonshimmy/custom-elements-runtime/directives';
+import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-slider', () => {
   const props = useProps({
@@ -92,23 +92,64 @@ component('md-slider', () => {
 
     .value-label {
       position: absolute;
-      top: -28px;
+      top: -32px;
       transform: translateX(-50%);
       background: var(--md-sys-color-primary, #6750A4);
       color: var(--md-sys-color-on-primary, #fff);
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
       font-family: var(--md-sys-typescale-font, 'Roboto', sans-serif);
       white-space: nowrap;
       pointer-events: none;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    .tick-marks {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      height: 4px;
+      z-index: 1;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tick {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--md-sys-color-on-primary, #fff);
+      flex-shrink: 0;
+    }
+    .tick.inactive {
+      background: var(--md-sys-color-primary, #6750A4);
     }
   `);
+
+  const tickCount = computed(() => {
+    if (!props.ticks || props.step <= 0) return [];
+    const count = Math.round((props.max - props.min) / props.step) + 1;
+    return Array.from({ length: count }, (_, i) => {
+      const tickValue = props.min + i * props.step;
+      return tickValue <= internalValue.value ? 'active' : 'inactive';
+    });
+  });
 
   return html`
     <div class="slider-wrapper">
       <div class="track-bg"></div>
       <div class="track-active" :style="${{ width: `calc(${percentage.value}% * (100% - 20px) / 100)` }}"></div>
+      ${when(props.ticks && tickCount.value.length > 0, () => html`
+        <div class="tick-marks">
+          ${each(tickCount.value, (state: string, i: number) => html`
+            <div key="${String(i)}" :class="${{ tick: true, inactive: state === 'inactive' }}"></div>
+          `)}
+        </div>
+      `)}
       ${when(props.labeled, () => html`
         <div class="value-label" :style="${{ left: `calc(10px + ${percentage.value}% * (100% - 20px) / 100)` }}">
           ${internalValue.value}

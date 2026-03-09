@@ -222,7 +222,7 @@ component('md-navigation-rail', () => {
             key="${item.id}"
             :class="${{ 'nav-item': true, active: props.active === item.id }}"
             aria-label="${item.label}"
-            aria-current="${props.active === item.id ? 'page' : 'false'}"
+            :bind="${{ 'aria-current': props.active === item.id ? 'page' : null }}"
             @click="${() => emit('change', item.id)}"
           >
             <div class="indicator">

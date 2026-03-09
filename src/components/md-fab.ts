@@ -8,6 +8,7 @@ component('md-fab', () => {
     icon: 'add',
     label: '',
     lowered: false,
+    ariaLabel: '',
   });
   const emit = useEmit();
 
@@ -114,6 +115,7 @@ component('md-fab', () => {
         [sizeClass]: true,
         lowered: props.lowered,
       }}"
+      :bind="${{ 'aria-label': props.ariaLabel || props.label || props.icon }}"
       @click="${() => emit('click')}"
     >
       <span class="icon">${props.icon}</span>

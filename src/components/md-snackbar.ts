@@ -98,7 +98,21 @@ component('md-snackbar', () => {
       padding: 0;
       outline: none;
       flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
     }
+    .close-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: var(--md-sys-color-inverse-on-surface, #F4EFF4);
+      opacity: 0;
+      transition: opacity 200ms;
+    }
+    .close-btn:hover::before  { opacity: 0.08; }
+    .close-btn:focus::before  { opacity: 0.12; }
+    .close-btn:active::before { opacity: 0.12; }
 
     .close-icon {
       font-family: 'Material Symbols Outlined';
@@ -107,6 +121,8 @@ component('md-snackbar', () => {
       font-style: normal;
       line-height: 1;
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      position: relative;
+      z-index: 1;
     }
   `);
 

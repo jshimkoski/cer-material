@@ -8,6 +8,7 @@ component('md-icon-button', () => {
     disabled: false,
     toggle: false,
     selectedIcon: '',
+    ariaLabel: '',
   });
   const emit = useEmit();
 
@@ -50,29 +51,47 @@ component('md-icon-button', () => {
     .standard::before { background: var(--md-sys-color-on-surface-variant, #49454F); }
     .standard.selected::before { background: var(--md-sys-color-primary, #6750A4); }
 
-    /* ── Filled ── */
+    /* ── Filled (non-toggle: always primary) ── */
     .filled {
-      background: var(--md-sys-color-surface-variant, #E7E0EC);
-      color: var(--md-sys-color-primary, #6750A4);
-    }
-    .filled.selected {
       background: var(--md-sys-color-primary, #6750A4);
       color: var(--md-sys-color-on-primary, #fff);
     }
-    .filled::before { background: var(--md-sys-color-primary, #6750A4); }
-    .filled.selected::before { background: var(--md-sys-color-on-primary, #fff); }
+    .filled::before { background: var(--md-sys-color-on-primary, #fff); }
 
-    /* ── Tonal ── */
-    .tonal {
-      background: var(--md-sys-color-surface-variant, #E7E0EC);
-      color: var(--md-sys-color-on-surface-variant, #49454F);
+    /* ── Filled toggle: unselected ── */
+    .filled.toggle {
+      background: var(--md-sys-color-surface-container-high, #ECE6F0);
+      color: var(--md-sys-color-primary, #6750A4);
     }
-    .tonal.selected {
+    .filled.toggle::before { background: var(--md-sys-color-primary, #6750A4); }
+
+    /* ── Filled toggle: selected ── */
+    .filled.toggle.selected {
+      background: var(--md-sys-color-primary, #6750A4);
+      color: var(--md-sys-color-on-primary, #fff);
+    }
+    .filled.toggle.selected::before { background: var(--md-sys-color-on-primary, #fff); }
+
+    /* ── Tonal (non-toggle: always secondary-container) ── */
+    .tonal {
       background: var(--md-sys-color-secondary-container, #E8DEF8);
       color: var(--md-sys-color-on-secondary-container, #1D192B);
     }
-    .tonal::before { background: var(--md-sys-color-on-surface-variant, #49454F); }
-    .tonal.selected::before { background: var(--md-sys-color-on-secondary-container, #1D192B); }
+    .tonal::before { background: var(--md-sys-color-on-secondary-container, #1D192B); }
+
+    /* ── Tonal toggle: unselected ── */
+    .tonal.toggle {
+      background: var(--md-sys-color-surface-container-high, #ECE6F0);
+      color: var(--md-sys-color-on-surface-variant, #49454F);
+    }
+    .tonal.toggle::before { background: var(--md-sys-color-on-surface-variant, #49454F); }
+
+    /* ── Tonal toggle: selected ── */
+    .tonal.toggle.selected {
+      background: var(--md-sys-color-secondary-container, #E8DEF8);
+      color: var(--md-sys-color-on-secondary-container, #1D192B);
+    }
+    .tonal.toggle.selected::before { background: var(--md-sys-color-on-secondary-container, #1D192B); }
 
     /* ── Outlined ── */
     .outlined {
@@ -113,9 +132,10 @@ component('md-icon-button', () => {
       :class="${{
         [props.variant]: true,
         selected: props.selected,
+        toggle: props.toggle,
       }}"
       :disabled="${props.disabled}"
-      :bind="${{ 'aria-pressed': props.toggle ? String(props.selected) : null }}"
+      :bind="${{ 'aria-label': props.ariaLabel || props.icon, 'aria-pressed': props.toggle ? String(props.selected) : null }}"
       @click="${() => {
         if (props.toggle) emit('change', !props.selected);
         emit('click');

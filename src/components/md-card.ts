@@ -63,7 +63,14 @@ component('md-card', () => {
         clickable: props.clickable,
       }}"
       tabindex="${props.clickable ? '0' : undefined}"
+      :bind="${{ role: props.clickable ? 'button' : null }}"
       @click="${() => props.clickable && emit('click')}"
+      @keydown="${(e: KeyboardEvent) => {
+        if (props.clickable && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          emit('click');
+        }
+      }}"
     >
       <slot></slot>
     </div>

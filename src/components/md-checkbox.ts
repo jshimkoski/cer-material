@@ -43,6 +43,10 @@ component('md-checkbox', () => {
       opacity: 0;
       transition: opacity 200ms;
     }
+    .checkbox-container.checked::before,
+    .checkbox-container.indeterminate::before {
+      background: var(--md-sys-color-primary, #6750A4);
+    }
     label:hover .checkbox-container::before  { opacity: 0.08; }
     label:focus-within .checkbox-container::before { opacity: 0.12; }
 
@@ -99,6 +103,7 @@ component('md-checkbox', () => {
           type="checkbox"
           :checked="${props.checked}"
           :disabled="${props.disabled}"
+          :bind="${{ indeterminate: props.indeterminate }}"
           @change="${(e: Event) => emit('change', (e.target as HTMLInputElement).checked)}"
         />
         <div class="box">

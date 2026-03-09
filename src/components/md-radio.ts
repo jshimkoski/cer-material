@@ -44,6 +44,9 @@ component('md-radio', () => {
       opacity: 0;
       transition: opacity 200ms;
     }
+    .radio-container.checked::before {
+      background: var(--md-sys-color-primary, #6750A4);
+    }
     label:hover .radio-container::before  { opacity: 0.08; }
     label:focus-within .radio-container::before { opacity: 0.12; }
 

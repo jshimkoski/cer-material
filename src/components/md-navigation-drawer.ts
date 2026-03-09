@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 
@@ -20,6 +20,13 @@ component('md-navigation-drawer', () => {
     active: '',
   });
   const emit = useEmit();
+
+  const handleEscKey = (e: KeyboardEvent) => {
+    if (!props.open || props.variant !== 'modal') return;
+    if (e.key === 'Escape') { e.preventDefault(); emit('close'); }
+  };
+  useOnConnected(() => { document.addEventListener('keydown', handleEscKey); });
+  useOnDisconnected(() => { document.removeEventListener('keydown', handleEscKey); });
 
   useStyle(() => css`
     :host { display: contents; }
@@ -220,7 +227,7 @@ component('md-navigation-drawer', () => {
                     key="${item.id}"
                     :class="${{ 'drawer-item': true, active: props.active === item.id }}"
                     :disabled="${item.disabled || false}"
-                    aria-current="${props.active === item.id ? 'page' : 'false'}"
+                    :bind="${{ 'aria-current': props.active === item.id ? 'page' : null }}"
                     @click="${() => { if (item.id) { emit('change', item.id); if (props.variant === 'modal') emit('close'); } }}"
                   >
                     ${when(!!item.icon, () => html`<span class="drawer-icon">${item.icon}</span>`)}

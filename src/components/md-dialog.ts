@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 
@@ -9,6 +9,13 @@ component('md-dialog', () => {
     icon: '',
   });
   const emit = useEmit();
+
+  const handleEscKey = (e: KeyboardEvent) => {
+    if (!props.open) return;
+    if (e.key === 'Escape') { e.preventDefault(); emit('close'); }
+  };
+  useOnConnected(() => { document.addEventListener('keydown', handleEscKey); });
+  useOnDisconnected(() => { document.removeEventListener('keydown', handleEscKey); });
 
   useStyle(() => css`
     :host { display: contents; }
@@ -126,7 +133,7 @@ component('md-dialog', () => {
         class="scrim"
         @click="${(e: Event) => { if (e.target === e.currentTarget) emit('close'); }}"
       >
-        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-headline">
+        <div class="dialog" role="dialog" aria-modal="true" :bind="${{ 'aria-labelledby': props.headline ? 'dialog-headline' : null }}">
           <div class="dialog-header">
             ${when(!!props.icon, () => html`<span class="dialog-icon">${props.icon}</span>`)}
             ${when(!!props.headline, () => html`<h2 class="dialog-headline" id="dialog-headline">${props.headline}</h2>`)}
