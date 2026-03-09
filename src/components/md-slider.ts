@@ -1,5 +1,6 @@
-import { component, html, css, ref, computed, watch, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, computed, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
+import { useControlledValue } from '../composables/useControlledValue';
 
 component('md-slider', () => {
   const props = useProps({
@@ -12,10 +13,7 @@ component('md-slider', () => {
     ticks: false,
   });
   const emit = useEmit();
-  const internalValue = ref(props.value);
-
-  // Sync with controlled prop
-  watch(() => props.value, (v) => { internalValue.value = v; });
+  const internalValue = useControlledValue(() => props.value);
   const percentage = computed(() =>
     ((internalValue.value - props.min) / (props.max - props.min)) * 100,
   );

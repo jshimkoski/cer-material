@@ -1,5 +1,6 @@
-import { component, html, css, ref, watch, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
+import { useControlledValue } from '../composables/useControlledValue';
 
 component('md-search', () => {
   const props = useProps({
@@ -9,9 +10,7 @@ component('md-search', () => {
     showAvatar: false,
   });
   const emit = useEmit();
-  const query = ref(props.value || '');
-
-  watch(() => props.value, (v) => { query.value = v || ''; });
+  const query = useControlledValue(() => props.value || '');
 
   const handleInput = (e: Event) => {
     const val = (e.target as HTMLInputElement).value;

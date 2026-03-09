@@ -1,6 +1,9 @@
-import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
+import { useEscapeKey } from '../composables/useEscapeKey';
+import { createFocusTrap } from '../composables/useFocusTrap';
+import { useScrollLock } from '../composables/useScrollLock';
 
 component('md-dialog', () => {
   const props = useProps({
@@ -10,12 +13,10 @@ component('md-dialog', () => {
   });
   const emit = useEmit();
 
-  const handleEscKey = (e: KeyboardEvent) => {
-    if (!props.open) return;
-    if (e.key === 'Escape') { e.preventDefault(); emit('close'); }
-  };
-  useOnConnected(() => { document.addEventListener('keydown', handleEscKey); });
-  useOnDisconnected(() => { document.removeEventListener('keydown', handleEscKey); });
+  useEscapeKey(() => props.open, () => emit('close'))();
+  const trap = createFocusTrap();
+  useOnDisconnected(() => trap.cleanup());
+  const scrollLock = useScrollLock();
 
   useStyle(() => css`
     :host { display: contents; }
@@ -128,6 +129,9 @@ component('md-dialog', () => {
       enterActive: 'scrim-enter-active',
       leaveActive: 'scrim-leave-active',
       leaveTo: 'scrim-leave-to',
+      onBeforeEnter: scrollLock.lock,
+      onAfterEnter: trap.onAfterEnter,
+      onAfterLeave: () => { trap.onAfterLeave(); scrollLock.unlock(); },
     }, html`
       <div
         class="scrim"

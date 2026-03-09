@@ -217,14 +217,6 @@ component('md-showcase', () => {
       font-weight: 500;
     }
 
-    /* ── List section ── */
-    .list-container {
-      border: 1px solid var(--md-sys-color-outline-variant, #CAC4D0);
-      border-radius: 12px;
-      overflow: hidden;
-      max-width: 560px;
-    }
-
     /* ── FAB stack ── */
     .fab-stack {
       display: flex;
@@ -837,7 +829,7 @@ component('md-showcase', () => {
           <h2 class="section-title">Lists</h2>
           <p class="section-subtitle">Lists are continuous, vertical indexes of text or images.</p>
 
-          <div class="list-container">
+          <md-list>
             <md-list-item
               headline="Inbox"
               supporting-text="3 unread messages"
@@ -873,7 +865,7 @@ component('md-showcase', () => {
               leading-icon="delete"
               disabled="true"
             ></md-list-item>
-          </div>
+          </md-list>
         </div>
         <div class="section-divider"></div>
 

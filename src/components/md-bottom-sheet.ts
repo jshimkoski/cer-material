@@ -1,6 +1,9 @@
-import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
+import { useEscapeKey } from '../composables/useEscapeKey';
+import { createFocusTrap } from '../composables/useFocusTrap';
+import { useScrollLock } from '../composables/useScrollLock';
 
 component('md-bottom-sheet', () => {
   const props = useProps({
@@ -95,12 +98,12 @@ component('md-bottom-sheet', () => {
     sheetEl = null;
   }
 
-  const handleEscKey = (e: KeyboardEvent) => {
-    if (!props.open) return;
-    if (e.key === 'Escape') { e.preventDefault(); emit('close'); }
-  };
-  useOnConnected(() => { document.addEventListener('keydown', handleEscKey); });
-  useOnDisconnected(() => { document.removeEventListener('keydown', handleEscKey); });
+  const handleEscKey = () => emit('close');
+
+  useEscapeKey(() => props.open, handleEscKey)();
+  const trap = createFocusTrap();
+  useOnDisconnected(() => trap.cleanup());
+  const scrollLock = useScrollLock();
 
   useStyle(() => css`
     :host { display: contents; }
@@ -224,6 +227,9 @@ component('md-bottom-sheet', () => {
           }
         }
       },
+      onBeforeEnter: scrollLock.lock,
+      onAfterEnter: trap.onAfterEnter,
+      onAfterLeave: () => { trap.onAfterLeave(); scrollLock.unlock(); },
     }, html`
       <div
         class="bottom-sheet"

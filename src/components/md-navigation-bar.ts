@@ -1,5 +1,6 @@
 import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
+import { useListKeyNav } from '../composables/useListKeyNav';
 
 interface NavItem {
   id: string;
@@ -14,6 +15,11 @@ component('md-navigation-bar', () => {
     active: '',
   });
   const emit = useEmit();
+
+  const handleNavKeyDown = useListKeyNav({
+    orientation: 'horizontal',
+    itemSelector: '.nav-item',
+  });
 
   useStyle(() => css`
     :host { display: block; }
@@ -121,7 +127,7 @@ component('md-navigation-bar', () => {
   `);
 
   return html`
-    <div class="nav-bar" role="navigation">
+    <div class="nav-bar" role="navigation" @keydown="${handleNavKeyDown}">
       ${each(
         Array.isArray(props.items) ? props.items : [],
         (item: NavItem) => html`

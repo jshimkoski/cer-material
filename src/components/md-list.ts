@@ -1,6 +1,28 @@
 import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
+component('md-list', () => {
+  const props = useProps({
+    role: 'list',
+  });
+
+  useStyle(() => css`
+    :host { display: block; }
+
+    .list {
+      border: 1px solid var(--md-sys-color-outline-variant, #CAC4D0);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+  `);
+
+  return html`
+    <div class="list" role="${props.role}">
+      <slot></slot>
+    </div>
+  `;
+});
+
 component('md-list-item', () => {
   const props = useProps({
     headline: '',

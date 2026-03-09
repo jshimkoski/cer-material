@@ -1,5 +1,6 @@
 import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
+import { useListKeyNav } from '../composables/useListKeyNav';
 
 interface NavItem {
   id: string;
@@ -17,6 +18,11 @@ component('md-navigation-rail', () => {
     menuIcon: false,
   });
   const emit = useEmit();
+
+  const handleNavKeyDown = useListKeyNav({
+    orientation: 'vertical',
+    itemSelector: '.nav-item',
+  });
 
   useStyle(() => css`
     :host { display: block; height: 100%; }
@@ -204,7 +210,7 @@ component('md-navigation-rail', () => {
   `);
 
   return html`
-    <nav class="nav-rail" aria-label="Navigation rail">
+      <nav class="nav-rail" aria-label="Navigation rail" @keydown="${handleNavKeyDown}">
       ${when(props.menuIcon, () => html`
         <button class="menu-btn" aria-label="Open navigation menu" @click="${() => emit('menu-click')}">
           <span class="mat-icon">menu</span>

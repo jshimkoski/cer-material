@@ -1,5 +1,6 @@
 import { component, html, css, ref, watch, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
+import { useListKeyNav } from '../composables/useListKeyNav';
 
 interface Tab {
   id: string;
@@ -128,30 +129,24 @@ component('md-tabs', () => {
     }
   `);
 
-  const handleTabKeyDown = (e: KeyboardEvent, idx: number) => {
-    const tabs = safeTabs();
-    let newIdx = idx;
-    if (e.key === 'ArrowRight') { newIdx = (idx + 1) % tabs.length; }
-    else if (e.key === 'ArrowLeft') { newIdx = (idx - 1 + tabs.length) % tabs.length; }
-    else if (e.key === 'Home') { newIdx = 0; }
-    else if (e.key === 'End') { newIdx = tabs.length - 1; }
-    else { return; }
-    e.preventDefault();
-    active.value = tabs[newIdx].id;
-    emit('tab-change', tabs[newIdx].id);
-    const container = (e.currentTarget as HTMLElement).parentElement;
-    if (container) {
-      const btns = container.querySelectorAll<HTMLElement>('[role="tab"]');
-      btns[newIdx]?.focus();
-    }
-  };
+  const handleTabKeyDown = useListKeyNav({
+    orientation: 'horizontal',
+    itemSelector: '[role="tab"]',
+    onNavigate: (_, newIdx) => {
+      const tabs = safeTabs();
+      if (tabs[newIdx]) {
+        active.value = tabs[newIdx].id;
+        emit('tab-change', tabs[newIdx].id);
+      }
+    },
+  });
 
   return html`
     <div>
-      <div :class="${{ 'tabs-container': true, [props.variant]: true }}" role="tablist">
+      <div :class="${{ 'tabs-container': true, [props.variant]: true }}" role="tablist" @keydown="${handleTabKeyDown}">
         ${each(
           safeTabs(),
-          (tab: Tab, idx: number) => html`
+          (tab: Tab) => html`
             <button
               key="${tab.id}"
               :class="${{ tab: true, active: active.value === tab.id }}"
@@ -159,7 +154,6 @@ component('md-tabs', () => {
               aria-selected="${String(active.value === tab.id)}"
               tabindex="${active.value === tab.id ? '0' : '-1'}"
               @click="${() => { active.value = tab.id; emit('tab-change', tab.id); }}"
-              @keydown="${(e: KeyboardEvent) => handleTabKeyDown(e, idx)}"
             >
               ${when(!!tab.icon, () => html`<span class="tab-icon">${tab.icon}</span>`)}
               ${tab.label}

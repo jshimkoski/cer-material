@@ -1,5 +1,9 @@
-import { component, html, css, ref, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected, watch, nextTick } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when, each } from '@jasonshimmy/custom-elements-runtime/directives';
+import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
+import { useEscapeKey } from '../composables/useEscapeKey';
+import { useListKeyNav } from '../composables/useListKeyNav';
+import { createFocusReturn } from '../composables/useFocusReturn';
 
 interface MenuItem {
   id: string;
@@ -101,50 +105,35 @@ component('md-menu', () => {
     }
   `);
 
-  const handleMenuKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') { e.preventDefault(); emit('close'); return; }
-    const container = e.currentTarget as HTMLElement;
-    const items = Array.from(container.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled):not([disabled])'));
-    if (!items.length) return;
-    const focused = container.querySelector<HTMLElement>(':focus');
-    const currentIdx = focused ? items.indexOf(focused) : -1;
-    let newIdx = currentIdx;
-    if (e.key === 'ArrowDown') { newIdx = currentIdx < items.length - 1 ? currentIdx + 1 : 0; }
-    else if (e.key === 'ArrowUp') { newIdx = currentIdx > 0 ? currentIdx - 1 : items.length - 1; }
-    else if (e.key === 'Home') { newIdx = 0; }
-    else if (e.key === 'End') { newIdx = items.length - 1; }
-    else { return; }
-    e.preventDefault();
-    items[newIdx]?.focus();
-  };
-
-  // Auto-focus the first menu item when the menu container is mounted.
-  // menuEl is a reactive ref, so watch() tracks it correctly.
-  const menuEl = ref<HTMLElement | null>(null);
-  watch(() => menuEl.value, (el) => {
-    if (el) {
-      nextTick().then(() => {
-        const first = el.querySelector<HTMLElement>('[role="menuitem"]:not([disabled])');
-        first?.focus();
-      });
-    }
+  const handleMenuKeyDown = useListKeyNav({
+    orientation: 'vertical',
+    itemSelector: '[role="menuitem"]:not([disabled])',
   });
 
+  // Auto-focus the first menu item and restore focus on close via Transition callbacks.
+  const focusReturn = createFocusReturn();
+
   // Escape key: document-level listener so it fires regardless of focus.
-  const handleEscKey = (e: KeyboardEvent) => {
-    if (!props.open) return;
-    if (e.key === 'Escape') { e.preventDefault(); emit('close'); }
-  };
-  useOnConnected(() => { document.addEventListener('keydown', handleEscKey); });
-  useOnDisconnected(() => { document.removeEventListener('keydown', handleEscKey); });
+  useEscapeKey(() => props.open, () => emit('close'))();
 
   return html`
     <div class="menu-wrapper">
       <slot name="trigger"></slot>
 
       ${when(props.open, () => html`
-        <div class="scrim" @click="${() => emit('close')}"></div>
-        <div :class="${{ menu: true, [props.anchor]: !!props.anchor }}" role="menu" tabindex="-1" ref="${menuEl}" @keydown="${handleMenuKeyDown}">
+        <div class="scrim" @click="${() => emit('close')}"></div>`)}
+      ${Transition({
+        show: props.open,
+        css: false,
+        onEnter: (_el: HTMLElement, done: () => void) => done(),
+        onLeave: (_el: HTMLElement, done: () => void) => done(),
+        onAfterEnter(el: HTMLElement) {
+          focusReturn.onAfterEnter(el);
+          el.querySelector<HTMLElement>('[role="menuitem"]:not([disabled])')?.focus();
+        },
+        onAfterLeave: focusReturn.onAfterLeave,
+      }, html`
+        <div :class="${{ menu: true, [props.anchor]: !!props.anchor }}" role="menu" tabindex="-1" @keydown="${handleMenuKeyDown}">
           ${each(
             Array.isArray(props.items) ? props.items : [],
             (item: MenuItem) => html`

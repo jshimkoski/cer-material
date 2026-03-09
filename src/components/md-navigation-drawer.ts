@@ -1,6 +1,9 @@
-import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
+import { useEscapeKey } from '../composables/useEscapeKey';
+import { createFocusTrap } from '../composables/useFocusTrap';
+import { useScrollLock } from '../composables/useScrollLock';
 
 interface DrawerItem {
   id?: string;
@@ -21,12 +24,10 @@ component('md-navigation-drawer', () => {
   });
   const emit = useEmit();
 
-  const handleEscKey = (e: KeyboardEvent) => {
-    if (!props.open || props.variant !== 'modal') return;
-    if (e.key === 'Escape') { e.preventDefault(); emit('close'); }
-  };
-  useOnConnected(() => { document.addEventListener('keydown', handleEscKey); });
-  useOnDisconnected(() => { document.removeEventListener('keydown', handleEscKey); });
+  useEscapeKey(() => props.open && props.variant === 'modal', () => emit('close'))();
+  const trap = createFocusTrap();
+  useOnDisconnected(() => trap.cleanup());
+  const scrollLock = useScrollLock();
 
   useStyle(() => css`
     :host { display: contents; }
@@ -197,6 +198,9 @@ component('md-navigation-drawer', () => {
     ${Transition({
       show: props.open,
       name: 'md-drawer',
+      onBeforeEnter: props.variant === 'modal' ? scrollLock.lock : undefined,
+      onAfterEnter: props.variant === 'modal' ? trap.onAfterEnter : undefined,
+      onAfterLeave: props.variant === 'modal' ? () => { trap.onAfterLeave(); scrollLock.unlock(); } : undefined,
       ...(props.variant === 'modal' ? {
         enterFrom: 'drawer-enter-from',
         enterActive: 'drawer-enter-active',

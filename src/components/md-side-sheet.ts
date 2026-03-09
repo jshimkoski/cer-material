@@ -1,6 +1,9 @@
-import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
+import { useEscapeKey } from '../composables/useEscapeKey';
+import { createFocusTrap } from '../composables/useFocusTrap';
+import { useScrollLock } from '../composables/useScrollLock';
 
 component('md-side-sheet', () => {
   const props = useProps({
@@ -10,12 +13,10 @@ component('md-side-sheet', () => {
   });
   const emit = useEmit();
 
-  const handleEscKey = (e: KeyboardEvent) => {
-    if (!props.open || props.variant !== 'modal') return;
-    if (e.key === 'Escape') { e.preventDefault(); emit('close'); }
-  };
-  useOnConnected(() => { document.addEventListener('keydown', handleEscKey); });
-  useOnDisconnected(() => { document.removeEventListener('keydown', handleEscKey); });
+  useEscapeKey(() => props.open && props.variant === 'modal', () => emit('close'))();
+  const trap = createFocusTrap();
+  useOnDisconnected(() => trap.cleanup());
+  const scrollLock = useScrollLock();
 
   useStyle(() => css`
     :host { display: contents; }
@@ -145,6 +146,9 @@ component('md-side-sheet', () => {
     ${Transition({
       show: props.open,
       name: 'md-side-sheet',
+      onBeforeEnter: props.variant === 'modal' ? scrollLock.lock : undefined,
+      onAfterEnter: props.variant === 'modal' ? trap.onAfterEnter : undefined,
+      onAfterLeave: props.variant === 'modal' ? () => { trap.onAfterLeave(); scrollLock.unlock(); } : undefined,
       ...(props.variant === 'modal' ? {
         enterFrom: 'side-sheet-enter-from',
         enterActive: 'side-sheet-enter-active',

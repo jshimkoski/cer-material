@@ -1,5 +1,6 @@
 import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
+import { useListKeyNav } from '../composables/useListKeyNav';
 
 interface Segment {
   id: string;
@@ -15,6 +16,15 @@ component('md-segmented-button', () => {
     multiselect: false,
   });
   const emit = useEmit();
+
+  const handleKeyDown = useListKeyNav({
+    orientation: 'horizontal',
+    itemSelector: 'button:not([disabled])',
+    onNavigate: (item) => {
+      // For single-select (radio), arrow keys both move focus and activate the item.
+      if (!props.multiselect) item.click();
+    },
+  });
 
   const isSelected = (id: string): boolean => {
     if (Array.isArray(props.selected)) return props.selected.includes(id);
@@ -122,7 +132,7 @@ component('md-segmented-button', () => {
   `);
 
   return html`
-    <div class="segmented-btn-group" role="group">
+    <div class="segmented-btn-group" role="group" @keydown="${handleKeyDown}">
       ${each(
         Array.isArray(props.segments) ? props.segments : [],
         (seg: Segment) => html`
