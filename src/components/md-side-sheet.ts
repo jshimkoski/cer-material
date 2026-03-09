@@ -1,5 +1,6 @@
 import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
+import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 
 component('md-side-sheet', () => {
   const props = useProps({
@@ -17,15 +18,13 @@ component('md-side-sheet', () => {
       inset: 0;
       background: rgba(0, 0, 0, 0.32);
       z-index: 700;
+      /* Base = fully visible; opacity: 1 and pointer-events: auto are defaults */
+    }
+    .scrim-enter-from, .scrim-leave-to {
       opacity: 0;
       pointer-events: none;
-      visibility: hidden;
-      transition: opacity 250ms ease-out, visibility 0s linear 250ms;
     }
-    .scrim.open {
-      opacity: 1;
-      pointer-events: auto;
-      visibility: visible;
+    .scrim-enter-active, .scrim-leave-active {
       transition: opacity 250ms ease-out;
     }
 
@@ -41,24 +40,21 @@ component('md-side-sheet', () => {
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      /* Base = fully open; transform: none and pointer-events: auto are defaults */
+    }
+    .side-sheet-enter-from, .side-sheet-leave-to {
       transform: translateX(100%);
       pointer-events: none;
-      transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .side-sheet.open {
-      transform: translateX(0);
-      pointer-events: auto;
+    .side-sheet-enter-active, .side-sheet-leave-active {
       transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
     .standard-side-sheet {
-      display: none;
+      display: flex;
       flex-direction: column;
       overflow: hidden;
       background: var(--md-sys-color-surface-container-low, #F7F2FA);
       height: 100%;
-    }
-    .standard-side-sheet.open {
-      display: flex;
     }
 
     .sheet-header {
@@ -123,34 +119,49 @@ component('md-side-sheet', () => {
     }
   `);
 
-  // Sheet is always in the DOM; .open class drives CSS enter/exit transitions.
+  // Scrim and sheet panel are conditionally mounted via Transition so the DOM
+  // is clean when closed, with animated enter/leave on open/close.
   return html`
-    ${when(props.variant === 'modal', () => html`
+    ${Transition({
+      show: props.open && props.variant === 'modal',
+      name: 'md-scrim',
+      enterFrom: 'scrim-enter-from',
+      enterActive: 'scrim-enter-active',
+      leaveActive: 'scrim-leave-active',
+      leaveTo: 'scrim-leave-to',
+    }, html`
       <div
-        :class="${{ scrim: true, open: props.open }}"
+        class="scrim"
         @click="${() => emit('close')}"
       ></div>
     `)}
-    <div
-      :class="${{
-        'side-sheet': props.variant === 'modal',
-        'standard-side-sheet': props.variant === 'standard',
-        open: props.open,
-      }}"
-      role="complementary"
-      aria-label="${props.headline || 'Side sheet'}"
-    >
-      ${when(!!props.headline, () => html`
-        <div class="sheet-header">
-          <h2 class="sheet-headline">${props.headline}</h2>
-          <button class="close-btn" aria-label="Close side sheet" @click="${() => emit('close')}">
-            <span class="close-icon">close</span>
-          </button>
+    ${Transition({
+      show: props.open,
+      name: 'md-side-sheet',
+      ...(props.variant === 'modal' ? {
+        enterFrom: 'side-sheet-enter-from',
+        enterActive: 'side-sheet-enter-active',
+        leaveActive: 'side-sheet-leave-active',
+        leaveTo: 'side-sheet-leave-to',
+      } : {}),
+    }, html`
+      <div
+        class="${props.variant === 'modal' ? 'side-sheet' : 'standard-side-sheet'}"
+        role="complementary"
+        aria-label="${props.headline || 'Side sheet'}"
+      >
+        ${when(!!props.headline, () => html`
+          <div class="sheet-header">
+            <h2 class="sheet-headline">${props.headline}</h2>
+            <button class="close-btn" aria-label="Close side sheet" @click="${() => emit('close')}">
+              <span class="close-icon">close</span>
+            </button>
+          </div>
+        `)}
+        <div class="sheet-content">
+          <slot></slot>
         </div>
-      `)}
-      <div class="sheet-content">
-        <slot></slot>
       </div>
-    </div>
+    `)}
   `;
 });

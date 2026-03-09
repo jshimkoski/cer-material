@@ -1,5 +1,6 @@
 import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
+import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 
 interface DrawerItem {
   id?: string;
@@ -29,17 +30,13 @@ component('md-navigation-drawer', () => {
       inset: 0;
       background: rgba(0, 0, 0, 0.32);
       z-index: 600;
+      /* Base = fully visible; opacity: 1 and pointer-events: auto are defaults */
+    }
+    .scrim-enter-from, .scrim-leave-to {
       opacity: 0;
       pointer-events: none;
-      visibility: hidden;
-      /* Closing: keep visible until transition fully completes, then hide. */
-      transition: opacity 250ms ease-out, visibility 0s linear 250ms;
     }
-    .scrim.open {
-      opacity: 1;
-      pointer-events: auto;
-      visibility: visible;
-      /* Opening: no delay — element must be visible from frame 1. */
+    .scrim-enter-active, .scrim-leave-active {
       transition: opacity 250ms ease-out;
     }
 
@@ -56,29 +53,23 @@ component('md-navigation-drawer', () => {
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      /* Closed: slide fully off-screen. The transform hides it visually;
-         pointer-events:none prevents interaction without visibility tricks
-         that starve the compositor of a promoted layer on first paint. */
+      /* Base = fully open; transform: none and pointer-events: auto are defaults */
+    }
+    .drawer-enter-from, .drawer-leave-to {
       transform: translateX(-100%);
       pointer-events: none;
-      transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .drawer.open {
-      transform: translateX(0);
-      pointer-events: auto;
+    .drawer-enter-active, .drawer-leave-active {
       transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ── Standard drawer (in-layout, no overlay) ─────────────────────────── */
     .standard-drawer {
-      display: none;
+      display: flex;
       flex-direction: column;
       overflow: hidden;
       background: var(--md-sys-color-surface, #FFFBFE);
       height: 100%;
-    }
-    .standard-drawer.open {
-      display: flex;
     }
 
     /* ── Inner content ──────────────────────────────────────────────────── */
@@ -180,53 +171,67 @@ component('md-navigation-drawer', () => {
     }
   `);
 
-  // Drawer is always rendered; the .open class drives CSS enter/exit transitions
-  // so both opening and closing are animated (fixes "strange toggle" behaviour).
+  // Scrim and drawer panel are conditionally mounted via Transition so the DOM
+  // is clean when closed, with animated enter/leave on open/close.
   return html`
-    ${when(props.variant === 'modal', () => html`
+    ${Transition({
+      show: props.open && props.variant === 'modal',
+      name: 'md-scrim',
+      enterFrom: 'scrim-enter-from',
+      enterActive: 'scrim-enter-active',
+      leaveActive: 'scrim-leave-active',
+      leaveTo: 'scrim-leave-to',
+    }, html`
       <div
-        :class="${{ scrim: true, open: props.open }}"
+        class="scrim"
         @click="${() => emit('close')}"
       ></div>
     `)}
-    <div
-      :class="${{
-        drawer: props.variant === 'modal',
-        'standard-drawer': props.variant === 'standard',
-        open: props.open,
-      }}"
-      role="navigation"
-      aria-label="Navigation drawer"
-    >
-      ${when(!!props.headline, () => html`
-        <div class="drawer-header">
-          <span class="drawer-headline">${props.headline}</span>
+    ${Transition({
+      show: props.open,
+      name: 'md-drawer',
+      ...(props.variant === 'modal' ? {
+        enterFrom: 'drawer-enter-from',
+        enterActive: 'drawer-enter-active',
+        leaveActive: 'drawer-leave-active',
+        leaveTo: 'drawer-leave-to',
+      } : {}),
+    }, html`
+      <div
+        class="${props.variant === 'modal' ? 'drawer' : 'standard-drawer'}"
+        role="navigation"
+        aria-label="Navigation drawer"
+      >
+        ${when(!!props.headline, () => html`
+          <div class="drawer-header">
+            <span class="drawer-headline">${props.headline}</span>
+          </div>
+        `)}
+        <div class="drawer-content">
+          ${each(
+            Array.isArray(props.items) ? props.items : [],
+            (item: DrawerItem) =>
+              item.divider
+                ? html`<div class="divider"></div>`
+                : item.section
+                ? html`<div class="section-label">${item.section}</div>`
+                : html`
+                  <button
+                    key="${item.id}"
+                    :class="${{ 'drawer-item': true, active: props.active === item.id }}"
+                    :disabled="${item.disabled || false}"
+                    aria-current="${props.active === item.id ? 'page' : 'false'}"
+                    @click="${() => { if (item.id) { emit('change', item.id); if (props.variant === 'modal') emit('close'); } }}"
+                  >
+                    ${when(!!item.icon, () => html`<span class="drawer-icon">${item.icon}</span>`)}
+                    <span class="drawer-label">${item.label}</span>
+                  </button>
+                `,
+          )}
+          <slot></slot>
         </div>
-      `)}
-      <div class="drawer-content">
-        ${each(
-          Array.isArray(props.items) ? props.items : [],
-          (item: DrawerItem) =>
-            item.divider
-              ? html`<div class="divider"></div>`
-              : item.section
-              ? html`<div class="section-label">${item.section}</div>`
-              : html`
-                <button
-                  key="${item.id}"
-                  :class="${{ 'drawer-item': true, active: props.active === item.id }}"
-                  :disabled="${item.disabled || false}"
-                  aria-current="${props.active === item.id ? 'page' : 'false'}"
-                  @click="${() => { if (item.id) { emit('change', item.id); if (props.variant === 'modal') emit('close'); } }}"
-                >
-                  ${when(!!item.icon, () => html`<span class="drawer-icon">${item.icon}</span>`)}
-                  <span class="drawer-label">${item.label}</span>
-                </button>
-              `,
-        )}
-        <slot></slot>
       </div>
-    </div>
+    `)}
   `;
 });
 

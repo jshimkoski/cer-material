@@ -6,12 +6,14 @@ import {
   useStyle,
 } from '@jasonshimmy/custom-elements-runtime';
 
+// Module-level — not inside the component function, so never reset on re-renders.
+let snackbarTimer: ReturnType<typeof setTimeout> | null = null;
+
 component('md-showcase', () => {
   // ── State ──────────────────────────────────────────────────────────────
   const dialogOpen     = ref(false);
   const snackbarOpen   = ref(false);
-  const snackbarMsg    = ref('');
-  const menuOpen       = ref(false);
+  const snackbarMsg    = ref('');  const menuOpen       = ref(false);
   const filterSelected = ref(false);
   const switchSelected = ref(false);
   const checkState     = ref(false);
@@ -19,10 +21,17 @@ component('md-showcase', () => {
   const sliderValue    = ref(40);
   const activeNav      = ref('home');
 
-  const showSnackbar = (msg: string) => {
+  const closeSnackbar = () => {
+    if (snackbarTimer !== null) { clearTimeout(snackbarTimer); snackbarTimer = null; }
+    snackbarOpen.value = false;
+  };
+
+  const showSnackbar = (msg: string, duration = 4000) => {
+    // Cancel any running timer first.
+    if (snackbarTimer !== null) { clearTimeout(snackbarTimer); snackbarTimer = null; }
     snackbarMsg.value = msg;
     snackbarOpen.value = true;
-    setTimeout(() => { snackbarOpen.value = false; }, 4000);
+    snackbarTimer = setTimeout(() => { snackbarTimer = null; snackbarOpen.value = false; }, duration);
   };
 
   const navItems = [
@@ -786,15 +795,15 @@ component('md-showcase', () => {
 
           <div class="row">
             <md-button variant="filled" label="Show Snackbar" @click="${() => showSnackbar('This is a snackbar message!')}"></md-button>
-            <md-button variant="tonal" label="With Action" @click="${() => { snackbarMsg.value = 'Item deleted'; snackbarOpen.value = true; setTimeout(() => { snackbarOpen.value = false; }, 4000); }}"></md-button>
+            <md-button variant="tonal" label="With Action" @click="${() => showSnackbar('Item deleted')}"></md-button>
           </div>
 
           <md-snackbar
             :open="${snackbarOpen.value}"
             :message="${snackbarMsg.value}"
             action-label="Undo"
-            @action="${() => { snackbarOpen.value = false; showSnackbar('Undone!'); }}"
-            @close="${() => { snackbarOpen.value = false; }}"
+            @action="${() => showSnackbar('Undone!')}"
+            @close="${closeSnackbar}"
           ></md-snackbar>
         </div>
         <div class="section-divider"></div>

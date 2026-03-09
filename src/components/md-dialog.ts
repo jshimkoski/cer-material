@@ -1,5 +1,6 @@
 import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
+import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 
 component('md-dialog', () => {
   const props = useProps({
@@ -20,17 +21,40 @@ component('md-dialog', () => {
       display: flex;
       align-items: center;
       justify-content: center;
+      /* Base = fully visible; opacity: 1 and pointer-events: auto are defaults */
+    }
+
+    /* Scrim enters: fade in; dialog enters: scale up */
+    .scrim-enter-from {
+      opacity: 0;
+    }
+    .scrim-enter-from .dialog {
+      transform: scale(0.92);
+      opacity: 0;
+    }
+    .scrim-enter-active {
+      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .scrim-enter-active .dialog {
+      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Scrim leaves: fade out; dialog leaves: scale down */
+    .scrim-leave-to {
       opacity: 0;
       pointer-events: none;
-      visibility: hidden;
-      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
-                  visibility 0s linear 200ms;
     }
-    .scrim.open {
-      opacity: 1;
-      pointer-events: auto;
-      visibility: visible;
+    .scrim-leave-to .dialog {
+      transform: scale(0.92);
+      opacity: 0;
+    }
+    .scrim-leave-active {
       transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .scrim-leave-active .dialog {
+      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .dialog {
@@ -44,18 +68,8 @@ component('md-dialog', () => {
       flex-direction: column;
       overflow: hidden;
       box-shadow: var(--md-sys-elevation-3);
-      transform: scale(0.92);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
-                  transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      /* Base = fully open; transform: none and opacity: 1 are defaults */
     }
-    .scrim.open .dialog {
-      transform: scale(1);
-      opacity: 1;
-      pointer-events: auto;
-    }
-
     .dialog-header {
       padding: 24px 24px 0;
       text-align: center;
@@ -96,24 +110,35 @@ component('md-dialog', () => {
     }
   `);
 
-  // Dialog is always in the DOM; .open class drives CSS enter/exit transitions.
+// Scrim + dialog are conditionally mounted via Transition. The scrim fades
+  // and the inner dialog scales via CSS descendant selectors on the scrim's
+  // transition state classes.
   return html`
-    <div
-      :class="${{ scrim: true, open: props.open }}"
-      @click="${(e: Event) => { if (e.target === e.currentTarget) emit('close'); }}"
-    >
-      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-headline">
-        <div class="dialog-header">
-          ${when(!!props.icon, () => html`<span class="dialog-icon">${props.icon}</span>`)}
-          ${when(!!props.headline, () => html`<h2 class="dialog-headline" id="dialog-headline">${props.headline}</h2>`)}
-        </div>
-        <div class="dialog-content">
-          <slot></slot>
-        </div>
-        <div class="dialog-actions">
-          <slot name="actions"></slot>
+    ${Transition({
+      show: props.open,
+      name: 'md-dialog-scrim',
+      enterFrom: 'scrim-enter-from',
+      enterActive: 'scrim-enter-active',
+      leaveActive: 'scrim-leave-active',
+      leaveTo: 'scrim-leave-to',
+    }, html`
+      <div
+        class="scrim"
+        @click="${(e: Event) => { if (e.target === e.currentTarget) emit('close'); }}"
+      >
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-headline">
+          <div class="dialog-header">
+            ${when(!!props.icon, () => html`<span class="dialog-icon">${props.icon}</span>`)}
+            ${when(!!props.headline, () => html`<h2 class="dialog-headline" id="dialog-headline">${props.headline}</h2>`)}
+          </div>
+          <div class="dialog-content">
+            <slot></slot>
+          </div>
+          <div class="dialog-actions">
+            <slot name="actions"></slot>
+          </div>
         </div>
       </div>
-    </div>
+    `)}
   `;
 });
