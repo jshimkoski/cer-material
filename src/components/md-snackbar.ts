@@ -31,7 +31,7 @@ component('md-snackbar', () => {
       opacity: 0;
       pointer-events: none;
       visibility: hidden;
-      z-index: 1100;
+      z-index: 700;
       font-family: var(--md-sys-typescale-font, 'Roboto', sans-serif);
       font-size: 14px;
       transition:

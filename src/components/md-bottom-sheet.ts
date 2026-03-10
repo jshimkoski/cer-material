@@ -114,7 +114,7 @@ component('md-bottom-sheet', () => {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.32);
-      z-index: 700;
+      z-index: 500;
     }
     .scrim-enter-from, .scrim-leave-to {
       opacity: 0;
@@ -133,7 +133,7 @@ component('md-bottom-sheet', () => {
       max-height: 90vh;
       background: var(--md-sys-color-surface-container-low, #F7F2FA);
       border-radius: 28px 28px 0 0;
-      z-index: 701;
+      z-index: 501;
       display: flex;
       flex-direction: column;
       overflow: hidden;

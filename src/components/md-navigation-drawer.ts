@@ -37,7 +37,7 @@ component('md-navigation-drawer', () => {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.32);
-      z-index: 600;
+      z-index: 400;
       /* Base = fully visible; opacity: 1 and pointer-events: auto are defaults */
     }
     .scrim-enter-from, .scrim-leave-to {
@@ -57,7 +57,7 @@ component('md-navigation-drawer', () => {
       width: 360px;
       max-width: 85vw;
       background: var(--md-sys-color-surface, #FFFBFE);
-      z-index: 601;
+      z-index: 401;
       display: flex;
       flex-direction: column;
       overflow: hidden;

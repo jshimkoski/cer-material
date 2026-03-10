@@ -36,7 +36,7 @@ component('md-tooltip', () => {
       bottom: calc(100% + 8px);
       left: 50%;
       transform: translateX(-50%);
-      z-index: 2000;
+      z-index: 800;
       animation: tip-in 100ms ease-out;
     }
     @keyframes tip-in {

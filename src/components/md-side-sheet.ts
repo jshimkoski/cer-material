@@ -28,7 +28,7 @@ component('md-side-sheet', () => {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.32);
-      z-index: 700;
+      z-index: 500;
     }
     .scrim-enter-from, .scrim-leave-to {
       opacity: 0;
@@ -48,7 +48,7 @@ component('md-side-sheet', () => {
       max-width: 85vw;
       background: var(--md-sys-color-surface-container-low, #F7F2FA);
       border-radius: 16px 0 0 16px;
-      z-index: 701;
+      z-index: 501;
       display: flex;
       flex-direction: column;
       overflow: hidden;

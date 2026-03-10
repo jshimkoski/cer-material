@@ -263,6 +263,7 @@ component('md-showcase', () => {
       border-radius: 12px;
       overflow: hidden;
       max-width: 560px;
+      isolation: isolate;
     }
 
     /* ── App bar preview ── */
@@ -272,6 +273,7 @@ component('md-showcase', () => {
       overflow: hidden;
       max-width: 560px;
       margin-bottom: 16px;
+      isolation: isolate;
     }
 
     /* ── Selection row ── */
@@ -317,6 +319,7 @@ component('md-showcase', () => {
       height: 320px;
       width: 80px;
       display: flex;
+      isolation: isolate;
     }
 
     /* ── Search demo ── */
@@ -345,6 +348,7 @@ component('md-showcase', () => {
       border-radius: 12px;
       overflow: hidden;
       margin-bottom: 16px;
+      isolation: isolate;
     }
     .drawer-preview-body {
       flex: 1;
@@ -367,6 +371,7 @@ component('md-showcase', () => {
       border-radius: 12px;
       overflow: hidden;
       margin-bottom: 16px;
+      isolation: isolate;
     }
     .side-sheet-preview-body {
       flex: 1;
