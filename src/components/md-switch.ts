@@ -110,6 +110,7 @@ component('md-switch', () => {
     }
     .switch:hover .thumb::before { opacity: 0.08; }
     .switch:focus-within .thumb::before { opacity: 0.12; }
+    .switch:active .thumb::before { opacity: 0.12; }
 
     .thumb-icon {
       font-family: 'Material Symbols Outlined';

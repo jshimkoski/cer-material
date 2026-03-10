@@ -63,7 +63,7 @@ component('md-navigation-bar', () => {
     .nav-item:active::before { opacity: 0.12; }
 
     .nav-item.active { color: var(--md-sys-color-on-secondary-container, #1D192B); }
-    .nav-item.active::before { background: var(--md-sys-color-primary, #6750A4); }
+    .nav-item.active::before { background: var(--md-sys-color-on-secondary-container, #1D192B); }
 
     .indicator {
       display: flex;
@@ -108,7 +108,7 @@ component('md-navigation-bar', () => {
       background: var(--md-sys-color-error, #B3261E);
       color: var(--md-sys-color-on-error, #fff);
       border-radius: 8px;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       display: inline-flex;
       align-items: center;
@@ -132,6 +132,7 @@ component('md-navigation-bar', () => {
         Array.isArray(props.items) ? props.items : [],
         (item: NavItem) => html`
           <button
+            type="button"
             key="${item.id}"
             :class="${{ 'nav-item': true, active: props.active === item.id }}"
             aria-label="${item.label}"

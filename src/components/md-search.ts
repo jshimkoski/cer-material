@@ -146,7 +146,7 @@ component('md-search', () => {
         @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter') emit('search', query.value); }}"
       >
       ${when(!!query.value, () => html`
-        <button class="clear-btn" aria-label="Clear search" @click="${handleClear}">
+        <button type="button" class="clear-btn" aria-label="Clear search" @click="${handleClear}">
           <span class="clear-icon" aria-hidden="true">close</span>
         </button>
       `)}

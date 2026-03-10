@@ -266,6 +266,7 @@ component('md-fab-menu', () => {
         <div class="items-list" role="menu">
           ${each(props.items, (item) => html`
             <button
+              type="button"
               class="menu-item"
               role="menuitem"
               aria-label="${item.label}"
@@ -279,6 +280,7 @@ component('md-fab-menu', () => {
         </div>
       `)}
       <button
+        type="button"
         :class="${{ 'fab-trigger': true, open: localOpen.value }}"
         aria-label="${props.ariaLabel}"
         aria-expanded="${localOpen.value}"

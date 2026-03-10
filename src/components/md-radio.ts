@@ -49,6 +49,7 @@ component('md-radio', () => {
     }
     label:hover .radio-container::before  { opacity: 0.08; }
     label:focus-within .radio-container::before { opacity: 0.12; }
+    label:active .radio-container::before { opacity: 0.12; }
 
     input[type="radio"] {
       position: absolute;

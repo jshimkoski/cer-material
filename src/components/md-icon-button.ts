@@ -136,6 +136,7 @@ component('md-icon-button', () => {
       }}"
       :disabled="${props.disabled}"
       :bind="${{ 'aria-label': props.ariaLabel || props.icon, 'aria-pressed': props.toggle ? String(props.selected) : null }}"
+      type="button"
       @click="${() => {
         if (props.toggle) emit('change', !props.selected);
         emit('click');

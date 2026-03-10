@@ -110,9 +110,9 @@ component('md-chip', () => {
       opacity: 0;
       transition: opacity 200ms;
     }
-    .close-icon:hover::before  { opacity: 0.16; }
-    .close-icon:focus::before  { opacity: 0.24; }
-    .close-icon:active::before { opacity: 0.24; }
+    .close-icon:hover::before  { opacity: 0.08; }
+    .close-icon:focus::before  { opacity: 0.12; }
+    .close-icon:active::before { opacity: 0.12; }
   `);
 
   const isElevated = props.variant === 'assist' || props.variant === 'suggestion';

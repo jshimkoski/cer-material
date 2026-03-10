@@ -142,7 +142,7 @@ component('md-tooltip', () => {
           `)}
           ${when(props.variant === 'rich' && !!props.action, () => html`
             <div class="tip-actions">
-              <button class="tip-action-btn" @click="${() => emit('action')}">${props.action}</button>
+              <button type="button" class="tip-action-btn" @click="${() => emit('action')}">${props.action}</button>
             </div>
           `)}
         </div>

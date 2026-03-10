@@ -135,11 +135,11 @@ component('md-snackbar', () => {
     >
       <span class="message">${props.message}</span>
       ${when(!!props.actionLabel, () => html`
-        <button class="action" @click="${() => emit('action')}">
+        <button type="button" class="action" @click="${() => emit('action')}">
           ${props.actionLabel}
         </button>
       `)}
-      <button class="close-btn" aria-label="Dismiss" @click="${() => emit('close')}">
+      <button type="button" class="close-btn" aria-label="Dismiss" @click="${() => emit('close')}">
         <span class="close-icon" aria-hidden="true">close</span>
       </button>
     </div>

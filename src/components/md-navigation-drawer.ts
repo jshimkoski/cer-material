@@ -141,6 +141,7 @@ component('md-navigation-drawer', () => {
     }
     .drawer-item:hover::before { opacity: 0.08; }
     .drawer-item:focus::before { opacity: 0.12; }
+    .drawer-item:active::before { opacity: 0.12; }
     .drawer-item:disabled { opacity: 0.38; pointer-events: none; }
 
     .drawer-item.active {

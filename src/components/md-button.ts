@@ -6,6 +6,7 @@ component('md-button', () => {
     variant: 'filled' as 'filled' | 'outlined' | 'text' | 'elevated' | 'tonal',
     label: '',
     icon: '',
+    type: 'button' as 'button' | 'submit' | 'reset',
     disabled: false,
   });
   useStyle(() => css`
@@ -96,8 +97,9 @@ component('md-button', () => {
     .tonal:hover   { box-shadow: var(--md-sys-elevation-1); }
     .tonal:disabled { background: rgba(28,27,31,.12); color: rgba(28,27,31,.38); box-shadow: none; }
 
-    /* icon with text: reduce left padding */
+    /* icon with text: reduce left padding for non-text variants; text variant swaps l/r */
     .has-icon { padding-left: 16px; }
+    .text.has-icon { padding-left: 12px; padding-right: 16px; }
 
     .icon {
       font-family: 'Material Symbols Outlined';
@@ -115,6 +117,7 @@ component('md-button', () => {
 
   return html`
     <button
+      :type="${props.type}"
       :class="${{
         [props.variant]: true,
         'has-icon': !!props.icon,

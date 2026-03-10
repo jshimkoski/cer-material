@@ -64,6 +64,8 @@ component('md-tabs', () => {
       flex-shrink: 0;
       transition: color 200ms;
     }
+    /* M3: tabs with both icon and label use 72dp container height */
+    .tab.has-icon { height: 72px; }
     .tab::before {
       content: '';
       position: absolute;
@@ -116,7 +118,7 @@ component('md-tabs', () => {
       background: var(--md-sys-color-error, #B3261E);
       color: var(--md-sys-color-on-error, #fff);
       border-radius: 8px;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -148,9 +150,10 @@ component('md-tabs', () => {
           safeTabs(),
           (tab: Tab) => html`
             <button
+              type="button"
               key="${tab.id}"
               id="tab-${tab.id}"
-              :class="${{ tab: true, active: active.value === tab.id }}"
+              :class="${{ tab: true, active: active.value === tab.id, 'has-icon': !!tab.icon }}"
               role="tab"
               aria-selected="${String(active.value === tab.id)}"
               aria-controls="tabpanel"

@@ -4,7 +4,7 @@ import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 component('md-fab', () => {
   const props = useProps({
     variant: 'primary' as 'primary' | 'secondary' | 'tertiary' | 'surface',
-    size: 'regular' as 'small' | 'regular' | 'large',
+    size: 'regular' as 'small' | 'regular' | 'medium' | 'large',
     icon: 'add',
     label: '',
     lowered: false,
@@ -50,8 +50,9 @@ component('md-fab', () => {
     /* ── Sizes ── */
     .small   { width: 40px; height: 40px; border-radius: 12px; }
     .regular { width: 56px; height: 56px; border-radius: 16px; }
+    .medium  { width: 80px; height: 80px; border-radius: 20px; }
     .large   { width: 96px; height: 96px; border-radius: 28px; }
-    .extended { height: 56px; border-radius: 16px; padding: 0 20px; }
+    .extended { height: 56px; border-radius: 16px; padding: 0 20px 0 16px; }
 
     /* ── Color variants ── */
     .primary {
@@ -99,6 +100,7 @@ component('md-fab', () => {
     }
     .small   .icon { font-size: 24px; }
     .regular .icon { font-size: 24px; }
+    .medium  .icon { font-size: 28px; }
     .large   .icon { font-size: 36px; }
     .extended .icon { font-size: 24px; }
 
@@ -116,6 +118,7 @@ component('md-fab', () => {
         lowered: props.lowered,
       }}"
       :bind="${{ 'aria-label': props.ariaLabel || props.label || props.icon }}"
+      type="button"
       @click="${() => emit('click')}"
     >
       <span class="icon" aria-hidden="true">${props.icon}</span>

@@ -49,6 +49,7 @@ component('md-checkbox', () => {
     }
     label:hover .checkbox-container::before  { opacity: 0.08; }
     label:focus-within .checkbox-container::before { opacity: 0.12; }
+    label:active .checkbox-container::before { opacity: 0.12; }
 
     input[type="checkbox"] {
       position: absolute;

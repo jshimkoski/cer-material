@@ -180,7 +180,7 @@ component('md-navigation-rail', () => {
       background: var(--md-sys-color-error, #B3261E);
       color: var(--md-sys-color-on-error, #fff);
       border-radius: 8px;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -212,12 +212,12 @@ component('md-navigation-rail', () => {
   return html`
       <nav class="nav-rail" aria-label="Navigation rail" @keydown="${handleNavKeyDown}">
       ${when(props.menuIcon, () => html`
-        <button class="menu-btn" aria-label="Open navigation menu" @click="${() => emit('menu-click')}">
+        <button type="button" class="menu-btn" aria-label="Open navigation menu" @click="${() => emit('menu-click')}">
           <span class="mat-icon" aria-hidden="true">menu</span>
         </button>
       `)}
       ${when(props.fab, () => html`
-        <button class="fab" aria-label="Create" @click="${() => emit('fab-click')}">
+        <button type="button" class="fab" aria-label="Create" @click="${() => emit('fab-click')}">
           <span class="mat-icon" aria-hidden="true">${props.fabIcon}</span>
         </button>
       `)}

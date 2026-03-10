@@ -1,7 +1,10 @@
 import { component, html, css, ref, watch, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
+let _fieldIdCounter = 0;
+
 component('md-text-field', () => {
+  const fieldId = `md-field-${++_fieldIdCounter}`;
   const props = useProps({
     variant: 'filled' as 'filled' | 'outlined',
     label: 'Label',
@@ -211,12 +214,12 @@ component('md-text-field', () => {
         ${when(props.variant === 'filled', () => html`<div class="filled-border"></div>`)}
         ${when(props.variant === 'outlined', () => html`<div class="outlined-border"></div>`)}
 
-        <label for="field-input">${props.label}${props.required ? html`<span aria-hidden="true"> *</span>` : ''}</label>
+        <label :for="${fieldId}">${props.label}${props.required ? html`<span aria-hidden="true"> *</span>` : ''}</label>
 
         <div class="input-row">
           ${when(!!props.leadingIcon, () => html`<span class="field-icon leading-icon" aria-hidden="true">${props.leadingIcon}</span>`)}
           <input
-            id="field-input"
+            :id="${fieldId}"
             :type="${props.type}"
             :value="${internalValue.value}"
             :disabled="${props.disabled}"
@@ -226,7 +229,7 @@ component('md-text-field', () => {
             :bind="${{
               'aria-required': props.required ? 'true' : null,
               'aria-invalid': props.error ? 'true' : null,
-              'aria-describedby': (props.error && props.errorText) || props.supportingText ? 'field-supporting' : null,
+              'aria-describedby': (props.error && props.errorText) || props.supportingText ? `${fieldId}-supporting` : null,
             }}"
             @focus="${() => { focused.value = true; }}"
             @blur="${() => { focused.value = false; }}"
@@ -240,8 +243,8 @@ component('md-text-field', () => {
         </div>
       </div>
 
-      ${when(!!(showError && props.errorText), () => html`<div id="field-supporting" class="support error-text">${props.errorText}</div>`)}
-      ${when(!!((!showError) && props.supportingText), () => html`<div id="field-supporting" class="support">${props.supportingText}</div>`)}
+      ${when(!!(showError && props.errorText), () => html`<div :id="${fieldId}-supporting" class="support error-text">${props.errorText}</div>`)}
+      ${when(!!((!showError) && props.supportingText), () => html`<div :id="${fieldId}-supporting" class="support">${props.supportingText}</div>`)}
     </div>
   `;
 });

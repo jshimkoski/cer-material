@@ -18,7 +18,7 @@ component('md-progress', () => {
       width: 100%;
       height: 4px;
       border-radius: 2px;
-      background: var(--md-sys-color-surface-container-high, #ECE6F0);
+      background: var(--md-sys-color-secondary-container, #E8DEF8);
       overflow: hidden;
       position: relative;
     }
