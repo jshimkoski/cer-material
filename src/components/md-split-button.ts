@@ -231,7 +231,7 @@ component('md-split-button', () => {
     }
     .menu-item:hover::before  { opacity: 0.08; }
     .menu-item:focus::before  { opacity: 0.12; }
-    .menu-item:active::before { opacity: 0.16; }
+    .menu-item:active::before { opacity: 0.12; }
     .menu-item:focus-visible  { outline: 2px solid var(--md-sys-color-primary,#6750A4); outline-offset: -2px; }
     .menu-item:disabled { color: rgba(28,27,31,.38); cursor: not-allowed; pointer-events: none; }
     .menu-item .btn-icon { color: var(--md-sys-color-on-surface-variant,#49454F); }

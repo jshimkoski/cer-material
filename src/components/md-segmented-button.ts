@@ -91,7 +91,7 @@ component('md-segmented-button', () => {
     }
     .segment:hover::before  { opacity: 0.08; }
     .segment:focus::before  { opacity: 0.12; }
-    .segment:active::before { opacity: 0.16; }
+    .segment:active::before { opacity: 0.12; }
 
     .segment.selected {
       background: var(--md-sys-color-secondary-container, #E8DEF8);

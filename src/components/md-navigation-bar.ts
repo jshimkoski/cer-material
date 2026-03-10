@@ -60,7 +60,7 @@ component('md-navigation-bar', () => {
     }
     .nav-item:hover::before  { opacity: 0.08; }
     .nav-item:focus::before  { opacity: 0.12; }
-    .nav-item:active::before { opacity: 0.04; }
+    .nav-item:active::before { opacity: 0.12; }
 
     .nav-item.active { color: var(--md-sys-color-on-secondary-container, #1D192B); }
     .nav-item.active::before { background: var(--md-sys-color-primary, #6750A4); }

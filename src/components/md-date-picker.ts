@@ -175,7 +175,10 @@ component('md-date-picker', () => {
   watch(() => props.value, (v) => { pendingValue.value = v; });
   watch(() => props.open, (open) => { if (open) pendingValue.value = props.value; });
 
-  // typed input (docked mode has a text field) — reserved for future use
+  // ── docked mode open state ──────────────────────────────────────────
+  const dockedOpen = ref(props.open && props.variant === 'docked');
+  watch(() => props.open, v => { if (props.variant === 'docked') dockedOpen.value = v; });
+  const toggleDocked = () => { dockedOpen.value = !dockedOpen.value; };
 
   // ── computed helpers ──────────────────────────────────────────────────
   const selectedDate  = computed(() =>
@@ -225,6 +228,7 @@ component('md-date-picker', () => {
       pendingValue.value = iso;
     } else {
       emit('change', iso);
+      dockedOpen.value = false;
     }
   };
 
@@ -235,7 +239,10 @@ component('md-date-picker', () => {
 
   // ── modal focus/scroll ────────────────────────────────────────────────
   const isModal = computed(() => props.variant === 'dialog');
-  useEscapeKey(() => props.open && isModal.value, () => emit('close'))();
+  useEscapeKey(
+    () => (props.open && isModal.value) || dockedOpen.value,
+    () => { dockedOpen.value = false; emit('close'); }
+  )();
   const trap = createFocusTrap();
   useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
@@ -319,6 +326,18 @@ component('md-date-picker', () => {
       align-items: center;
       gap: 4px;
       cursor: pointer;
+      border: none;
+      background: transparent;
+      padding: 4px 8px;
+      border-radius: 8px;
+      outline: none;
+    }
+    .cal-header-month:hover {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface, #1C1B1F) 8%, transparent);
+    }
+    .cal-header-month:focus-visible {
+      outline: 2px solid var(--md-sys-color-primary, #6750A4);
+      outline-offset: 2px;
     }
     .cal-header-month-label {
       font-family: var(--md-sys-typescale-font,'Roboto',sans-serif);
@@ -337,6 +356,13 @@ component('md-date-picker', () => {
     .cal-header-nav {
       display: flex;
       gap: 4px;
+    }
+    .cal-header-nav.nav-hidden { visibility: hidden; pointer-events: none; }
+
+    /* ── Fixed-height body for consistent layout ── */
+    .cal-body {
+      height: 304px;
+      overflow-y: auto;
     }
 
     /* ── Weekday labels ── */
@@ -417,8 +443,6 @@ component('md-date-picker', () => {
     /* ── Year list ── */
     .year-list {
       padding: 8px 12px;
-      max-height: 280px;
-      overflow-y: auto;
       display: flex;
       flex-wrap: wrap;
       gap: 4px;
@@ -512,6 +536,57 @@ component('md-date-picker', () => {
       left: 0;
       z-index: 100;
     }
+
+    /* ── Docked input field ── */
+    .docked-field {
+      display: flex;
+      align-items: center;
+      height: 56px;
+      border-radius: 4px;
+      border: 1px solid var(--md-sys-color-outline, #79747E);
+      padding: 0 12px;
+      cursor: pointer;
+      background: transparent;
+      position: relative;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .docked-field:hover { border-color: var(--md-sys-color-on-surface, #1C1B1F); }
+    .docked-field:focus-within { border-color: var(--md-sys-color-primary, #6750A4); border-width: 2px; padding: 0 11px; }
+    .docked-field-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: var(--md-sys-typescale-font, 'Roboto', sans-serif);
+      font-size: 16px;
+      color: var(--md-sys-color-on-surface, #1C1B1F);
+      cursor: pointer;
+    }
+    .docked-field-input::placeholder {
+      color: var(--md-sys-color-on-surface-variant, #49454F);
+    }
+    .docked-field-icon {
+      font-family: 'Material Symbols Outlined';
+      font-size: 24px;
+      font-weight: normal;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      color: var(--md-sys-color-on-surface-variant, #49454F);
+      margin-left: 8px;
+    }
+    .docked-field-label {
+      position: absolute;
+      left: 12px;
+      top: -8px;
+      background: var(--md-sys-color-surface, #FFFBFE);
+      padding: 0 4px;
+      font-family: var(--md-sys-typescale-font, 'Roboto', sans-serif);
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface-variant, #49454F);
+    }
+    .docked-field:focus-within .docked-field-label {
+      color: var(--md-sys-color-primary, #6750A4);
+    }
   `);
 
   // ── headline display ──────────────────────────────────────────────────
@@ -529,6 +604,7 @@ component('md-date-picker', () => {
   const renderCalendar = () => html`
     <div class="cal-header">
       <button
+        type="button"
         class="cal-header-month"
         @click="${() => { view.value = view.value === 'year' ? 'day' : 'year'; }}"
         aria-label="Switch to year view"
@@ -539,17 +615,20 @@ component('md-date-picker', () => {
           ${view.value === 'year' ? 'arrow_drop_up' : 'arrow_drop_down'}
         </span>
       </button>
-      ${when(view.value === 'day', () => html`
-        <div class="cal-header-nav">
-          <button class="nav-btn" @click="${prevMonth}" aria-label="Previous month">
-            <span class="nav-btn-icon" aria-hidden="true">chevron_left</span>
-          </button>
-          <button class="nav-btn" @click="${nextMonth}" aria-label="Next month">
-            <span class="nav-btn-icon" aria-hidden="true">chevron_right</span>
-          </button>
-        </div>
-      `)}
+      <div :class="${{ 'cal-header-nav': true, 'nav-hidden': view.value !== 'day' }}">
+        <button type="button" class="nav-btn" aria-label="Previous month"
+          @click="${(e: Event) => { e.stopPropagation(); if (viewMonth.value === 0) { viewMonth.value = 11; viewYear.value--; } else { viewMonth.value--; } }}"
+        >
+          <span class="nav-btn-icon" aria-hidden="true">chevron_left</span>
+        </button>
+        <button type="button" class="nav-btn" aria-label="Next month"
+          @click="${(e: Event) => { e.stopPropagation(); if (viewMonth.value === 11) { viewMonth.value = 0; viewYear.value++; } else { viewMonth.value++; } }}"
+        >
+          <span class="nav-btn-icon" aria-hidden="true">chevron_right</span>
+        </button>
+      </div>
     </div>
+    <div class="cal-body">
     ${when(view.value === 'year', () => html`
       <div class="year-list" role="listbox" aria-label="Year selection">
           ${each(yearList.value.map((y) => ({ key: String(y), year: y })), (item: {key:string;year:number}) => html`
@@ -615,12 +694,13 @@ component('md-date-picker', () => {
         `)}
       </div>
     `)}
+    </div>
   `;
 
   const renderActions = () => html`
     <div class="picker-actions">
-      <md-button variant="text" @click="${() => emit('close')}">Cancel</md-button>
-      <md-button variant="text" @click="${() => { if (props.variant === 'dialog' && pendingValue.value) emit('change', pendingValue.value); emit('close'); }}">OK</md-button>
+      <md-button variant="text" @click="${() => { dockedOpen.value = false; emit('close'); }}">Cancel</md-button>
+      <md-button variant="text" @click="${() => { if (props.variant === 'dialog' && pendingValue.value) emit('change', pendingValue.value); dockedOpen.value = false; emit('close'); }}">OK</md-button>
     </div>
   `;
 
@@ -653,8 +733,19 @@ component('md-date-picker', () => {
     `)}
     ${when(props.variant === 'docked', () => html`
       <div class="docked-wrapper">
-        <slot name="trigger"></slot>
-        ${Transition({ show: props.open,
+        <div class="docked-field" @click="${() => toggleDocked()}">
+          <span class="docked-field-label">${props.label}</span>
+          <input
+            class="docked-field-input"
+            type="text"
+            readonly
+            :value="${props.value ? formatHeadline(props.value) : ''}"
+            placeholder="mm/dd/yyyy"
+            aria-label="${props.label}"
+          />
+          <span class="docked-field-icon" aria-hidden="true">calendar_today</span>
+        </div>
+        ${Transition({ show: dockedOpen.value,
           enterFrom: 'docked-enter-from', enterActive: 'docked-enter-active',
           leaveActive: 'docked-leave-active', leaveTo: 'docked-leave-to',
         }, html`

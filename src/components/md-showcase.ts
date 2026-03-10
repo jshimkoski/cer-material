@@ -1399,7 +1399,6 @@ component('md-showcase', () => {
           <div style="max-width:380px;min-height:460px;">
             <md-date-picker
               variant="docked"
-              open="true"
               :value="${datePickerValue.value}"
               @change="${(e: CustomEvent<string>) => { datePickerValue.value = e.detail; }}"
               @close="${() => {}}"

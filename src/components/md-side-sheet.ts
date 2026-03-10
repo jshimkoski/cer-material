@@ -44,7 +44,7 @@ component('md-side-sheet', () => {
       top: 0;
       right: 0;
       bottom: 0;
-      width: 400px;
+      width: 360px;
       max-width: 85vw;
       background: var(--md-sys-color-surface-container-low, #F7F2FA);
       border-radius: 16px 0 0 16px;
