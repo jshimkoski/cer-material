@@ -136,9 +136,9 @@ component('md-menu', () => {
         <div :class="${{ menu: true, [props.anchor]: !!props.anchor }}" role="menu" tabindex="-1" @keydown="${handleMenuKeyDown}">
           ${each(
             Array.isArray(props.items) ? props.items : [],
-            (item: MenuItem) => html`
-              ${when(!!item.divider, () => html`<div class="menu-divider"></div>`)}
-              ${when(!item.divider, () => html`
+            (item: MenuItem) => item.divider
+              ? html`<div key="${item.id}" class="menu-divider"></div>`
+              : html`
                 <button
                   key="${item.id}"
                   class="menu-item"
@@ -149,8 +149,7 @@ component('md-menu', () => {
                   ${when(!!item.icon, () => html`<span class="item-icon" aria-hidden="true">${item.icon}</span>`)}
                   ${item.label}
                 </button>
-              `)}
-            `,
+              `,
           )}
         </div>
       `)}

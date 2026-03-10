@@ -10,6 +10,7 @@ component('md-bottom-sheet', () => {
     open: false,
     headline: '',
     showHandle: true,
+    variant: 'standard' as 'standard' | 'modal',
   });
   const emit = useEmit();
 
@@ -33,8 +34,7 @@ component('md-bottom-sheet', () => {
   function onHandlePointerDown(e: PointerEvent) {
     if (!props.open) return;
     const handle = e.currentTarget as HTMLElement;
-    // .drag-handle is a direct child of .bottom-sheet, so closest() finds it immediately.
-    sheetEl = handle.closest('.bottom-sheet') as HTMLElement | null;
+    sheetEl = (handle.closest('.modal-bottom-sheet') ?? handle.closest('.standard-bottom-sheet')) as HTMLElement | null;
     if (!sheetEl) return;
 
     isDragging    = true;
@@ -100,7 +100,8 @@ component('md-bottom-sheet', () => {
 
   const handleEscKey = () => emit('close');
 
-  useEscapeKey(() => props.open, handleEscKey)();
+  // Only modal variant uses escape key, focus trap, and scroll lock.
+  useEscapeKey(() => props.open && props.variant === 'modal', handleEscKey)();
   const trap = createFocusTrap();
   useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
@@ -108,12 +109,12 @@ component('md-bottom-sheet', () => {
   useStyle(() => css`
     :host { display: contents; }
 
+    /* ── Scrim (modal only) ─────────────────────────────────────── */
     .scrim {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.32);
       z-index: 700;
-      /* Base = fully visible; opacity: 1 and pointer-events: auto are defaults */
     }
     .scrim-enter-from, .scrim-leave-to {
       opacity: 0;
@@ -123,7 +124,8 @@ component('md-bottom-sheet', () => {
       transition: opacity 250ms ease-out;
     }
 
-    .bottom-sheet {
+    /* ── Modal bottom sheet: overlays content with scrim ─────────── */
+    .modal-bottom-sheet {
       position: fixed;
       bottom: 0;
       left: 0;
@@ -135,13 +137,34 @@ component('md-bottom-sheet', () => {
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      /* Base = fully open; transform: none and pointer-events: auto are defaults */
     }
-    .sheet-enter-from, .sheet-leave-to {
+    .modal-enter-from, .modal-leave-to {
       transform: translateY(100%);
       pointer-events: none;
     }
-    .sheet-enter-active, .sheet-leave-active {
+    .modal-enter-active, .modal-leave-active {
+      transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Standard bottom sheet: coexists with primary content ────── */
+    .standard-bottom-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-height: 90vh;
+      background: var(--md-sys-color-surface-container-low, #F7F2FA);
+      border-radius: 28px 28px 0 0;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .standard-enter-from, .standard-leave-to {
+      transform: translateY(100%);
+      pointer-events: none;
+    }
+    .standard-enter-active, .standard-leave-active {
       transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -196,7 +219,7 @@ component('md-bottom-sheet', () => {
   // is clean when closed. The drag-dismiss flag prevents a double leave animation.
   return html`
     ${Transition({
-      show: props.open,
+      show: props.open && props.variant === 'modal',
       name: 'md-scrim',
       enterFrom: 'scrim-enter-from',
       enterActive: 'scrim-enter-active',
@@ -208,59 +231,106 @@ component('md-bottom-sheet', () => {
         @click="${() => emit('close')}"
       ></div>
     `)}
-    ${Transition({
-      show: props.open,
-      name: 'md-sheet',
-      enterFrom: 'sheet-enter-from',
-      enterActive: 'sheet-enter-active',
-      leaveActive: 'sheet-leave-active',
-      leaveTo: 'sheet-leave-to',
-      onBeforeLeave: () => {
-        if (dragDismissed) {
-          dragDismissed = false;
-          if (dismissedEl) {
-            // Sheet is already at translateY(100%) from the drag animation.
-            // Kill the transition so CER detects duration 0s and removes the
-            // element immediately instead of waiting for a leave animation.
-            dismissedEl.style.transition = 'none';
-            dismissedEl = null;
-          }
-        }
-      },
-      onBeforeEnter: scrollLock.lock,
-      onAfterEnter: trap.onAfterEnter,
-      onAfterLeave: () => { trap.onAfterLeave(); scrollLock.unlock(); },
-    }, html`
-      <div
-        class="bottom-sheet"
-        role="dialog"
-        aria-modal="true"
-        :bind="${{ 'aria-labelledby': props.headline ? 'bottom-sheet-headline' : null }}"
-      >
-        ${when(props.showHandle, () => html`
+
+    ${props.variant === 'modal'
+      ? Transition({
+          show: props.open,
+          name: 'md-modal-sheet',
+          enterFrom: 'modal-enter-from',
+          enterActive: 'modal-enter-active',
+          leaveActive: 'modal-leave-active',
+          leaveTo: 'modal-leave-to',
+          onBeforeLeave: () => {
+            if (dragDismissed) {
+              dragDismissed = false;
+              if (dismissedEl) {
+                dismissedEl.style.transition = 'none';
+                dismissedEl = null;
+              }
+            }
+          },
+          onBeforeEnter: scrollLock.lock,
+          onAfterEnter: trap.onAfterEnter,
+          onAfterLeave: () => { trap.onAfterLeave(); scrollLock.unlock(); },
+        }, html`
           <div
-            class="drag-handle"
-            role="button"
-            aria-label="Drag down to dismiss"
-            tabindex="0"
-            @pointerdown="${onHandlePointerDown}"
-            @pointermove="${onHandlePointerMove}"
-            @pointerup="${onHandlePointerUp}"
-            @pointercancel="${onHandlePointerUp}"
-            @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); emit('close'); } }}"
+            class="modal-bottom-sheet"
+            role="dialog"
+            aria-modal="true"
+            :bind="${{ 'aria-labelledby': props.headline ? 'bottom-sheet-headline' : null }}"
           >
-            <div class="drag-handle-bar"></div>
+            ${when(props.showHandle, () => html`
+              <div
+                class="drag-handle"
+                role="button"
+                aria-label="Drag down to dismiss"
+                tabindex="0"
+                @pointerdown="${onHandlePointerDown}"
+                @pointermove="${onHandlePointerMove}"
+                @pointerup="${onHandlePointerUp}"
+                @pointercancel="${onHandlePointerUp}"
+                @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); emit('close'); } }}"
+              >
+                <div class="drag-handle-bar"></div>
+              </div>
+            `)}
+            ${when(!!props.headline, () => html`
+              <div class="sheet-header">
+                <h2 class="sheet-headline" id="bottom-sheet-headline">${props.headline}</h2>
+              </div>
+            `)}
+            <div class="sheet-content">
+              <slot></slot>
+            </div>
           </div>
-        `)}
-        ${when(!!props.headline, () => html`
-          <div class="sheet-header">
-            <h2 class="sheet-headline" id="bottom-sheet-headline">${props.headline}</h2>
+        `)
+      : Transition({
+          show: props.open,
+          name: 'md-standard-sheet',
+          enterFrom: 'standard-enter-from',
+          enterActive: 'standard-enter-active',
+          leaveActive: 'standard-leave-active',
+          leaveTo: 'standard-leave-to',
+          onBeforeLeave: () => {
+            if (dragDismissed) {
+              dragDismissed = false;
+              if (dismissedEl) {
+                dismissedEl.style.transition = 'none';
+                dismissedEl = null;
+              }
+            }
+          },
+        }, html`
+          <div
+            class="standard-bottom-sheet"
+            role="complementary"
+            :bind="${{ 'aria-labelledby': props.headline ? 'bottom-sheet-headline' : null }}"
+          >
+            ${when(props.showHandle, () => html`
+              <div
+                class="drag-handle"
+                role="button"
+                aria-label="Drag down to collapse"
+                tabindex="0"
+                @pointerdown="${onHandlePointerDown}"
+                @pointermove="${onHandlePointerMove}"
+                @pointerup="${onHandlePointerUp}"
+                @pointercancel="${onHandlePointerUp}"
+                @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); emit('close'); } }}"
+              >
+                <div class="drag-handle-bar"></div>
+              </div>
+            `)}
+            ${when(!!props.headline, () => html`
+              <div class="sheet-header">
+                <h2 class="sheet-headline" id="bottom-sheet-headline">${props.headline}</h2>
+              </div>
+            `)}
+            <div class="sheet-content">
+              <slot></slot>
+            </div>
           </div>
-        `)}
-        <div class="sheet-content">
-          <slot></slot>
-        </div>
-      </div>
-    `)}
+        `)
+    }
   `;
 });

@@ -9,10 +9,11 @@ component('md-side-sheet', () => {
   const props = useProps({
     open: false,
     headline: '',
-    variant: 'modal' as 'modal' | 'standard',
+    variant: 'standard' as 'standard' | 'modal',
   });
   const emit = useEmit();
 
+  // Only modal variant uses escape key, focus trap, and scroll lock.
   useEscapeKey(() => props.open && props.variant === 'modal', () => emit('close'))();
   const trap = createFocusTrap();
   useOnDisconnected(() => trap.cleanup());
@@ -21,12 +22,12 @@ component('md-side-sheet', () => {
   useStyle(() => css`
     :host { display: contents; }
 
+    /* ── Scrim (modal only) ─────────────────────────────────────── */
     .scrim {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.32);
       z-index: 700;
-      /* Base = fully visible; opacity: 1 and pointer-events: auto are defaults */
     }
     .scrim-enter-from, .scrim-leave-to {
       opacity: 0;
@@ -36,7 +37,8 @@ component('md-side-sheet', () => {
       transition: opacity 250ms ease-out;
     }
 
-    .side-sheet {
+    /* ── Modal side sheet: overlays content, slides in from right ── */
+    .modal-side-sheet {
       position: fixed;
       top: 0;
       right: 0;
@@ -44,32 +46,43 @@ component('md-side-sheet', () => {
       width: 400px;
       max-width: 85vw;
       background: var(--md-sys-color-surface-container-low, #F7F2FA);
+      border-radius: 16px 0 0 16px;
       z-index: 701;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      /* Base = fully open; transform: none and pointer-events: auto are defaults */
     }
-    .side-sheet-enter-from, .side-sheet-leave-to {
+    .modal-enter-from, .modal-leave-to {
       transform: translateX(100%);
       pointer-events: none;
     }
-    .side-sheet-enter-active, .side-sheet-leave-active {
+    .modal-enter-active, .modal-leave-active {
       transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
+
+    /* ── Standard side sheet: in-layout, body shrinks to accommodate ── */
     .standard-side-sheet {
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      background: var(--md-sys-color-surface-container-low, #F7F2FA);
+      width: 400px;
       height: 100%;
+      background: var(--md-sys-color-surface, #FFFBFE);
+      flex-shrink: 0;
+    }
+    .standard-enter-from, .standard-leave-to {
+      width: 0;
+    }
+    .standard-enter-active, .standard-leave-active {
+      transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* ── Shared header & content ─────────────────────────────────── */
     .sheet-header {
       display: flex;
       align-items: center;
       padding: 24px 24px 0;
-      gap: 8px;
+      gap: 4px;
       flex-shrink: 0;
     }
     .sheet-headline {
@@ -81,7 +94,7 @@ component('md-side-sheet', () => {
       flex: 1;
     }
 
-    .close-btn {
+    .icon-btn {
       width: 40px;
       height: 40px;
       border-radius: 50%;
@@ -97,7 +110,7 @@ component('md-side-sheet', () => {
       overflow: hidden;
       flex-shrink: 0;
     }
-    .close-btn::before {
+    .icon-btn::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -106,10 +119,10 @@ component('md-side-sheet', () => {
       opacity: 0;
       transition: opacity 200ms;
     }
-    .close-btn:hover::before { opacity: 0.08; }
-    .close-btn:focus::before { opacity: 0.12; }
+    .icon-btn:hover::before { opacity: 0.08; }
+    .icon-btn:focus::before { opacity: 0.12; }
 
-    .close-icon {
+    .icon-btn-icon {
       font-family: 'Material Symbols Outlined';
       font-size: 24px;
       font-weight: normal;
@@ -127,8 +140,6 @@ component('md-side-sheet', () => {
     }
   `);
 
-  // Scrim and sheet panel are conditionally mounted via Transition so the DOM
-  // is clean when closed, with animated enter/leave on open/close.
   return html`
     ${Transition({
       show: props.open && props.variant === 'modal',
@@ -138,42 +149,69 @@ component('md-side-sheet', () => {
       leaveActive: 'scrim-leave-active',
       leaveTo: 'scrim-leave-to',
     }, html`
-      <div
-        class="scrim"
-        @click="${() => emit('close')}"
-      ></div>
+      <div class="scrim" @click="${() => emit('close')}"></div>
     `)}
-    ${Transition({
-      show: props.open,
-      name: 'md-side-sheet',
-      onBeforeEnter: props.variant === 'modal' ? scrollLock.lock : undefined,
-      onAfterEnter: props.variant === 'modal' ? trap.onAfterEnter : undefined,
-      onAfterLeave: props.variant === 'modal' ? () => { trap.onAfterLeave(); scrollLock.unlock(); } : undefined,
-      ...(props.variant === 'modal' ? {
-        enterFrom: 'side-sheet-enter-from',
-        enterActive: 'side-sheet-enter-active',
-        leaveActive: 'side-sheet-leave-active',
-        leaveTo: 'side-sheet-leave-to',
-      } : {}),
-    }, html`
-      <div
-        class="${props.variant === 'modal' ? 'side-sheet' : 'standard-side-sheet'}"
-        role="${props.variant === 'modal' ? 'dialog' : 'complementary'}"
-        aria-label="${props.headline || 'Side sheet'}"
-        :bind="${{ 'aria-modal': props.variant === 'modal' ? 'true' : null }}"
-      >
-        ${when(!!props.headline, () => html`
-          <div class="sheet-header">
-            <h2 class="sheet-headline">${props.headline}</h2>
-            <button class="close-btn" aria-label="Close side sheet" @click="${() => emit('close')}">
-              <span class="close-icon">close</span>
-            </button>
+
+    ${props.variant === 'modal'
+      ? Transition({
+          show: props.open,
+          name: 'md-modal-side-sheet',
+          enterFrom: 'modal-enter-from',
+          enterActive: 'modal-enter-active',
+          leaveActive: 'modal-leave-active',
+          leaveTo: 'modal-leave-to',
+          onBeforeEnter: scrollLock.lock,
+          onAfterEnter: trap.onAfterEnter,
+          onAfterLeave: () => { trap.onAfterLeave(); scrollLock.unlock(); },
+        }, html`
+          <div
+            class="modal-side-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="${props.headline || 'Side sheet'}"
+          >
+            ${when(!!props.headline, () => html`
+              <div class="sheet-header">
+                <button class="icon-btn" aria-label="Go back" @click="${() => emit('back')}">
+                  <span class="icon-btn-icon">arrow_back</span>
+                </button>
+                <h2 class="sheet-headline">${props.headline}</h2>
+                <button class="icon-btn" aria-label="Close side sheet" @click="${() => emit('close')}">
+                  <span class="icon-btn-icon">close</span>
+                </button>
+              </div>
+            `)}
+            <div class="sheet-content">
+              <slot></slot>
+            </div>
           </div>
-        `)}
-        <div class="sheet-content">
-          <slot></slot>
-        </div>
-      </div>
-    `)}
+        `)
+      : Transition({
+          show: props.open,
+          name: 'md-standard-side-sheet',
+          enterFrom: 'standard-enter-from',
+          enterActive: 'standard-enter-active',
+          leaveActive: 'standard-leave-active',
+          leaveTo: 'standard-leave-to',
+        }, html`
+          <div
+            class="standard-side-sheet"
+            role="complementary"
+            aria-label="${props.headline || 'Side sheet'}"
+          >
+            ${when(!!props.headline, () => html`
+              <div class="sheet-header">
+                <h2 class="sheet-headline">${props.headline}</h2>
+                <button class="icon-btn" aria-label="Close side sheet" @click="${() => emit('close')}">
+                  <span class="icon-btn-icon">close</span>
+                </button>
+              </div>
+            `)}
+            <div class="sheet-content">
+              <slot></slot>
+            </div>
+          </div>
+        `)
+    }
   `;
 });

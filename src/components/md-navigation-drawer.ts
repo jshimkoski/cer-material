@@ -18,7 +18,7 @@ component('md-navigation-drawer', () => {
   const props = useProps({
     open: false,
     headline: '',
-    variant: 'modal' as 'modal' | 'standard',
+    variant: 'standard' as 'standard' | 'modal',
     items: [] as DrawerItem[],
     active: '',
   });
@@ -71,13 +71,21 @@ component('md-navigation-drawer', () => {
       transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* ── Standard drawer (in-layout, no overlay) ─────────────────────────── */
+    /* ── Standard drawer: in-layout, body shrinks to accommodate ───── */
     .standard-drawer {
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      background: var(--md-sys-color-surface, #FFFBFE);
+      width: 360px;
       height: 100%;
+      background: var(--md-sys-color-surface, #FFFBFE);
+      flex-shrink: 0;
+    }
+    .standard-enter-from, .standard-leave-to {
+      width: 0;
+    }
+    .standard-enter-active, .standard-leave-active {
+      transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ── Inner content ──────────────────────────────────────────────────── */
@@ -179,8 +187,6 @@ component('md-navigation-drawer', () => {
     }
   `);
 
-  // Scrim and drawer panel are conditionally mounted via Transition so the DOM
-  // is clean when closed, with animated enter/leave on open/close.
   return html`
     ${Transition({
       show: props.open && props.variant === 'modal',
@@ -190,60 +196,101 @@ component('md-navigation-drawer', () => {
       leaveActive: 'scrim-leave-active',
       leaveTo: 'scrim-leave-to',
     }, html`
-      <div
-        class="scrim"
-        @click="${() => emit('close')}"
-      ></div>
+      <div class="scrim" @click="${() => emit('close')}"></div>
     `)}
-    ${Transition({
-      show: props.open,
-      name: 'md-drawer',
-      onBeforeEnter: props.variant === 'modal' ? scrollLock.lock : undefined,
-      onAfterEnter: props.variant === 'modal' ? trap.onAfterEnter : undefined,
-      onAfterLeave: props.variant === 'modal' ? () => { trap.onAfterLeave(); scrollLock.unlock(); } : undefined,
-      ...(props.variant === 'modal' ? {
-        enterFrom: 'drawer-enter-from',
-        enterActive: 'drawer-enter-active',
-        leaveActive: 'drawer-leave-active',
-        leaveTo: 'drawer-leave-to',
-      } : {}),
-    }, html`
-      <div
-        class="${props.variant === 'modal' ? 'drawer' : 'standard-drawer'}"
-        role="${props.variant === 'modal' ? 'dialog' : 'navigation'}"
-        aria-label="${props.headline || 'Navigation drawer'}"
-        :bind="${{ 'aria-modal': props.variant === 'modal' ? 'true' : null }}"
-      >
-        ${when(!!props.headline, () => html`
-          <div class="drawer-header">
-            <span class="drawer-headline">${props.headline}</span>
+
+    ${props.variant === 'modal'
+      ? Transition({
+          show: props.open,
+          name: 'md-modal-drawer',
+          enterFrom: 'drawer-enter-from',
+          enterActive: 'drawer-enter-active',
+          leaveActive: 'drawer-leave-active',
+          leaveTo: 'drawer-leave-to',
+          onBeforeEnter: scrollLock.lock,
+          onAfterEnter: trap.onAfterEnter,
+          onAfterLeave: () => { trap.onAfterLeave(); scrollLock.unlock(); },
+        }, html`
+          <div
+            class="drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label="${props.headline || 'Navigation drawer'}"
+          >
+            ${when(!!props.headline, () => html`
+              <div class="drawer-header">
+                <span class="drawer-headline">${props.headline}</span>
+              </div>
+            `)}
+            <div class="drawer-content">
+              ${each(
+                Array.isArray(props.items) ? props.items : [],
+                (item: DrawerItem) =>
+                  item.divider
+                    ? html`<div class="divider"></div>`
+                    : item.section
+                    ? html`<div class="section-label">${item.section}</div>`
+                    : html`
+                      <button
+                        key="${item.id}"
+                        :class="${{ 'drawer-item': true, active: props.active === item.id }}"
+                        :disabled="${item.disabled || false}"
+                        :bind="${{ 'aria-current': props.active === item.id ? 'page' : null }}"
+                        @click="${() => { if (item.id) { emit('change', item.id); emit('close'); } }}"
+                      >
+                        ${when(!!item.icon, () => html`<span class="drawer-icon" aria-hidden="true">${item.icon}</span>`)}
+                        <span class="drawer-label">${item.label}</span>
+                      </button>
+                    `,
+              )}
+              <slot></slot>
+            </div>
           </div>
-        `)}
-        <div class="drawer-content">
-          ${each(
-            Array.isArray(props.items) ? props.items : [],
-            (item: DrawerItem) =>
-              item.divider
-                ? html`<div class="divider"></div>`
-                : item.section
-                ? html`<div class="section-label">${item.section}</div>`
-                : html`
-                  <button
-                    key="${item.id}"
-                    :class="${{ 'drawer-item': true, active: props.active === item.id }}"
-                    :disabled="${item.disabled || false}"
-                    :bind="${{ 'aria-current': props.active === item.id ? 'page' : null }}"
-                    @click="${() => { if (item.id) { emit('change', item.id); if (props.variant === 'modal') emit('close'); } }}"
-                  >
-                    ${when(!!item.icon, () => html`<span class="drawer-icon" aria-hidden="true">${item.icon}</span>`)}
-                    <span class="drawer-label">${item.label}</span>
-                  </button>
-                `,
-          )}
-          <slot></slot>
-        </div>
-      </div>
-    `)}
+        `)
+      : Transition({
+          show: props.open,
+          name: 'md-standard-drawer',
+          enterFrom: 'standard-enter-from',
+          enterActive: 'standard-enter-active',
+          leaveActive: 'standard-leave-active',
+          leaveTo: 'standard-leave-to',
+        }, html`
+          <div
+            class="standard-drawer"
+            role="navigation"
+            aria-label="${props.headline || 'Navigation drawer'}"
+          >
+            ${when(!!props.headline, () => html`
+              <div class="drawer-header">
+                <span class="drawer-headline">${props.headline}</span>
+              </div>
+            `)}
+            <div class="drawer-content">
+              ${each(
+                Array.isArray(props.items) ? props.items : [],
+                (item: DrawerItem) =>
+                  item.divider
+                    ? html`<div class="divider"></div>`
+                    : item.section
+                    ? html`<div class="section-label">${item.section}</div>`
+                    : html`
+                      <button
+                        key="${item.id}"
+                        :class="${{ 'drawer-item': true, active: props.active === item.id }}"
+                        :disabled="${item.disabled || false}"
+                        :bind="${{ 'aria-current': props.active === item.id ? 'page' : null }}"
+                        @click="${() => { if (item.id) emit('change', item.id); }}"
+                      >
+                        ${when(!!item.icon, () => html`<span class="drawer-icon" aria-hidden="true">${item.icon}</span>`)}
+                        <span class="drawer-label">${item.label}</span>
+                      </button>
+                    `,
+              )}
+              <slot></slot>
+            </div>
+          </div>
+        `)
+    }
   `;
 });
 

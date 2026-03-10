@@ -5,6 +5,7 @@ import {
   ref,
   useStyle,
 } from '@jasonshimmy/custom-elements-runtime';
+import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 // Module-level — not inside the component function, so never reset on re-renders.
 let snackbarTimer: ReturnType<typeof setTimeout> | null = null;
@@ -57,12 +58,19 @@ component('md-showcase', () => {
   ];
 
   // ── New component state ───────────────────────────────────────────────
-  const drawerOpen      = ref(false);
+  const drawerOpen      = ref(true);
+  const drawerModalOpen = ref(false);
   const activeDrawer    = ref('inbox');
   const activeRail      = ref('home');
   const bottomSheetOpen = ref(false);
-  const sideSheetOpen   = ref(false);
+  const sideSheetOpen   = ref(true);
+  const sideSheetModalOpen = ref(false);
   const segSelected     = ref('day');
+  const datePickerOpen  = ref(false);
+  const datePickerValue = ref('');
+  const timePickerOpen  = ref(false);
+  const timePickerValue = ref('');
+  const timePickerVariant = ref<'dial' | 'input'>('dial');
 
   const drawerItems = [
     { id: 'inbox',     label: 'Inbox',     icon: 'inbox' },
@@ -327,6 +335,52 @@ component('md-showcase', () => {
       font-size: 14px;
       color: var(--md-sys-color-on-surface-variant, #49454F);
       line-height: 20px;
+    }
+
+    /* ── Drawer / sheet preview frames ── */
+    .drawer-preview {
+      display: flex;
+      height: 320px;
+      border: 1px solid var(--md-sys-color-outline-variant, #CAC4D0);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .drawer-preview-body {
+      flex: 1;
+      padding: 16px 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--md-sys-color-background, #FFFBFE);
+    }
+    .drawer-preview-body p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--md-sys-color-on-surface-variant, #49454F);
+    }
+    .side-sheet-preview {
+      display: flex;
+      height: 320px;
+      border: 1px solid var(--md-sys-color-outline-variant, #CAC4D0);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .side-sheet-preview-body {
+      flex: 1;
+      padding: 16px 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--md-sys-color-background, #FFFBFE);
+    }
+    .side-sheet-preview-body p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--md-sys-color-on-surface-variant, #49454F);
     }
 
     /* ── Tooltip demo ── */
@@ -1157,22 +1211,43 @@ component('md-showcase', () => {
           <h2 class="section-title">Navigation Drawer</h2>
           <p class="section-subtitle">The navigation drawer provides access to destinations and app functionality, such as switching accounts.</p>
 
+          <div class="demo-label">Standard (in-layout — drawer sits beside content)</div>
+          <div class="drawer-preview">
+            <md-navigation-drawer
+              variant="standard"
+              :open="${drawerOpen.value}"
+              :items="${drawerItems}"
+              :active="${activeDrawer.value}"
+              @change="${(e: CustomEvent<string>) => { activeDrawer.value = e.detail; }}"
+              @close="${() => { drawerOpen.value = false; }}"
+            ></md-navigation-drawer>
+            <div class="drawer-preview-body">
+              <div class="row" style="margin-bottom:0">
+                <md-icon-button variant="standard" icon="menu" @click="${() => { drawerOpen.value = !drawerOpen.value; }}"></md-icon-button>
+                <span style="font-size:14px;font-weight:500;color:var(--md-sys-color-on-surface,#1C1B1F)">${activeDrawer.value.charAt(0).toUpperCase() + activeDrawer.value.slice(1)}</span>
+              </div>
+              <p>Primary content area. The standard navigation drawer sits beside this content in the layout — it doesn't block interaction.</p>
+              <p>Toggle the menu icon to open or close the drawer.</p>
+            </div>
+          </div>
+
+          <div class="demo-label">Modal (overlays content with scrim)</div>
           <div class="row">
             <md-button
               variant="filled"
-              label="Open Drawer"
+              label="Open Modal Drawer"
               icon="menu"
-              @click="${() => { drawerOpen.value = true; }}"
+              @click="${() => { drawerModalOpen.value = true; }}"
             ></md-button>
           </div>
-
           <md-navigation-drawer
-            :open="${drawerOpen.value}"
+            variant="modal"
+            :open="${drawerModalOpen.value}"
             headline="Mail"
             :items="${drawerItems}"
             :active="${activeDrawer.value}"
             @change="${(e: CustomEvent<string>) => { activeDrawer.value = e.detail; showSnackbar('Drawer: ' + e.detail); }}"
-            @close="${() => { drawerOpen.value = false; }}"
+            @close="${() => { drawerModalOpen.value = false; }}"
           ></md-navigation-drawer>
         </div>
         <div class="section-divider"></div>
@@ -1214,19 +1289,46 @@ component('md-showcase', () => {
           <h2 class="section-title">Side Sheet</h2>
           <p class="section-subtitle">Side sheets are surfaces containing supplementary content or navigation, anchored to the side of the screen.</p>
 
+          <div class="demo-label">Standard (in-layout — sheet sits beside content)</div>
+          <div class="side-sheet-preview">
+            <div class="side-sheet-preview-body">
+              <div class="row" style="margin-bottom:0">
+                <span style="font-size:14px;font-weight:500;color:var(--md-sys-color-on-surface,#1C1B1F)">Search Results</span>
+                <md-icon-button variant="standard" icon="tune" @click="${() => { sideSheetOpen.value = !sideSheetOpen.value; }}"></md-icon-button>
+              </div>
+              <p>Primary content area. The standard side sheet sits beside this content in the layout — it doesn't block interaction.</p>
+              <p>Toggle the filter icon to open or close the sheet.</p>
+            </div>
+            <md-side-sheet
+              variant="standard"
+              :open="${sideSheetOpen.value}"
+              headline="Filters"
+              @close="${() => { sideSheetOpen.value = false; }}"
+            >
+              <div class="sheet-content-demo">
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <md-checkbox label="In stock only"></md-checkbox>
+                  <md-checkbox label="Free shipping"></md-checkbox>
+                  <md-checkbox label="On sale"></md-checkbox>
+                </div>
+              </div>
+            </md-side-sheet>
+          </div>
+
+          <div class="demo-label">Modal (overlays content with scrim)</div>
           <div class="row">
             <md-button
               variant="filled"
-              label="Open Side Sheet"
+              label="Open Modal Side Sheet"
               icon="view_sidebar"
-              @click="${() => { sideSheetOpen.value = true; }}"
+              @click="${() => { sideSheetModalOpen.value = true; }}"
             ></md-button>
           </div>
-
           <md-side-sheet
-            :open="${sideSheetOpen.value}"
+            variant="modal"
+            :open="${sideSheetModalOpen.value}"
             headline="Filters"
-            @close="${() => { sideSheetOpen.value = false; }}"
+            @close="${() => { sideSheetModalOpen.value = false; }}"
           >
             <div class="sheet-content-demo">
               <p style="margin:0 0 16px">Refine your search results using the filters below.</p>
@@ -1236,7 +1338,7 @@ component('md-showcase', () => {
                 <md-checkbox label="On sale"></md-checkbox>
               </div>
               <div style="margin-top:24px">
-                <md-button variant="filled" label="Apply filters" @click="${() => { sideSheetOpen.value = false; showSnackbar('Filters applied'); }}"></md-button>
+                <md-button variant="filled" label="Apply filters" @click="${() => { sideSheetModalOpen.value = false; showSnackbar('Filters applied'); }}"></md-button>
               </div>
             </div>
           </md-side-sheet>
@@ -1256,6 +1358,224 @@ component('md-showcase', () => {
 
           <div class="demo-label">Full-screen</div>
           <md-carousel :items="${carouselItems}" variant="full-screen"></md-carousel>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Date Picker -->
+        <div class="section">
+          <h2 class="section-title">Date Picker</h2>
+          <p class="section-subtitle">Date pickers let people select a date or range of dates.</p>
+
+          <div class="demo-label">Modal (dialog)</div>
+          <div class="row">
+            <md-button variant="filled" label="Open Date Picker" icon="calendar_today"
+              @click="${() => { datePickerOpen.value = true; }}">
+            </md-button>
+            ${when(!!datePickerValue.value, () => html`<span style="font-size:14px;color:var(--md-sys-color-on-surface-variant,#49454F)">Selected: ${datePickerValue.value}</span>`)}
+          </div>
+          <md-date-picker
+            variant="dialog"
+            :open="${datePickerOpen.value}"
+            :value="${datePickerValue.value}"
+            @change="${(e: CustomEvent<string>) => { datePickerValue.value = e.detail; }}"
+            @close="${() => { datePickerOpen.value = false; }}"
+          ></md-date-picker>
+
+          <div class="demo-label">Docked (inline)</div>
+          <div style="max-width:380px;min-height:460px;">
+            <md-date-picker
+              variant="docked"
+              open="true"
+              :value="${datePickerValue.value}"
+              @change="${(e: CustomEvent<string>) => { datePickerValue.value = e.detail; }}"
+              @close="${() => {}}"
+            ></md-date-picker>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Time Picker -->
+        <div class="section">
+          <h2 class="section-title">Time Picker</h2>
+          <p class="section-subtitle">Time pickers help users select and set a specific time.</p>
+
+          <div class="demo-label">Dial variant</div>
+          <div class="row">
+            <md-button variant="filled" label="Open Time Picker (Dial)" icon="schedule"
+              @click="${() => { timePickerOpen.value = true; timePickerVariant.value = 'dial'; }}">
+            </md-button>
+            ${when(!!timePickerValue.value, () => html`<span style="font-size:14px;color:var(--md-sys-color-on-surface-variant,#49454F)">Selected: ${timePickerValue.value}</span>`)}
+          </div>
+
+          <div class="demo-label">Input variant</div>
+          <div class="row">
+            <md-button variant="outlined" label="Open Time Picker (Input)" icon="keyboard"
+              @click="${() => { timePickerOpen.value = true; timePickerVariant.value = 'input'; }}">
+            </md-button>
+          </div>
+          <md-time-picker
+            :variant="${timePickerVariant.value}"
+            :open="${timePickerOpen.value}"
+            :value="${timePickerValue.value}"
+            @change="${(e: CustomEvent<string>) => { timePickerValue.value = e.detail; }}"
+            @close="${() => { timePickerOpen.value = false; }}"
+          ></md-time-picker>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Loading Indicator -->
+        <div class="section">
+          <h2 class="section-title">Loading Indicator</h2>
+          <p class="section-subtitle">Loading indicators express an unspecified wait time or display the length of a process.</p>
+
+          <div class="demo-label">Sizes</div>
+          <div class="row" style="align-items:center">
+            <md-loading-indicator size="small"></md-loading-indicator>
+            <md-loading-indicator size="medium"></md-loading-indicator>
+            <md-loading-indicator size="large"></md-loading-indicator>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Button Group -->
+        <div class="section">
+          <h2 class="section-title">Button Group</h2>
+          <p class="section-subtitle">Button groups present multiple related actions together in a horizontally connected row.</p>
+
+          <div class="demo-label">Outlined (default)</div>
+          <div class="row">
+            <md-button-group
+              variant="outlined"
+              :items="${[
+                { id: 'day',   label: 'Day'   },
+                { id: 'week',  label: 'Week'  },
+                { id: 'month', label: 'Month' },
+              ]}"
+              @click="${(e: CustomEvent<{id:string}>) => showSnackbar('Button group: ' + e.detail.id)}"
+            ></md-button-group>
+          </div>
+
+          <div class="demo-label">Filled with icons</div>
+          <div class="row">
+            <md-button-group
+              variant="filled"
+              :items="${[
+                { id: 'list',  label: 'List',  icon: 'list'         },
+                { id: 'grid',  label: 'Grid',  icon: 'grid_view'    },
+                { id: 'table', label: 'Table', icon: 'table_chart'  },
+              ]}"
+              @click="${(e: CustomEvent<{id:string}>) => showSnackbar('View: ' + e.detail.id)}"
+            ></md-button-group>
+          </div>
+
+          <div class="demo-label">Tonal</div>
+          <div class="row">
+            <md-button-group
+              variant="tonal"
+              :items="${[
+                { id: 'bold',      label: 'B'   },
+                { id: 'italic',    label: 'I'   },
+                { id: 'underline', label: 'U'   },
+              ]}"
+              @click="${(e: CustomEvent<{id:string}>) => showSnackbar('Format: ' + e.detail.id)}"
+            ></md-button-group>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Split Button -->
+        <div class="section">
+          <h2 class="section-title">Split Button</h2>
+          <p class="section-subtitle">Split buttons combine a primary action with a dropdown for additional related actions.</p>
+
+          <div class="demo-label">Filled</div>
+          <div class="row">
+            <md-split-button
+              variant="filled"
+              label="Save"
+              icon="save"
+              :items="${[
+                { id: 'save-copy',  label: 'Save a copy',   icon: 'file_copy' },
+                { id: 'save-as',    label: 'Save as…',      icon: 'edit'      },
+                { id: 'autosave',   label: 'Autosave',      icon: 'autorenew' },
+              ]}"
+              @click="${() => showSnackbar('Save clicked!')}"
+              @select="${(e: CustomEvent<{id:string}>) => showSnackbar('Split: ' + e.detail.id)}"
+            ></md-split-button>
+          </div>
+
+          <div class="demo-label">Outlined</div>
+          <div class="row">
+            <md-split-button
+              variant="outlined"
+              label="Share"
+              icon="share"
+              :items="${[
+                { id: 'email', label: 'Email link',   icon: 'email'    },
+                { id: 'copy',  label: 'Copy link',    icon: 'link'     },
+                { id: 'embed', label: 'Embed',        icon: 'code'     },
+              ]}"
+              @click="${() => showSnackbar('Share clicked!')}"
+              @select="${(e: CustomEvent<{id:string}>) => showSnackbar('Share via: ' + e.detail.id)}"
+            ></md-split-button>
+          </div>
+
+          <div class="demo-label">Tonal</div>
+          <div class="row">
+            <md-split-button
+              variant="tonal"
+              label="Export"
+              icon="download"
+              :items="${[
+                { id: 'pdf',  label: 'Export as PDF',  icon: 'picture_as_pdf' },
+                { id: 'csv',  label: 'Export as CSV',  icon: 'table_view'     },
+                { id: 'json', label: 'Export as JSON', icon: 'data_object'    },
+              ]}"
+              @click="${() => showSnackbar('Export clicked!')}"
+              @select="${(e: CustomEvent<{id:string}>) => showSnackbar('Export as: ' + e.detail.id)}"
+            ></md-split-button>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- FAB Menu (Speed Dial) -->
+        <div class="section">
+          <h2 class="section-title">FAB Menu (Speed Dial)</h2>
+          <p class="section-subtitle">The FAB menu (speed dial) is a FAB that expands to show a set of related actions.</p>
+
+          <div class="demo-label">Primary variant</div>
+          <div class="row" style="min-height:280px;align-items:flex-end">
+            <md-fab-menu
+              variant="primary"
+              icon="add"
+              aria-label="Create new"
+              :items="${[
+                { id: 'doc',    icon: 'description', label: 'New document' },
+                { id: 'sheet',  icon: 'table_chart',  label: 'New spreadsheet' },
+                { id: 'slide',  icon: 'slideshow',    label: 'New presentation' },
+                { id: 'folder', icon: 'folder',       label: 'New folder' },
+              ]}"
+              @select="${(e: CustomEvent<{id:string}>) => showSnackbar('Created: ' + e.detail.id)}"
+            ></md-fab-menu>
+
+            <md-fab-menu
+              variant="secondary"
+              icon="share"
+              aria-label="Share"
+              :items="${[
+                { id: 'email',   icon: 'email',    label: 'Email' },
+                { id: 'message', icon: 'message',  label: 'Message' },
+                { id: 'link',    icon: 'link',     label: 'Copy link' },
+              ]}"
+              @select="${(e: CustomEvent<{id:string}>) => showSnackbar('Shared via: ' + e.detail.id)}"
+            ></md-fab-menu>
+          </div>
         </div>
 
       </div><!-- /main-content -->
