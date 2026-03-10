@@ -10,6 +10,7 @@ component('md-side-sheet', () => {
     open: false,
     headline: '',
     variant: 'standard' as 'standard' | 'modal',
+    divider: true,
   });
   const emit = useEmit();
 
@@ -69,6 +70,9 @@ component('md-side-sheet', () => {
       height: 100%;
       background: var(--md-sys-color-surface, #FFFBFE);
       flex-shrink: 0;
+    }
+    .standard-side-sheet.with-divider {
+      border-left: 1px solid var(--md-sys-color-outline-variant, #CAC4D0);
     }
     .standard-enter-from, .standard-leave-to {
       width: 0;
@@ -195,7 +199,7 @@ component('md-side-sheet', () => {
           leaveTo: 'standard-leave-to',
         }, html`
           <div
-            class="standard-side-sheet"
+            :class="${{ 'standard-side-sheet': true, 'with-divider': props.divider }}"
             role="complementary"
             aria-label="${props.headline || 'Side sheet'}"
           >

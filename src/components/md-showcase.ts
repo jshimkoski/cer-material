@@ -1290,6 +1290,14 @@ component('md-showcase', () => {
           <p class="section-subtitle">Side sheets are surfaces containing supplementary content or navigation, anchored to the side of the screen.</p>
 
           <div class="demo-label">Standard (in-layout — sheet sits beside content)</div>
+          <div class="row">
+            <md-button
+              variant="${sideSheetOpen.value ? 'outlined' : 'filled'}"
+              label="${sideSheetOpen.value ? 'Close Side Sheet' : 'Open Side Sheet'}"
+              icon="view_sidebar"
+              @click="${() => { sideSheetOpen.value = !sideSheetOpen.value; }}"
+            ></md-button>
+          </div>
           <div class="side-sheet-preview">
             <div class="side-sheet-preview-body">
               <div class="row" style="margin-bottom:0">
