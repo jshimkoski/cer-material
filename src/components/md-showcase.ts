@@ -771,17 +771,30 @@ component('md-showcase', () => {
 
           <div class="demo-label">With value label</div>
           <div class="progress-demo">
-            <md-slider value="65" labeled="true"></md-slider>
+            <md-slider
+              :value="${sliderValue.value}"
+              @change="${(e: CustomEvent<number>) => { sliderValue.value = e.detail; }}"
+              labeled="true"
+            ></md-slider>
           </div>
 
           <div class="demo-label">Stepped (step=10)</div>
           <div class="progress-demo">
-            <md-slider value="30" step="10" ticks="true"></md-slider>
+            <md-slider
+              :value="${sliderValue.value}"
+              @change="${(e: CustomEvent<number>) => { sliderValue.value = e.detail; }}"
+              step="10"
+              ticks="true"
+            ></md-slider>
           </div>
 
           <div class="demo-label">Disabled</div>
           <div class="progress-demo">
-            <md-slider value="50" disabled="true"></md-slider>
+            <md-slider
+              :value="${sliderValue.value}"
+              @change="${(e: CustomEvent<number>) => { sliderValue.value = e.detail; }}"
+              disabled="true"
+            ></md-slider>
           </div>
         </div>
         <div class="section-divider"></div>

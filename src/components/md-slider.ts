@@ -1,5 +1,5 @@
 import { component, html, css, computed, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
-import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
+import { each } from '@jasonshimmy/custom-elements-runtime/directives';
 import { useControlledValue } from '../composables/useControlledValue';
 
 component('md-slider', () => {
@@ -27,7 +27,6 @@ component('md-slider', () => {
       height: 40px;
       display: flex;
       align-items: center;
-      padding: 0 10px;
     }
 
     input[type="range"] {
@@ -90,8 +89,9 @@ component('md-slider', () => {
     }
 
     .value-label {
+      display: none;
       position: absolute;
-      top: -32px;
+      top: -36px;
       transform: translateX(-50%);
       background: var(--md-sys-color-primary, #6750A4);
       color: var(--md-sys-color-on-primary, #fff);
@@ -104,6 +104,9 @@ component('md-slider', () => {
       pointer-events: none;
       min-width: 28px;
       text-align: center;
+    }
+    .value-label.visible {
+      display: block;
     }
 
     .tick-marks {
@@ -141,19 +144,18 @@ component('md-slider', () => {
   return html`
     <div class="slider-wrapper">
       <div class="track-bg"></div>
-      <div class="track-active" :style="${{ width: `calc(${percentage.value}% * (100% - 20px) / 100)` }}"></div>
-      ${when(props.ticks && tickCount.value.length > 0, () => html`
-        <div class="tick-marks">
-          ${each(tickCount.value, (state: string, i: number) => html`
-            <div key="${String(i)}" :class="${{ tick: true, inactive: state === 'inactive' }}"></div>
-          `)}
-        </div>
-      `)}
-      ${when(props.labeled, () => html`
-        <div class="value-label" :style="${{ left: `calc(10px + ${percentage.value}% * (100% - 20px) / 100)` }}">
-          ${internalValue.value}
-        </div>
-      `)}
+      <div class="track-active" :style="${{ width: `calc(${percentage.value / 100} * (100% - 20px))` }}"></div>
+      <div class="tick-marks" :style="${{ display: props.ticks && tickCount.value.length > 0 ? 'flex' : 'none' }}">
+        ${each(tickCount.value, (state: string, i: number) => html`
+          <div key="${String(i)}" :class="${{ tick: true, inactive: state === 'inactive' }}"></div>
+        `)}
+      </div>
+      <div
+        :class="${{ 'value-label': true, visible: !!props.labeled }}"
+        :style="${{ left: `calc(10px + ${percentage.value / 100} * (100% - 20px))` }}"
+      >
+        ${internalValue.value}
+      </div>
       <input
         type="range"
         :min="${String(props.min)}"

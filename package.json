@@ -1,16 +1,41 @@
 {
-  "name": "cer-material",
-  "private": true,
+  "name": "@jasonshimmy/cer-material",
   "version": "0.0.0",
+  "description": "Material Design 3 web components built on @jasonshimmy/custom-elements-runtime",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./theme": {
+      "types": "./dist/theme.d.ts",
+      "import": "./dist/theme.js",
+      "require": "./dist/theme.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": true,
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:lib": "vite build --mode lib",
     "preview": "vite preview"
+  },
+  "peerDependencies": {
+    "@jasonshimmy/custom-elements-runtime": ">=2.5.0"
   },
   "devDependencies": {
     "@jasonshimmy/custom-elements-runtime": "^2.5.8",
+    "@types/node": "^25.4.0",
     "typescript": "~5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vite-plugin-dts": "^4.5.4"
   }
 }

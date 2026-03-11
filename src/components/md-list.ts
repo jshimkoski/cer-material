@@ -10,9 +10,7 @@ component('md-list', () => {
     :host { display: block; }
 
     .list {
-      border: 1px solid var(--md-sys-color-outline-variant, #CAC4D0);
-      border-radius: 12px;
-      overflow: hidden;
+      background: var(--md-sys-color-surface, #FFFBFE);
     }
   `);
 

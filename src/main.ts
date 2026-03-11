@@ -1,5 +1,5 @@
 import '@jasonshimmy/custom-elements-runtime/css/reset.css'
-import './style.css'
+import './theme.ts'
 
 // Material Design Components
 import './components/md-button.ts'
