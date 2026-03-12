@@ -4,6 +4,8 @@ Material Design 3 web components built on [`@jasonshimmy/custom-elements-runtime
 
 All components are standard custom elements — framework-agnostic and usable in plain HTML, React, Vue, Angular, Svelte, or any other environment.
 
+Learn more about the author at [jasonshimmy.com](https://jasonshimmy.com) and check out the [changelog](./CHANGELOG.md) for recent updates.
+
 ---
 
 ## Installation
