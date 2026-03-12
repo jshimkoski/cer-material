@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.1.2] - 2026-03-12
+
+- fix: update readme (401b122)
+
 ## [v0.1.1] - 2026-03-12
 
 - fix: update publish.yml (1918cff)
