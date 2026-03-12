@@ -1,14 +1,14 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 
 component('md-radio', () => {
   const props = useProps({
-    checked: false,
     disabled: false,
     name: '',
     value: '',
     label: '',
   });
   const emit = useEmit();
+  const checked = defineModel('checked', false);
 
   useStyle(() => css`
     :host { display: inline-flex; align-items: center; vertical-align: middle; }
@@ -89,15 +89,15 @@ component('md-radio', () => {
     <label :class="${{ disabled: props.disabled }}">
       <div :class="${{
         'radio-container': true,
-        checked: props.checked,
+        checked: checked.value,
       }}">
         <input
           type="radio"
-          :checked="${props.checked}"
+          :checked="${checked.value}"
           :disabled="${props.disabled}"
           :name="${props.name}"
           :value="${props.value}"
-          @change="${() => emit('change', props.value)}"
+          @change="${() => { emit('change', props.value); checked.value = props.value as unknown as boolean; }}"
         />
         <div class="circle">
           <div class="inner"></div>

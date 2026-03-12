@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when, each } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 import { useEscapeKey } from '../composables/useEscapeKey';
@@ -15,11 +15,11 @@ interface MenuItem {
 
 component('md-menu', () => {
   const props = useProps({
-    open: false,
     items: [] as MenuItem[],
     anchor: 'bottom-start' as 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end',
   });
   const emit = useEmit();
+  const open = defineModel('open', false);
 
   useStyle(() => css`
     :host { display: inline-block; position: relative; }
@@ -114,16 +114,16 @@ component('md-menu', () => {
   const focusReturn = createFocusReturn();
 
   // Escape key: document-level listener so it fires regardless of focus.
-  useEscapeKey(() => props.open, () => emit('close'))();
+  useEscapeKey(() => open.value, () => { emit('close'); open.value = false; })();
 
   return html`
     <div class="menu-wrapper">
       <slot name="trigger"></slot>
 
-      ${when(props.open, () => html`
-        <div class="scrim" @click="${() => emit('close')}"></div>`)}
+      ${when(open.value, () => html`
+        <div class="scrim" @click="${() => { emit('close'); open.value = false; }}"></div>`)}  
       ${Transition({
-        show: props.open,
+        show: open.value,
         css: false,
         onEnter: (_el: HTMLElement, done: () => void) => done(),
         onLeave: (_el: HTMLElement, done: () => void) => done(),
@@ -144,7 +144,7 @@ component('md-menu', () => {
                   class="menu-item"
                   role="menuitem"
                   :disabled="${item.disabled || false}"
-                  @click="${() => { emit('select', item.id); emit('close'); }}"
+                  @click="${() => { emit('select', item.id); emit('close'); open.value = false; }}"
                 >
                   ${when(!!item.icon, () => html`<span class="item-icon" aria-hidden="true">${item.icon}</span>`)}
                   ${item.label}

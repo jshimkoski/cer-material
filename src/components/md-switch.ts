@@ -1,13 +1,13 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-switch', () => {
   const props = useProps({
-    selected: false,
     disabled: false,
     icons: false,
   });
   const emit = useEmit();
+  const selected = defineModel('selected', false);
 
   useStyle(() => css`
     :host { display: inline-flex; align-items: center; vertical-align: middle; }
@@ -130,7 +130,7 @@ component('md-switch', () => {
     <div
       :class="${{
         switch: true,
-        selected: props.selected,
+        selected: selected.value,
         disabled: props.disabled,
         icons: props.icons,
       }}"
@@ -138,13 +138,13 @@ component('md-switch', () => {
       <input
         role="switch"
         type="checkbox"
-        :checked="${props.selected}"
+        :checked="${selected.value}"
         :disabled="${props.disabled}"
-        @change="${(e: Event) => emit('change', (e.target as HTMLInputElement).checked)}"
+        @change="${(e: Event) => { emit('change', (e.target as HTMLInputElement).checked); selected.value = (e.target as HTMLInputElement).checked; }}"
       />
       <div class="track">
-        <div :class="${{ thumb: true, selected: props.selected }}">
-          ${when(props.icons, () => html`<span class="thumb-icon" aria-hidden="true">${props.selected ? 'check' : 'close'}</span>`)}
+        <div :class="${{ thumb: true, selected: selected.value }}">
+          ${when(props.icons, () => html`<span class="thumb-icon" aria-hidden="true">${selected.value ? 'check' : 'close'}</span>`)}
         </div>
       </div>
     </div>

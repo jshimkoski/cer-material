@@ -39,28 +39,29 @@ component('md-fab-menu', () => {
     icon: 'add',
     closeIcon: 'close',
     variant: 'primary' as 'primary' | 'secondary' | 'tertiary',
-    open: false,
     items: [] as FabMenuItem[],
     ariaLabel: 'Speed dial',
+    open: false,
   });
   const emit = useEmit();
-
-  const localOpen = ref(props.open);
-  watch(() => props.open, v => { localOpen.value = v; });
+  const open = ref(props.open);
+  watch(() => props.open, v => { open.value = v; });
 
   const closeMenu = () => {
     if (_activeFabClose === closeMenu) _activeFabClose = null;
-    localOpen.value = false;
+    open.value = false;
+    emit('update:open', false);
     emit('close');
   };
 
   const toggle = () => {
-    if (localOpen.value) {
+    if (open.value) {
       closeMenu();
     } else {
       // Close any other open FAB menu before opening this one.
       if (_activeFabClose) _activeFabClose();
-      localOpen.value = true;
+      open.value = true;
+      emit('update:open', true);
       _activeFabClose = closeMenu;
       emit('open');
     }
@@ -72,7 +73,7 @@ component('md-fab-menu', () => {
     closeMenu();
   };
 
-  useEscapeKey(() => localOpen.value, closeMenu)();
+  useEscapeKey(() => open.value, closeMenu)();
 
   useStyle(() => css`
     :host { display: inline-flex; }
@@ -255,11 +256,11 @@ component('md-fab-menu', () => {
   `);
 
   return html`
-    ${when(localOpen.value, () => html`
+    ${when(open.value, () => html`
       <div class="fab-scrim" @click="${() => closeMenu()}"></div>
     `)}
     <div :class="${{ 'fab-wrap': true, [props.variant]: true }}">
-      ${Transition({ show: localOpen.value,
+      ${Transition({ show: open.value,
         enterFrom: 'items-enter-from', enterActive: 'items-enter-active',
         leaveActive: 'items-leave-active', leaveTo: 'items-leave-to',
       }, html`
@@ -281,14 +282,14 @@ component('md-fab-menu', () => {
       `)}
       <button
         type="button"
-        :class="${{ 'fab-trigger': true, open: localOpen.value }}"
+        :class="${{ 'fab-trigger': true, open: open.value }}"
         aria-label="${props.ariaLabel}"
-        aria-expanded="${localOpen.value}"
+        aria-expanded="${open.value}"
         aria-haspopup="true"
         @click="${() => toggle()}"
       >
         <span class="fab-trigger-icon" aria-hidden="true">
-          ${localOpen.value ? props.closeIcon : props.icon}
+          ${open.value ? props.closeIcon : props.icon}
         </span>
       </button>
     </div>

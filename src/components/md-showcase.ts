@@ -71,6 +71,10 @@ component('md-showcase', () => {
   const timePickerOpen  = ref(false);
   const timePickerValue = ref('');
   const timePickerVariant = ref<'dial' | 'input'>('dial');
+  const activeTab          = ref('tab1');
+  const iconToggleSelected = ref(false);
+  const textFieldValue     = ref('');
+  const searchQuery        = ref('');
 
   const drawerItems = [
     { id: 'inbox',     label: 'Inbox',     icon: 'inbox' },
@@ -504,12 +508,20 @@ component('md-showcase', () => {
             <md-icon-button variant="outlined" icon="favorite" @click="${() => showSnackbar('Outlined!')}"></md-icon-button>
           </div>
 
-          <div class="demo-label">Selected (toggle) state</div>
+          <div class="demo-label">Selected (static)</div>
           <div class="row">
             <md-icon-button variant="standard" icon="bookmark_border" selected="true"></md-icon-button>
             <md-icon-button variant="filled"   icon="bookmark" selected="true"></md-icon-button>
             <md-icon-button variant="tonal"    icon="thumb_up" selected="true"></md-icon-button>
             <md-icon-button variant="outlined" icon="check" selected="true"></md-icon-button>
+          </div>
+
+          <div class="demo-label">Toggle (interactive — :model:selected) — state: ${iconToggleSelected.value ? 'selected' : 'unselected'}</div>
+          <div class="row">
+            <md-icon-button variant="standard" toggle="true" icon="bookmark_border" selected-icon="bookmark" :model:selected="${iconToggleSelected}"></md-icon-button>
+            <md-icon-button variant="filled"   toggle="true" icon="favorite_border" selected-icon="favorite" :model:selected="${iconToggleSelected}"></md-icon-button>
+            <md-icon-button variant="tonal"    toggle="true" icon="thumb_up" :model:selected="${iconToggleSelected}"></md-icon-button>
+            <md-icon-button variant="outlined" toggle="true" icon="star_outline" selected-icon="star" :model:selected="${iconToggleSelected}"></md-icon-button>
           </div>
 
           <div class="demo-label">Disabled</div>
@@ -539,8 +551,7 @@ component('md-showcase', () => {
             <md-chip
               variant="filter"
               label="Favorites"
-              :selected="${filterSelected.value}"
-              @click="${() => { filterSelected.value = !filterSelected.value; }}"
+              :model:selected="${filterSelected}"
             ></md-chip>
             <md-chip variant="filter" label="Slow cooker" selected="true"></md-chip>
             <md-chip variant="filter" label="Spicy" selected="false"></md-chip>
@@ -615,9 +626,21 @@ component('md-showcase', () => {
           <h2 class="section-title">Text Fields</h2>
           <p class="section-subtitle">Text fields let users enter and edit text.</p>
 
+          <div class="demo-label">With :model binding — click "Show value" to inspect</div>
+          <div class="row" style="align-items:flex-end">
+            <md-text-field
+              :model="${textFieldValue}"
+              variant="outlined"
+              label="Type something"
+              style="max-width:360px;width:100%"
+            ></md-text-field>
+            <md-button variant="text" label="Show value" @click="${() => showSnackbar('Value: ' + textFieldValue.value)}"></md-button>
+          </div>
+
           <div class="demo-label">Filled Variant</div>
           <div class="row column">
             <md-text-field
+              :model="${textFieldValue}"
               variant="filled"
               label="Email address"
               type="email"
@@ -626,6 +649,7 @@ component('md-showcase', () => {
               style="max-width:360px;width:100%"
             ></md-text-field>
             <md-text-field
+              :model="${textFieldValue}"
               variant="filled"
               label="Password"
               type="password"
@@ -637,12 +661,14 @@ component('md-showcase', () => {
           <div class="demo-label">Outlined Variant</div>
           <div class="row column">
             <md-text-field
+              :model="${textFieldValue}"
               variant="outlined"
               label="First name"
               leading-icon="person"
               style="max-width:360px;width:100%"
             ></md-text-field>
             <md-text-field
+              :model="${textFieldValue}"
               variant="outlined"
               label="Search"
               leading-icon="search"
@@ -654,6 +680,7 @@ component('md-showcase', () => {
           <div class="demo-label">Error State</div>
           <div class="row column">
             <md-text-field
+              :model="${textFieldValue}"
               variant="outlined"
               label="Username"
               value="taken_user"
@@ -666,6 +693,7 @@ component('md-showcase', () => {
           <div class="demo-label">Disabled</div>
           <div class="row column">
             <md-text-field
+              :model="${textFieldValue}"
               variant="filled"
               label="Disabled field"
               value="Cannot edit"
@@ -688,8 +716,7 @@ component('md-showcase', () => {
               <div class="control-row">
                 <md-checkbox
                   label="Checked"
-                  :checked="${checkState.value}"
-                  @change="${(e: CustomEvent<boolean>) => { checkState.value = e.detail; }}"
+                  :model:checked="${checkState}"
                 ></md-checkbox>
                 <md-checkbox label="Unchecked" checked="false"></md-checkbox>
                 <md-checkbox label="Indeterminate" indeterminate="true"></md-checkbox>
@@ -733,10 +760,9 @@ component('md-showcase', () => {
               <div class="control-row">
                 <div style="display:flex;align-items:center;gap:12px">
                   <md-switch
-                    :selected="${switchSelected.value}"
-                    @change="${(e: CustomEvent<boolean>) => { switchSelected.value = e.detail; }}"
+                    :model:selected="${switchSelected}"
                   ></md-switch>
-                  <span style="font-size:14px">${switchSelected.value ? 'On' : 'Off'}</span>
+                  <span style="font-size:14px">Toggle switch</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:12px">
                   <md-switch selected="true" icons="true"></md-switch>
@@ -761,19 +787,20 @@ component('md-showcase', () => {
           <h2 class="section-title">Sliders</h2>
           <p class="section-subtitle">Sliders allow users to make selections from a range of values.</p>
 
-          <div class="demo-label">Continuous (value: ${sliderValue.value})</div>
+          <div class="demo-label">Continuous — click "Show value" to inspect</div>
+          <div class="row" style="margin-bottom:0">
+            <md-button variant="text" label="Show value" @click="${() => showSnackbar('Slider: ' + sliderValue.value)}"></md-button>
+          </div>
           <div class="progress-demo">
             <md-slider
-              :value="${sliderValue.value}"
-              @change="${(e: CustomEvent<number>) => { sliderValue.value = e.detail; }}"
+              :model="${sliderValue}"
             ></md-slider>
           </div>
 
           <div class="demo-label">With value label</div>
           <div class="progress-demo">
             <md-slider
-              :value="${sliderValue.value}"
-              @change="${(e: CustomEvent<number>) => { sliderValue.value = e.detail; }}"
+              :model="${sliderValue}"
               labeled="true"
             ></md-slider>
           </div>
@@ -781,8 +808,7 @@ component('md-showcase', () => {
           <div class="demo-label">Stepped (step=10)</div>
           <div class="progress-demo">
             <md-slider
-              :value="${sliderValue.value}"
-              @change="${(e: CustomEvent<number>) => { sliderValue.value = e.detail; }}"
+              :model="${sliderValue}"
               step="10"
               ticks="true"
             ></md-slider>
@@ -791,8 +817,7 @@ component('md-showcase', () => {
           <div class="demo-label">Disabled</div>
           <div class="progress-demo">
             <md-slider
-              :value="${sliderValue.value}"
-              @change="${(e: CustomEvent<number>) => { sliderValue.value = e.detail; }}"
+              :model="${sliderValue}"
               disabled="true"
             ></md-slider>
           </div>
@@ -838,10 +863,9 @@ component('md-showcase', () => {
           </div>
 
           <md-dialog
-            :open="${dialogOpen.value}"
+            :model:open="${dialogOpen}"
             headline="Save changes?"
             icon="save"
-            @close="${() => { dialogOpen.value = false; }}"
           >
             Your unsaved changes will be lost if you navigate away from this page before saving.
             <span slot="actions">
@@ -863,7 +887,7 @@ component('md-showcase', () => {
           </div>
 
           <md-snackbar
-            :open="${snackbarOpen.value}"
+            :model:open="${snackbarOpen}"
             :message="${snackbarMsg.value}"
             action-label="Undo"
             @action="${() => showSnackbar('Undone!')}"
@@ -877,12 +901,17 @@ component('md-showcase', () => {
           <h2 class="section-title">Tabs</h2>
           <p class="section-subtitle">Tabs organize content across different screens and views.</p>
 
-          <div class="demo-label">Primary Tabs (with icons)</div>
+          <div class="demo-label">Primary Tabs with icons — click to navigate</div>
           <md-tabs
             variant="primary"
             :tabs="${tabs1}"
-            @tab-change="${(e: CustomEvent<string>) => showSnackbar('Tab: ' + e.detail)}"
-          ></md-tabs>
+            :model:activeTab="${activeTab}"
+          >
+            ${when(activeTab.value === 'tab1', () => html`<p style="margin:0;font-size:14px;color:var(--md-sys-color-on-surface-variant,#49454F)">♫ Music — your entire library in one place.</p>`)}
+            ${when(activeTab.value === 'tab2', () => html`<p style="margin:0;font-size:14px;color:var(--md-sys-color-on-surface-variant,#49454F)">&#128191; Albums — browse by album art.</p>`)}
+            ${when(activeTab.value === 'tab3', () => html`<p style="margin:0;font-size:14px;color:var(--md-sys-color-on-surface-variant,#49454F)">🎤 Artists — sorted alphabetically.</p>`)}
+            ${when(activeTab.value === 'tab4', () => html`<p style="margin:0;font-size:14px;color:var(--md-sys-color-on-surface-variant,#49454F)">&#128251; Radio — curated stations.</p>`)}
+          </md-tabs>
 
           <div class="demo-label">Secondary Tabs</div>
           <md-tabs
@@ -993,10 +1022,9 @@ component('md-showcase', () => {
 
           <div class="row">
             <md-menu
-              :open="${menuOpen.value}"
+              :model:open="${menuOpen}"
               :items="${menuItems}"
               @select="${(e: CustomEvent<string>) => showSnackbar('Menu: ' + e.detail)}"
-              @close="${() => { menuOpen.value = false; }}"
             >
               <md-button
                 slot="trigger"
@@ -1018,8 +1046,8 @@ component('md-showcase', () => {
           <div class="nav-preview">
             <md-navigation-bar
               :items="${navItems}"
-              :active="${activeNav.value}"
-              @change="${(e: CustomEvent<string>) => { activeNav.value = e.detail; showSnackbar('Nav: ' + e.detail); }}"
+              :model:active="${activeNav}"
+              @change="${(e: CustomEvent<string>) => showSnackbar('Nav: ' + e.detail)}"
             ></md-navigation-bar>
           </div>
         </div>
@@ -1095,14 +1123,17 @@ component('md-showcase', () => {
           <h2 class="section-title">Search</h2>
           <p class="section-subtitle">The search bar allows users to enter a keyword or phrase to get relevant information.</p>
 
-          <div class="demo-label">Default</div>
+          <div class="demo-label">With :model binding — click "Show query" to inspect</div>
           <div class="search-demo">
-            <md-search placeholder="Search"></md-search>
+            <md-search placeholder="Search" :model="${searchQuery}"></md-search>
+          </div>
+          <div class="row" style="margin-top:4px">
+            <md-button variant="text" label="Show query" @click="${() => showSnackbar('Query: ' + searchQuery.value)}"></md-button>
           </div>
 
           <div class="demo-label">With avatar</div>
           <div class="search-demo">
-            <md-search placeholder="Search your library" show-avatar="true"></md-search>
+            <md-search placeholder="Search your library" :model="${searchQuery}" show-avatar="true"></md-search>
           </div>
         </div>
         <div class="section-divider"></div>
@@ -1112,7 +1143,10 @@ component('md-showcase', () => {
           <h2 class="section-title">Segmented Buttons</h2>
           <p class="section-subtitle">Segmented buttons help people select options, switch views, or sort elements.</p>
 
-          <div class="demo-label">Single select (selected: ${segSelected.value})</div>
+          <div class="demo-label">Single select — click "Show selection" to inspect</div>
+          <div class="row" style="margin-bottom:0">
+            <md-button variant="text" label="Show selection" @click="${() => showSnackbar('Selected: ' + segSelected.value)}"></md-button>
+          </div>
           <div class="segmented-demo">
             <md-segmented-button
               :segments="${[
@@ -1120,8 +1154,7 @@ component('md-showcase', () => {
                 { id: 'week',  label: 'Week',  icon: 'view_week' },
                 { id: 'month', label: 'Month', icon: 'calendar_month' },
               ]}"
-              :selected="${segSelected.value}"
-              @change="${(e: CustomEvent<string>) => { segSelected.value = e.detail; }}"
+              :model:selected="${segSelected}"
             ></md-segmented-button>
           </div>
 
@@ -1199,12 +1232,12 @@ component('md-showcase', () => {
           <h2 class="section-title">Navigation Rail</h2>
           <p class="section-subtitle">The navigation rail provides access to primary destinations in apps when using tablet and desktop screens.</p>
 
-          <div class="demo-label">Standard (active: ${activeRail.value})</div>
+          <div class="demo-label">Standard</div>
           <div class="rail-preview">
             <md-navigation-rail
               :items="${railItems}"
-              :active="${activeRail.value}"
-              @change="${(e: CustomEvent<string>) => { activeRail.value = e.detail; showSnackbar('Rail: ' + e.detail); }}"
+              :model:active="${activeRail}"
+              @change="${(e: CustomEvent<string>) => showSnackbar('Rail: ' + e.detail)}"
             ></md-navigation-rail>
           </div>
 
@@ -1233,11 +1266,9 @@ component('md-showcase', () => {
           <div class="drawer-preview">
             <md-navigation-drawer
               variant="standard"
-              :open="${drawerOpen.value}"
+              :model:open="${drawerOpen}"
               :items="${drawerItems}"
-              :active="${activeDrawer.value}"
-              @change="${(e: CustomEvent<string>) => { activeDrawer.value = e.detail; }}"
-              @close="${() => { drawerOpen.value = false; }}"
+              :model:active="${activeDrawer}"
             ></md-navigation-drawer>
             <div class="drawer-preview-body">
               <div class="row" style="margin-bottom:0">
@@ -1260,12 +1291,11 @@ component('md-showcase', () => {
           </div>
           <md-navigation-drawer
             variant="modal"
-            :open="${drawerModalOpen.value}"
+            :model:open="${drawerModalOpen}"
             headline="Mail"
             :items="${drawerItems}"
-            :active="${activeDrawer.value}"
-            @change="${(e: CustomEvent<string>) => { activeDrawer.value = e.detail; showSnackbar('Drawer: ' + e.detail); }}"
-            @close="${() => { drawerModalOpen.value = false; }}"
+            :model:active="${activeDrawer}"
+            @change="${(e: CustomEvent<string>) => showSnackbar('Drawer: ' + e.detail)}"
           ></md-navigation-drawer>
         </div>
         <div class="section-divider"></div>
@@ -1285,9 +1315,9 @@ component('md-showcase', () => {
           </div>
 
           <md-bottom-sheet
-            :open="${bottomSheetOpen.value}"
+            :model:open="${bottomSheetOpen}"
             headline="Share"
-            @close="${() => { bottomSheetOpen.value = false; }}"
+            variant="modal"
           >
             <div class="sheet-content-demo">
               <div class="row">
@@ -1327,9 +1357,8 @@ component('md-showcase', () => {
             </div>
             <md-side-sheet
               variant="standard"
-              :open="${sideSheetOpen.value}"
+              :model:open="${sideSheetOpen}"
               headline="Filters"
-              @close="${() => { sideSheetOpen.value = false; }}"
             >
               <div class="sheet-content-demo">
                 <div style="display:flex;flex-direction:column;gap:12px">
@@ -1352,9 +1381,8 @@ component('md-showcase', () => {
           </div>
           <md-side-sheet
             variant="modal"
-            :open="${sideSheetModalOpen.value}"
+            :model:open="${sideSheetModalOpen}"
             headline="Filters"
-            @close="${() => { sideSheetModalOpen.value = false; }}"
           >
             <div class="sheet-content-demo">
               <p style="margin:0 0 16px">Refine your search results using the filters below.</p>
@@ -1402,19 +1430,15 @@ component('md-showcase', () => {
           </div>
           <md-date-picker
             variant="dialog"
-            :open="${datePickerOpen.value}"
-            :value="${datePickerValue.value}"
-            @change="${(e: CustomEvent<string>) => { datePickerValue.value = e.detail; }}"
-            @close="${() => { datePickerOpen.value = false; }}"
+            :model:open="${datePickerOpen}"
+            :model="${datePickerValue}"
           ></md-date-picker>
 
           <div class="demo-label">Docked (inline)</div>
           <div style="max-width:380px;min-height:460px;">
             <md-date-picker
               variant="docked"
-              :value="${datePickerValue.value}"
-              @change="${(e: CustomEvent<string>) => { datePickerValue.value = e.detail; }}"
-              @close="${() => {}}"
+              :model="${datePickerValue}"
             ></md-date-picker>
           </div>
         </div>
@@ -1442,10 +1466,8 @@ component('md-showcase', () => {
           </div>
           <md-time-picker
             :variant="${timePickerVariant.value}"
-            :open="${timePickerOpen.value}"
-            :value="${timePickerValue.value}"
-            @change="${(e: CustomEvent<string>) => { timePickerValue.value = e.detail; }}"
-            @close="${() => { timePickerOpen.value = false; }}"
+            :model:open="${timePickerOpen}"
+            :model="${timePickerValue}"
           ></md-time-picker>
         </div>
 

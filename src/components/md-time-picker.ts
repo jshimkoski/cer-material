@@ -1,4 +1,4 @@
-import { component, html, css, ref, watch, computed, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, ref, watch, computed, defineModel, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when, each } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 import { useEscapeKey } from '../composables/useEscapeKey';
@@ -41,18 +41,16 @@ component('md-time-picker', () => {
   const props = useProps({
     /** 'dial' | 'input' */
     variant: 'dial' as 'dial' | 'input',
-    /** "HH:MM" 24-hour format */
-    value: '',
-    /** whether picker is open */
-    open: false,
     /** 12 or 24-hour format */
     hour24: false,
     ariaLabel: 'Time picker',
   });
   const emit = useEmit();
+  const modelValue = defineModel('');
+  const open = defineModel('open', false);
 
   // ── internal state ────────────────────────────────────────────────────
-  const parsed = computed(() => parseTime(props.value));
+  const parsed = computed(() => parseTime(modelValue.value));
 
   // Local mutable copies
   const hours   = ref(parsed.value?.hours   ?? 12);
@@ -69,7 +67,7 @@ component('md-time-picker', () => {
   const inputM = ref(pad2(minutes.value));
 
   // Sync when prop changes externally
-  watch(() => props.value, (v) => {
+  watch(() => modelValue.value, (v) => {
     const p = parseTime(v);
     if (p) {
       hours.value   = p.hours;
@@ -199,11 +197,13 @@ component('md-time-picker', () => {
       if (period.value === 'PM' && h !== 12) h = h + 12;
     }
     emit('change', `${pad2(h)}:${pad2(minutes.value)}`);
+    modelValue.value = `${pad2(h)}:${pad2(minutes.value)}`;
     emit('close');
+    open.value = false;
   };
 
   // ── focus/scroll management ───────────────────────────────────────────
-  useEscapeKey(() => props.open, () => emit('close'))();
+  useEscapeKey(() => open.value, () => { emit('close'); open.value = false; })();
   const trap = createFocusTrap();
   useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
@@ -510,7 +510,7 @@ component('md-time-picker', () => {
   // userVariant stores an explicit in-session toggle; null means “follow props”.
   const userVariant = ref<'dial' | 'input' | null>(null);
   // Clear user override whenever the picker opens so it always starts with props.variant
-  watch(() => props.open, (open) => { if (open) userVariant.value = null; });
+  watch(() => open.value, (isOpen) => { if (isOpen) userVariant.value = null; });
   const currentVariant = computed(() => userVariant.value ?? props.variant);
 
   // Helper to toggle between dial/input within an open session
@@ -567,8 +567,8 @@ component('md-time-picker', () => {
               inputmode="numeric"
               maxlength="2"
               aria-label="Hours"
-              .value="${inputH.value}"
-              @input="${(e: Event) => { inputH.value = (e.target as HTMLInputElement).value; }}"
+              :model="${inputH}"
+              @input="${(e: Event) => e.stopPropagation()}"
               @blur="${commitInputH}"
               @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter') { commitInputH(); (e.currentTarget as HTMLElement).blur(); } }}"
             />
@@ -583,8 +583,8 @@ component('md-time-picker', () => {
               inputmode="numeric"
               maxlength="2"
               aria-label="Minutes"
-              .value="${inputM.value}"
-              @input="${(e: Event) => { inputM.value = (e.target as HTMLInputElement).value; }}"
+              :model="${inputM}"
+              @input="${(e: Event) => e.stopPropagation()}"
               @blur="${commitInputM}"
               @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter') { commitInputM(); (e.currentTarget as HTMLElement).blur(); } }}"
             />
@@ -650,14 +650,14 @@ component('md-time-picker', () => {
         </button>
       </div>
       <div class="picker-actions">
-        <md-button variant="text" @click="${() => emit('close')}">Cancel</md-button>
+        <md-button variant="text" @click="${() => { emit('close'); open.value = false; }}">Cancel</md-button>
         <md-button variant="text" @click="${handleOK}">OK</md-button>
       </div>
     </div>
   `;
 
   return html`
-    ${Transition({ show: props.open,
+    ${Transition({ show: open.value,
       enterFrom: 'scrim-enter-from', enterActive: 'scrim-enter-active',
       leaveActive: 'scrim-leave-active', leaveTo: 'scrim-leave-to',
       onBeforeEnter: scrollLock.lock,
@@ -666,7 +666,7 @@ component('md-time-picker', () => {
     }, html`
       <div
         class="scrim"
-        @click="${(e: Event) => { if (e.target === e.currentTarget) emit('close'); }}"
+        @click="${(e: Event) => { if (e.target === e.currentTarget) { emit('close'); open.value = false; } }}"
       >
         ${renderContent()}
       </div>

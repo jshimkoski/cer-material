@@ -1,22 +1,19 @@
-import { component, html, css, computed, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, computed, defineModel, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each } from '@jasonshimmy/custom-elements-runtime/directives';
-import { useControlledValue } from '../composables/useControlledValue';
 
 component('md-slider', () => {
   const props = useProps({
     min: 0,
     max: 100,
-    value: 50,
     step: 1,
     disabled: false,
     labeled: false,
     ticks: false,
     ariaLabel: '',
   });
-  const emit = useEmit();
-  const internalValue = useControlledValue(() => props.value);
+  const modelValue = defineModel(50);
   const percentage = computed(() =>
-    ((internalValue.value - props.min) / (props.max - props.min)) * 100,
+    ((modelValue.value - props.min) / (props.max - props.min)) * 100,
   );
 
   useStyle(() => css`
@@ -137,7 +134,7 @@ component('md-slider', () => {
     const count = Math.round((props.max - props.min) / props.step) + 1;
     return Array.from({ length: count }, (_, i) => {
       const tickValue = props.min + i * props.step;
-      return tickValue <= internalValue.value ? 'active' : 'inactive';
+      return tickValue <= modelValue.value ? 'active' : 'inactive';
     });
   });
 
@@ -154,20 +151,16 @@ component('md-slider', () => {
         :class="${{ 'value-label': true, visible: !!props.labeled }}"
         :style="${{ left: `calc(10px + ${percentage.value / 100} * (100% - 20px))` }}"
       >
-        ${internalValue.value}
+        ${modelValue.value}
       </div>
       <input
         type="range"
         :min="${String(props.min)}"
         :max="${String(props.max)}"
         :step="${String(props.step)}"
-        :value="${String(internalValue.value)}"
+        :model="${modelValue}"
         :disabled="${props.disabled}"
         :bind="${{ 'aria-label': props.ariaLabel || null }}"
-        @input="${(e: Event) => {
-          internalValue.value = Number((e.target as HTMLInputElement).value);
-          emit('change', internalValue.value);
-        }}"
       />
     </div>
   `;

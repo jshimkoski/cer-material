@@ -1,13 +1,13 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-snackbar', () => {
   const props = useProps({
-    open: false,
     message: '',
     actionLabel: '',
   });
   const emit = useEmit();
+  const open = defineModel('open', false);
 
   useStyle(() => css`
     :host { display: contents; }
@@ -128,7 +128,7 @@ component('md-snackbar', () => {
 
   return html`
     <div
-      :class="${{ bar: true, open: props.open }}"
+      :class="${{ bar: true, open: open.value }}"
       role="status"
       aria-live="polite"
       aria-atomic="true"
@@ -139,7 +139,7 @@ component('md-snackbar', () => {
           ${props.actionLabel}
         </button>
       `)}
-      <button type="button" class="close-btn" aria-label="Dismiss" @click="${() => emit('close')}">
+      <button type="button" class="close-btn" aria-label="Dismiss" @click="${() => { emit('close'); open.value = false; }}">
         <span class="close-icon" aria-hidden="true">close</span>
       </button>
     </div>

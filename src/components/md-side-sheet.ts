@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 import { useEscapeKey } from '../composables/useEscapeKey';
@@ -7,15 +7,15 @@ import { useScrollLock } from '../composables/useScrollLock';
 
 component('md-side-sheet', () => {
   const props = useProps({
-    open: false,
     headline: '',
     variant: 'standard' as 'standard' | 'modal',
     divider: true,
   });
   const emit = useEmit();
+  const open = defineModel('open', false);
 
   // Only modal variant uses escape key, focus trap, and scroll lock.
-  useEscapeKey(() => props.open && props.variant === 'modal', () => emit('close'))();
+  useEscapeKey(() => open.value && props.variant === 'modal', () => { emit('close'); open.value = false; })();
   const trap = createFocusTrap();
   useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
@@ -74,12 +74,7 @@ component('md-side-sheet', () => {
     .standard-side-sheet.with-divider {
       border-left: 1px solid var(--md-sys-color-outline-variant, #CAC4D0);
     }
-    .standard-enter-from, .standard-leave-to {
-      width: 0;
-    }
-    .standard-enter-active, .standard-leave-active {
-      transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
+
 
     /* ── Shared header & content ─────────────────────────────────── */
     .sheet-header {
@@ -146,19 +141,19 @@ component('md-side-sheet', () => {
 
   return html`
     ${Transition({
-      show: props.open && props.variant === 'modal',
+      show: open.value && props.variant === 'modal',
       name: 'md-scrim',
       enterFrom: 'scrim-enter-from',
       enterActive: 'scrim-enter-active',
       leaveActive: 'scrim-leave-active',
       leaveTo: 'scrim-leave-to',
     }, html`
-      <div class="scrim" @click="${() => emit('close')}"></div>
+      <div class="scrim" @click="${() => { emit('close'); open.value = false; }}"></div>
     `)}
 
     ${props.variant === 'modal'
       ? Transition({
-          show: props.open,
+          show: open.value,
           name: 'md-modal-side-sheet',
           enterFrom: 'modal-enter-from',
           enterActive: 'modal-enter-active',
@@ -180,7 +175,7 @@ component('md-side-sheet', () => {
                   <span class="icon-btn-icon">arrow_back</span>
                 </button>
                 <h2 class="sheet-headline">${props.headline}</h2>
-                <button class="icon-btn" aria-label="Close side sheet" @click="${() => emit('close')}">
+                <button class="icon-btn" aria-label="Close side sheet" @click="${() => { emit('close'); open.value = false; }}">
                   <span class="icon-btn-icon">close</span>
                 </button>
               </div>
@@ -191,12 +186,39 @@ component('md-side-sheet', () => {
           </div>
         `)
       : Transition({
-          show: props.open,
+          show: open.value,
           name: 'md-standard-side-sheet',
-          enterFrom: 'standard-enter-from',
-          enterActive: 'standard-enter-active',
-          leaveActive: 'standard-leave-active',
-          leaveTo: 'standard-leave-to',
+          css: false,
+          onBeforeEnter: (el) => {
+            (el as HTMLElement).style.width = '0';
+          },
+          onEnter: (el, done) => {
+            const h = el as HTMLElement;
+            h.offsetHeight; // force reflow to commit width: 0
+            h.style.transition = 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)';
+            h.style.width = '400px';
+            h.addEventListener('transitionend', () => done(), { once: true });
+          },
+          onAfterEnter: (el) => {
+            const h = el as HTMLElement;
+            h.style.removeProperty('width');
+            h.style.removeProperty('transition');
+          },
+          onBeforeLeave: (el) => {
+            const h = el as HTMLElement;
+            h.style.width = `${h.offsetWidth}px`;
+          },
+          onLeave: (el, done) => {
+            const h = el as HTMLElement;
+            h.style.transition = 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)';
+            h.style.width = '0';
+            h.addEventListener('transitionend', () => done(), { once: true });
+          },
+          onAfterLeave: (el) => {
+            const h = el as HTMLElement;
+            h.style.removeProperty('width');
+            h.style.removeProperty('transition');
+          },
         }, html`
           <div
             :class="${{ 'standard-side-sheet': true, 'with-divider': props.divider }}"
@@ -206,7 +228,7 @@ component('md-side-sheet', () => {
             ${when(!!props.headline, () => html`
               <div class="sheet-header">
                 <h2 class="sheet-headline">${props.headline}</h2>
-                <button class="icon-btn" aria-label="Close side sheet" @click="${() => emit('close')}">
+                <button class="icon-btn" aria-label="Close side sheet" @click="${() => { emit('close'); open.value = false; }}">
                   <span class="icon-btn-icon">close</span>
                 </button>
               </div>

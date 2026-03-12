@@ -1,14 +1,11 @@
-import { component, html, css, ref, watch, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, ref, defineModel, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
-let _fieldIdCounter = 0;
-
 component('md-text-field', () => {
-  const fieldId = `md-field-${++_fieldIdCounter}`;
+  const fieldId = `md-field`;
   const props = useProps({
     variant: 'filled' as 'filled' | 'outlined',
     label: 'Label',
-    value: '',
     type: 'text',
     placeholder: '',
     disabled: false,
@@ -20,12 +17,8 @@ component('md-text-field', () => {
     required: false,
     readonly: false,
   });
-  const emit = useEmit();
+  const modelValue = defineModel('');
   const focused = ref(false);
-  const internalValue = ref(props.value);
-
-  // Sync with controlled prop
-  watch(() => props.value, (v) => { internalValue.value = v; });
 
   useStyle(() => css`
     :host { display: block; }
@@ -207,7 +200,7 @@ component('md-text-field', () => {
         :class="${{
           [props.variant]: true,
           'has-leading': !!props.leadingIcon,
-          'is-active': internalValue.value !== '' || focused.value,
+          'is-active': modelValue.value !== '' || focused.value,
           error: !!showError,
         }}"
       >
@@ -221,7 +214,7 @@ component('md-text-field', () => {
           <input
             :id="${fieldId}"
             :type="${props.type}"
-            :value="${internalValue.value}"
+            :model="${modelValue}"
             :disabled="${props.disabled}"
             :readonly="${props.readonly}"
             :required="${props.required}"
@@ -231,12 +224,9 @@ component('md-text-field', () => {
               'aria-invalid': props.error ? 'true' : null,
               'aria-describedby': (props.error && props.errorText) || props.supportingText ? `${fieldId}-supporting` : null,
             }}"
+            class="focus:outline-none"
             @focus="${() => { focused.value = true; }}"
             @blur="${() => { focused.value = false; }}"
-            @input="${(e: Event) => {
-              internalValue.value = (e.target as HTMLInputElement).value;
-              emit('change', internalValue.value);
-            }}"
           />
           ${when(!!props.trailingIcon, () => html`<span :class="${{ 'field-icon': true, 'trailing-icon': true, 'error-icon': !!showError }}" aria-hidden="true">${props.trailingIcon}</span>`)}
           ${when(!props.trailingIcon && showError, () => html`<span class="field-icon trailing-icon error-icon" aria-hidden="true">error</span>`)}

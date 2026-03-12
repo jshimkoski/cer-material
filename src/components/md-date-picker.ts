@@ -1,4 +1,4 @@
-import { component, html, css, ref, watch, computed, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, ref, watch, computed, defineModel, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when, each } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 import { useEscapeKey } from '../composables/useEscapeKey';
@@ -136,8 +136,6 @@ component('md-date-picker', () => {
   const props = useProps({
     /** 'dialog' | 'docked' */
     variant: 'dialog' as 'dialog' | 'docked',
-    /** ISO date string YYYY-MM-DD */
-    value: '',
     /** ISO date string for range start */
     rangeStart: '',
     /** ISO date string for range end */
@@ -146,13 +144,15 @@ component('md-date-picker', () => {
     min: '',
     /** max selectable date (ISO) */
     max: '',
-    /** whether the picker is open (dialog/docked variants) */
-    open: false,
     /** label shown on the trigger text field */
     label: 'Select date',
     ariaLabel: 'Date picker',
+    open: false,
   });
   const emit = useEmit();
+  const modelValue = defineModel('');
+  const open = ref(props.open);
+  watch(() => props.open, v => { open.value = v; });
 
   // ── view state ────────────────────────────────────────────────────────
   // 'day' | 'month' | 'year'
@@ -163,26 +163,24 @@ component('md-date-picker', () => {
 
   // initialize from value prop
   const initFromValue = () => {
-    const d = isoToDate(props.value);
+    const d = isoToDate(modelValue.value);
     if (d) { viewYear.value = d.getFullYear(); viewMonth.value = d.getMonth(); }
   };
   initFromValue();
-  watch(() => props.value, initFromValue);
+  watch(() => modelValue.value, initFromValue);
 
   // ── pending selection (dialog mode) ──────────────────────────────────
   // Dialog mode: day clicks update a pending value; OK confirms, Cancel discards.
-  const pendingValue = ref(props.value);
-  watch(() => props.value, (v) => { pendingValue.value = v; });
-  watch(() => props.open, (open) => { if (open) pendingValue.value = props.value; });
+  const pendingValue = ref(modelValue.value);
+  watch(() => modelValue.value, (v) => { pendingValue.value = v; });
+  watch(() => open.value, (isOpen) => { if (isOpen) pendingValue.value = modelValue.value; });
 
   // ── docked mode open state ──────────────────────────────────────────
-  const dockedOpen = ref(props.open && props.variant === 'docked');
-  watch(() => props.open, v => { if (props.variant === 'docked') dockedOpen.value = v; });
-  const toggleDocked = () => { dockedOpen.value = !dockedOpen.value; };
+  const toggleDocked = () => { const v = !open.value; open.value = v; emit('update:open', v); };
 
   // ── computed helpers ──────────────────────────────────────────────────
   const selectedDate  = computed(() =>
-    isoToDate(props.variant === 'dialog' ? pendingValue.value : props.value));
+    isoToDate(props.variant === 'dialog' ? pendingValue.value : modelValue.value));
   const rangeStartDt  = computed(() => isoToDate(props.rangeStart));
   const rangeEndDt    = computed(() => isoToDate(props.rangeEnd));
   const minDt         = computed(() => isoToDate(props.min));
@@ -228,7 +226,9 @@ component('md-date-picker', () => {
       pendingValue.value = iso;
     } else {
       emit('change', iso);
-      dockedOpen.value = false;
+      modelValue.value = iso;
+      open.value = false;
+      emit('update:open', false);
     }
   };
 
@@ -240,9 +240,8 @@ component('md-date-picker', () => {
   // ── modal focus/scroll ────────────────────────────────────────────────
   const isModal = computed(() => props.variant === 'dialog');
   useEscapeKey(
-    () => (props.open && isModal.value) || dockedOpen.value,
-    () => { dockedOpen.value = false; emit('close'); }
-  )();
+    () => (open.value && isModal.value) || open.value,
+    () => { open.value = false; emit('update:open', false); emit('close'); })();
   const trap = createFocusTrap();
   useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
@@ -596,7 +595,7 @@ component('md-date-picker', () => {
       const e = props.rangeEnd   ? formatRangeDate(props.rangeEnd)   : '—';
       return `${s}  –  ${e}`;
     }
-    const val = props.variant === 'dialog' ? pendingValue.value : props.value;
+    const val = props.variant === 'dialog' ? pendingValue.value : modelValue.value;
     return val ? formatHeadline(val) : '——/——/————';
   });
 
@@ -699,8 +698,8 @@ component('md-date-picker', () => {
 
   const renderActions = () => html`
     <div class="picker-actions">
-      <md-button variant="text" @click="${() => { dockedOpen.value = false; emit('close'); }}">Cancel</md-button>
-      <md-button variant="text" @click="${() => { if (props.variant === 'dialog' && pendingValue.value) emit('change', pendingValue.value); dockedOpen.value = false; emit('close'); }}">OK</md-button>
+      <md-button variant="text" @click="${() => { open.value = false; emit('update:open', false); emit('close'); }}">Cancel</md-button>
+      <md-button variant="text" @click="${() => { if (props.variant === 'dialog' && pendingValue.value) { emit('change', pendingValue.value); modelValue.value = pendingValue.value; } open.value = false; emit('update:open', false); emit('close'); }}">OK</md-button>
     </div>
   `;
 
@@ -717,7 +716,7 @@ component('md-date-picker', () => {
   `;
 
   return html`
-    ${Transition({ show: props.open && props.variant === 'dialog',
+    ${Transition({ show: open.value && props.variant === 'dialog',
       enterFrom: 'scrim-enter-from', enterActive: 'scrim-enter-active',
       leaveActive: 'scrim-leave-active', leaveTo: 'scrim-leave-to',
       onBeforeEnter: scrollLock.lock,
@@ -726,7 +725,7 @@ component('md-date-picker', () => {
     }, html`
       <div
         class="scrim"
-        @click="${(e: Event) => { if (e.target === e.currentTarget) emit('close'); }}"
+        @click="${(e: Event) => { if (e.target === e.currentTarget) { emit('close'); open.value = false; emit('update:open', false); } }}"
       >
         ${renderPicker()}
       </div>
@@ -739,13 +738,13 @@ component('md-date-picker', () => {
             class="docked-field-input"
             type="text"
             readonly
-            :value="${props.value ? formatHeadline(props.value) : ''}"
+            :value="${modelValue.value ? formatHeadline(modelValue.value) : ''}"
             placeholder="mm/dd/yyyy"
             aria-label="${props.label}"
           />
           <span class="docked-field-icon" aria-hidden="true">calendar_today</span>
         </div>
-        ${Transition({ show: dockedOpen.value,
+        ${Transition({ show: open.value,
           enterFrom: 'docked-enter-from', enterActive: 'docked-enter-active',
           leaveActive: 'docked-leave-active', leaveTo: 'docked-leave-to',
         }, html`

@@ -70,6 +70,33 @@ import '@jasonshimmy/cer-material/dist/components/md-text-field.js';
 
 ---
 
+## Two-way bindings (`:model`)
+
+All stateful components emit `update:*` events enabling concise two-way data binding with `:model` — no need to manually pair a `:prop` setter with a `@event` handler.
+
+| Syntax | Syncs | Components |
+|---|---|---|
+| `:model="${ref}"` | `value` | `md-text-field`, `md-slider`, `md-search`, `md-date-picker`, `md-time-picker` |
+| `:model:checked="${ref}"` | `checked` | `md-checkbox` |
+| `:model:selected="${ref}"` | `selected` | `md-switch`, `md-chip` (filter), `md-icon-button` (toggle), `md-segmented-button` |
+| `:model:activeTab="${ref}"` | active tab id | `md-tabs` |
+| `:model:active="${ref}"` | active item id | `md-navigation-bar`, `md-navigation-rail`, `md-navigation-drawer` |
+| `:model:open="${ref}"` | open / visible | `md-dialog`, `md-menu`, `md-snackbar`, `md-bottom-sheet`, `md-side-sheet`, `md-fab-menu`, `md-navigation-drawer`, `md-date-picker`, `md-time-picker` |
+
+All original `change`, `close`, `tab-change`, and other events still fire for backward compatibility — `:model` is additive.
+
+```ts
+// Verbose (still works)
+<md-text-field :value="${email}" @change="${e => email = e.detail}"></md-text-field>
+
+// Concise with :model
+<md-text-field :model="${email}"></md-text-field>
+```
+
+> **Radio groups**: `:model:checked` writes the radio's `value` string to the ref when selected, but does not derive the `checked` boolean. Use `:checked="${selected === radio.value}"` for the display state alongside `@change` for radio groups.
+
+---
+
 ## Design tokens
 
 The theme is injected as `document.adoptedStyleSheets` and exposes every MD3 system token as a CSS custom property. Override them on `:root` to customise the palette:
@@ -167,10 +194,9 @@ Slide-up bottom sheet with optional drag-to-dismiss, focus trap, and scroll lock
 
 ```html
 <md-bottom-sheet
-  :open="${isOpen}"
+  :model:open="${isOpen}"
   headline="Options"
   variant="modal"
-  @close="${() => isOpen = false}"
 >
   <p>Your content here</p>
 </md-bottom-sheet>
@@ -286,8 +312,7 @@ MD3 checkbox with animated check/dash icon and an optional inline text label.
 ```html
 <md-checkbox
   label="Accept terms"
-  :checked="${accepted}"
-  @change="${e => accepted = e.detail.checked}"
+  :model:checked="${accepted}"
 ></md-checkbox>
 ```
 
@@ -308,7 +333,7 @@ MD3 chip in four variants — assist, filter (toggle), input (removable), and su
 **Events:** `click`; `remove` — the × button was tapped (input variant only).
 
 ```html
-<md-chip variant="filter" label="Unread" :selected="${filterUnread}" @click="${toggleFilter}"></md-chip>
+<md-chip variant="filter" label="Unread" :model:selected="${filterUnread}"></md-chip>
 <md-chip variant="input" label="jason@example.com" @remove="${removeChip}"></md-chip>
 ```
 
@@ -335,11 +360,9 @@ Full MD3 date picker with calendar grid, month/year navigation, optional date ra
 ```html
 <md-date-picker
   label="Start date"
-  :value="${startDate}"
+  :model="${startDate}"
   min="2024-01-01"
-  :open="${pickerOpen}"
-  @change="${e => startDate = e.detail.iso}"
-  @close="${() => pickerOpen = false}"
+  :model:open="${pickerOpen}"
 ></md-date-picker>
 ```
 
@@ -360,7 +383,7 @@ MD3 modal dialog with scale-in animation, optional icon/headline, scrollable bod
 **Events:** `close` — dialog dismissed.
 
 ```html
-<md-dialog :open="${dialogOpen}" headline="Delete item?" @close="${() => dialogOpen = false}">
+<md-dialog :model:open="${dialogOpen}" headline="Delete item?">
   <p>This action cannot be undone.</p>
   <div slot="actions">
     <md-button variant="text" label="Cancel" @click="${() => dialogOpen = false}"></md-button>
@@ -429,6 +452,7 @@ FAB speed dial that expands upward to reveal labeled action items. Only one inst
 
 ```html
 <md-fab-menu
+  :model:open="${fabOpen}"
   :bind="${{ items: [
     { id: 'share', icon: 'share', label: 'Share' },
     { id: 'copy', icon: 'content_copy', label: 'Copy link' },
@@ -456,7 +480,7 @@ MD3 icon button with four style variants and optional toggle (pressed/selected) 
 **Events:** `click`; `change` `(detail: { selected: boolean })` — toggle state changed.
 
 ```html
-<md-icon-button icon="favorite_border" selected-icon="favorite" toggle @change="${handleFav}"></md-icon-button>
+<md-icon-button icon="favorite_border" selected-icon="favorite" toggle :model:selected="${isFav}"></md-icon-button>
 <md-icon-button icon="delete" variant="outlined" @click="${onDelete}"></md-icon-button>
 ```
 
@@ -532,6 +556,7 @@ Contextual dropdown menu with four anchor positions, keyboard navigation, and di
 
 ```html
 <md-menu
+  :model:open="${menuOpen}"
   :bind="${{ items: [
     { id: 'edit', label: 'Edit', icon: 'edit' },
     { id: 'dup', label: 'Duplicate', icon: 'content_copy' },
@@ -539,7 +564,7 @@ Contextual dropdown menu with four anchor positions, keyboard navigation, and di
   ] }}"
   @select="${handleMenuSelect}"
 >
-  <md-icon-button slot="trigger" icon="more_vert"></md-icon-button>
+  <md-icon-button slot="trigger" icon="more_vert" @click="${() => menuOpen = !menuOpen}"></md-icon-button>
 </md-menu>
 ```
 
@@ -558,13 +583,12 @@ MD3 bottom navigation bar for mobile with active pill indicator, filled icon for
 
 ```html
 <md-navigation-bar
-  :active="${activeTab}"
+  :model:active="${activeTab}"
   :bind="${{ items: [
     { id: 'home', label: 'Home', icon: 'home' },
     { id: 'search', label: 'Search', icon: 'search' },
     { id: 'profile', label: 'Profile', icon: 'person', badge: '2' },
   ] }}"
-  @change="${e => activeTab = e.detail.id}"
 ></md-navigation-bar>
 ```
 
@@ -590,11 +614,10 @@ MD3 navigation drawer in standard (in-layout, width-animated) or modal (slide-in
 <md-navigation-drawer
   variant="modal"
   headline="Mail"
-  :open="${drawerOpen}"
-  :active="${currentRoute}"
+  :model:open="${drawerOpen}"
+  :model:active="${currentRoute}"
   :bind="${{ items: navItems }}"
-  @change="${e => navigate(e.detail.id)}"
-  @close="${() => drawerOpen = false}"
+  @change="${e => navigate(e.detail)}"
 ></md-navigation-drawer>
 ```
 
@@ -616,13 +639,13 @@ MD3 vertical navigation rail for tablet/desktop with optional top FAB and hambur
 
 ```html
 <md-navigation-rail
-  :active="${activeRoute}"
+  :model:active="${activeRoute}"
   menu-icon
   :bind="${{ items: [
     { id: 'inbox', label: 'Inbox', icon: 'inbox' },
     { id: 'sent', label: 'Sent', icon: 'send' },
   ] }}"
-  @change="${e => navigate(e.detail.id)}"
+  @change="${e => navigate(e.detail)}"
 ></md-navigation-rail>
 ```
 
@@ -685,8 +708,7 @@ MD3 search bar with a leading icon, animated clear button, and optional avatar.
 ```html
 <md-search
   placeholder="Search contacts"
-  :value="${query}"
-  @input="${e => query = e.detail.value}"
+  :model="${query}"
   @search="${e => runSearch(e.detail.query)}"
 ></md-search>
 ```
@@ -713,8 +735,7 @@ MD3 segmented button group for single-select or multi-select toggle behaviour.
     { id: 'week', label: 'Week' },
     { id: 'month', label: 'Month' },
   ] }}"
-  selected="week"
-  @change="${e => view = e.detail.id}"
+  :model:selected="${view}"
 ></md-segmented-button>
 ```
 
@@ -736,7 +757,7 @@ MD3 side sheet — standard (in-layout, right-side panel) or modal (slide-in fro
 **Events:** `close`; `back` — header back button clicked (modal variant).
 
 ```html
-<md-side-sheet variant="modal" headline="Details" :open="${sheetOpen}" @close="${() => sheetOpen = false}">
+<md-side-sheet variant="modal" headline="Details" :model:open="${sheetOpen}">
   <p>Side panel content</p>
 </md-side-sheet>
 ```
@@ -761,7 +782,7 @@ MD3 range slider with a custom-styled track, optional floating value label, and 
 **Events:** `change` `(detail: { value: number })` — value changed.
 
 ```html
-<md-slider min="0" max="50" step="5" labeled :value="${vol}" @change="${e => vol = e.detail.value}"></md-slider>
+<md-slider min="0" max="50" step="5" labeled :model="${vol}"></md-slider>
 ```
 
 ---
@@ -780,11 +801,10 @@ MD3 snackbar that slides up from the bottom with an optional action button.
 
 ```html
 <md-snackbar
-  :open="${showSnack}"
+  :model:open="${showSnack}"
   message="Item deleted"
   action-label="Undo"
   @action="${undoDelete}"
-  @close="${() => showSnack = false}"
 ></md-snackbar>
 ```
 
@@ -832,7 +852,7 @@ MD3 toggle switch with animated thumb, state-layer ripple, and optional check/cl
 **Events:** `change` `(detail: { checked: boolean })` — toggled.
 
 ```html
-<md-switch :selected="${darkMode}" icons @change="${e => darkMode = e.detail.checked}"></md-switch>
+<md-switch :model:selected="${darkMode}" icons></md-switch>
 ```
 
 ---
@@ -854,12 +874,11 @@ MD3 tabbed navigation with an active indicator bar, icon and badge support, keyb
 ```html
 <md-tabs
   variant="primary"
-  :active-tab="${activeTab}"
+  :model:activeTab="${activeTab}"
   :bind="${{ tabs: [
     { id: 'flights', label: 'Flights', icon: 'flight' },
     { id: 'hotels', label: 'Hotels', icon: 'hotel' },
   ] }}"
-  @tab-change="${e => activeTab = e.detail.id}"
 >
   <!-- render panel based on activeTab -->
 </md-tabs>
@@ -895,10 +914,9 @@ MD3 text field (filled or outlined) with animated floating label, leading/traili
   label="Email"
   type="email"
   leading-icon="mail"
-  :value="${email}"
+  :model="${email}"
   :error="${!!emailError}"
   :error-text="${emailError}"
-  @change="${e => email = e.detail.value}"
 ></md-text-field>
 ```
 
@@ -920,10 +938,8 @@ MD3 time picker modal with an interactive clock dial or keyboard input mode, AM/
 
 ```html
 <md-time-picker
-  :value="${meetingTime}"
-  :open="${pickerOpen}"
-  @change="${e => meetingTime = e.detail.time}"
-  @close="${() => pickerOpen = false}"
+  :model="${meetingTime}"
+  :model:open="${pickerOpen}"
 ></md-time-picker>
 ```
 

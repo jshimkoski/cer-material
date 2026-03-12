@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { useListKeyNav } from '../composables/useListKeyNav';
 
@@ -12,12 +12,12 @@ interface NavItem {
 component('md-navigation-rail', () => {
   const props = useProps({
     items: [] as NavItem[],
-    active: '',
     fab: false,
     fabIcon: 'add',
     menuIcon: false,
   });
   const emit = useEmit();
+  const active = defineModel('active', '');
 
   const handleNavKeyDown = useListKeyNav({
     orientation: 'vertical',
@@ -226,10 +226,10 @@ component('md-navigation-rail', () => {
         (item: NavItem) => html`
           <button
             key="${item.id}"
-            :class="${{ 'nav-item': true, active: props.active === item.id }}"
+            :class="${{ 'nav-item': true, active: active.value === item.id }}"
             aria-label="${item.label}"
-            :bind="${{ 'aria-current': props.active === item.id ? 'page' : null }}"
-            @click="${() => emit('change', item.id)}"
+            :bind="${{ 'aria-current': active.value === item.id ? 'page' : null }}"
+            @click="${() => { emit('change', item.id); active.value = item.id; }}"
           >
             <div class="indicator">
               <span class="nav-icon" aria-hidden="true">${item.icon}</span>

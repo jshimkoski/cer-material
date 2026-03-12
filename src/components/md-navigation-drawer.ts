@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 import { useEscapeKey } from '../composables/useEscapeKey';
@@ -16,15 +16,15 @@ interface DrawerItem {
 
 component('md-navigation-drawer', () => {
   const props = useProps({
-    open: false,
     headline: '',
     variant: 'standard' as 'standard' | 'modal',
     items: [] as DrawerItem[],
-    active: '',
   });
   const emit = useEmit();
+  const open = defineModel('open', false);
+  const active = defineModel('active', '');
 
-  useEscapeKey(() => props.open && props.variant === 'modal', () => emit('close'))();
+  useEscapeKey(() => open.value && props.variant === 'modal', () => { emit('close'); open.value = false; })();
   const trap = createFocusTrap();
   useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
@@ -190,19 +190,19 @@ component('md-navigation-drawer', () => {
 
   return html`
     ${Transition({
-      show: props.open && props.variant === 'modal',
+      show: open.value && props.variant === 'modal',
       name: 'md-scrim',
       enterFrom: 'scrim-enter-from',
       enterActive: 'scrim-enter-active',
       leaveActive: 'scrim-leave-active',
       leaveTo: 'scrim-leave-to',
     }, html`
-      <div class="scrim" @click="${() => emit('close')}"></div>
+      <div class="scrim" @click="${() => { emit('close'); open.value = false; }}"></div>
     `)}
 
     ${props.variant === 'modal'
       ? Transition({
-          show: props.open,
+          show: open.value,
           name: 'md-modal-drawer',
           enterFrom: 'drawer-enter-from',
           enterActive: 'drawer-enter-active',
@@ -234,10 +234,10 @@ component('md-navigation-drawer', () => {
                     : html`
                       <button
                         key="${item.id}"
-                        :class="${{ 'drawer-item': true, active: props.active === item.id }}"
+                        :class="${{ 'drawer-item': true, active: active.value === item.id }}"
                         :disabled="${item.disabled || false}"
-                        :bind="${{ 'aria-current': props.active === item.id ? 'page' : null }}"
-                        @click="${() => { if (item.id) { emit('change', item.id); emit('close'); } }}"
+                        :bind="${{ 'aria-current': active.value === item.id ? 'page' : null }}"
+                        @click="${() => { if (item.id) { emit('change', item.id); active.value = item.id; emit('close'); open.value = false; } }}"
                       >
                         ${when(!!item.icon, () => html`<span class="drawer-icon" aria-hidden="true">${item.icon}</span>`)}
                         <span class="drawer-label">${item.label}</span>
@@ -249,7 +249,7 @@ component('md-navigation-drawer', () => {
           </div>
         `)
       : Transition({
-          show: props.open,
+          show: open.value,
           name: 'md-standard-drawer',
           enterFrom: 'standard-enter-from',
           enterActive: 'standard-enter-active',
@@ -277,10 +277,10 @@ component('md-navigation-drawer', () => {
                     : html`
                       <button
                         key="${item.id}"
-                        :class="${{ 'drawer-item': true, active: props.active === item.id }}"
+                        :class="${{ 'drawer-item': true, active: active.value === item.id }}"
                         :disabled="${item.disabled || false}"
-                        :bind="${{ 'aria-current': props.active === item.id ? 'page' : null }}"
-                        @click="${() => { if (item.id) emit('change', item.id); }}"
+                        :bind="${{ 'aria-current': active.value === item.id ? 'page' : null }}"
+                        @click="${() => { if (item.id) { emit('change', item.id); active.value = item.id; } }}"
                       >
                         ${when(!!item.icon, () => html`<span class="drawer-icon" aria-hidden="true">${item.icon}</span>`)}
                         <span class="drawer-label">${item.label}</span>

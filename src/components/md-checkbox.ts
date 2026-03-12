@@ -1,13 +1,13 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 
 component('md-checkbox', () => {
   const props = useProps({
-    checked: false,
     indeterminate: false,
     disabled: false,
     label: '',
   });
   const emit = useEmit();
+  const checked = defineModel('checked', false);
 
   useStyle(() => css`
     :host { display: inline-flex; align-items: center; vertical-align: middle; }
@@ -97,15 +97,15 @@ component('md-checkbox', () => {
     <label :class="${{ disabled: props.disabled }}">
       <div :class="${{
         'checkbox-container': true,
-        checked: props.checked,
+        checked: checked.value,
         indeterminate: props.indeterminate,
       }}">
         <input
           type="checkbox"
-          :checked="${props.checked}"
+          :checked="${checked.value}"
           :disabled="${props.disabled}"
           :bind="${{ indeterminate: props.indeterminate }}"
-          @change="${(e: Event) => emit('change', (e.target as HTMLInputElement).checked)}"
+          @change="${(e: Event) => { emit('change', (e.target as HTMLInputElement).checked); checked.value = (e.target as HTMLInputElement).checked; }}"
         />
         <div class="box">
           <span class="check-icon" aria-hidden="true">${props.indeterminate ? 'remove' : 'check'}</span>

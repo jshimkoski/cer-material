@@ -1,4 +1,4 @@
-import { component, html, css, ref, watch, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, watch, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { useListKeyNav } from '../composables/useListKeyNav';
 
@@ -13,16 +13,14 @@ component('md-tabs', () => {
   const props = useProps({
     variant: 'primary' as 'primary' | 'secondary',
     tabs: [] as Tab[],
-    activeTab: '',
   });
   const emit = useEmit();
-  const active = ref(props.activeTab || (props.tabs[0]?.id ?? ''));
+  const activeTab = defineModel('activeTab', '');
 
-  // Keep active in sync with controlled prop changes
-  watch(() => props.activeTab, (v) => { if (v) active.value = v; });
+  // Initialize to first tab if not set
   watch(() => props.tabs, (newTabs) => {
-    if (!active.value && newTabs && newTabs.length > 0) {
-      active.value = newTabs[0].id;
+    if (!activeTab.value && newTabs && newTabs.length > 0) {
+      activeTab.value = newTabs[0].id;
     }
   });
 
@@ -137,7 +135,7 @@ component('md-tabs', () => {
     onNavigate: (_, newIdx) => {
       const tabs = safeTabs();
       if (tabs[newIdx]) {
-        active.value = tabs[newIdx].id;
+        activeTab.value = tabs[newIdx].id;
         emit('tab-change', tabs[newIdx].id);
       }
     },
@@ -153,22 +151,22 @@ component('md-tabs', () => {
               type="button"
               key="${tab.id}"
               id="tab-${tab.id}"
-              :class="${{ tab: true, active: active.value === tab.id, 'has-icon': !!tab.icon }}"
+              :class="${{ tab: true, active: activeTab.value === tab.id, 'has-icon': !!tab.icon }}"
               role="tab"
-              aria-selected="${String(active.value === tab.id)}"
+              aria-selected="${String(activeTab.value === tab.id)}"
               aria-controls="tabpanel"
-              tabindex="${active.value === tab.id ? '0' : '-1'}"
-              @click="${() => { active.value = tab.id; emit('tab-change', tab.id); }}"
+              tabindex="${activeTab.value === tab.id ? '0' : '-1'}"
+              @click="${() => { activeTab.value = tab.id; emit('tab-change', tab.id); }}"
             >
               ${when(!!tab.icon, () => html`<span class="tab-icon" aria-hidden="true">${tab.icon}</span>`)}
               ${tab.label}
-              ${when(active.value === tab.id, () => html`<div class="tab-indicator"></div>`)}
+              ${when(activeTab.value === tab.id, () => html`<div class="tab-indicator"></div>`)}
               ${when(!!tab.badge, () => html`<span class="tab-badge">${tab.badge}</span>`)}
             </button>
           `,
         )}
       </div>
-      <div class="content" role="tabpanel" id="tabpanel" :bind="${{ 'aria-labelledby': active.value ? 'tab-' + active.value : null }}">
+      <div class="content" role="tabpanel" id="tabpanel" :bind="${{ 'aria-labelledby': activeTab.value ? 'tab-' + activeTab.value : null }}">
         <slot></slot>
       </div>
     </div>

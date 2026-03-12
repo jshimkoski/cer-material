@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 import { useEscapeKey } from '../composables/useEscapeKey';
@@ -7,13 +7,13 @@ import { useScrollLock } from '../composables/useScrollLock';
 
 component('md-dialog', () => {
   const props = useProps({
-    open: false,
     headline: '',
     icon: '',
   });
   const emit = useEmit();
+  const open = defineModel('open', false);
 
-  useEscapeKey(() => props.open, () => emit('close'))();
+  useEscapeKey(() => open.value, () => { emit('close'); open.value = false; })();
   const trap = createFocusTrap();
   useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
@@ -123,7 +123,7 @@ component('md-dialog', () => {
   // transition state classes.
   return html`
     ${Transition({
-      show: props.open,
+      show: open.value,
       name: 'md-dialog-scrim',
       enterFrom: 'scrim-enter-from',
       enterActive: 'scrim-enter-active',
@@ -135,7 +135,7 @@ component('md-dialog', () => {
     }, html`
       <div
         class="scrim"
-        @click="${(e: Event) => { if (e.target === e.currentTarget) emit('close'); }}"
+        @click="${(e: Event) => { if (e.target === e.currentTarget) { emit('close'); open.value = false; } }}"
       >
         <div class="dialog" role="dialog" aria-modal="true" :bind="${{ 'aria-labelledby': props.headline ? 'dialog-headline' : null }}">
           <div class="dialog-header">

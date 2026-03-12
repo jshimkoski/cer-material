@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each, when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { useListKeyNav } from '../composables/useListKeyNav';
 
@@ -12,11 +12,11 @@ interface Segment {
 component('md-segmented-button', () => {
   const props = useProps({
     segments: [] as Segment[],
-    selected: '' as string | string[],
     multiselect: false,
     ariaLabel: '',
   });
   const emit = useEmit();
+  const selected = defineModel('selected', '' as string | string[]);
 
   const handleKeyDown = useListKeyNav({
     orientation: 'horizontal',
@@ -28,21 +28,23 @@ component('md-segmented-button', () => {
   });
 
   const isSelected = (id: string): boolean => {
-    if (Array.isArray(props.selected)) return props.selected.includes(id);
-    return props.selected === id;
+    if (Array.isArray(selected.value)) return selected.value.includes(id);
+    return selected.value === id;
   };
 
   const handleClick = (id: string) => {
     if (props.multiselect) {
-      const current = Array.isArray(props.selected)
-        ? [...props.selected]
-        : props.selected ? [props.selected as string] : [];
+      const current = Array.isArray(selected.value)
+        ? [...selected.value]
+        : selected.value ? [selected.value as string] : [];
       const idx = current.indexOf(id);
       if (idx >= 0) current.splice(idx, 1);
       else current.push(id);
       emit('change', current);
+      selected.value = current;
     } else {
       emit('change', id);
+      selected.value = id;
     }
   };
 

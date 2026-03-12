@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-chip', () => {
@@ -6,10 +6,10 @@ component('md-chip', () => {
     variant: 'assist' as 'assist' | 'filter' | 'input' | 'suggestion',
     label: '',
     icon: '',
-    selected: false,
     disabled: false,
   });
   const emit = useEmit();
+  const selected = defineModel('selected', false);
 
   useStyle(() => css`
     :host { display: inline-flex; vertical-align: middle; }
@@ -116,22 +116,22 @@ component('md-chip', () => {
   `);
 
   const isElevated = props.variant === 'assist' || props.variant === 'suggestion';
-  const checkIcon = props.selected && props.variant === 'filter' ? 'check' : props.icon;
+  const checkIcon = selected.value && props.variant === 'filter' ? 'check' : props.icon;
 
   return html`
     <div
       :class="${{
         chip: true,
-        selected: props.selected,
+        selected: selected.value,
         elevated: isElevated,
         'has-icon': !!checkIcon,
       }}"
       role="${props.variant === 'filter' ? 'checkbox' : 'button'}"
-      :bind="${{ 'aria-checked': props.variant === 'filter' ? String(props.selected) : null }}"
+      :bind="${{ 'aria-checked': props.variant === 'filter' ? String(selected.value) : null }}"
       :aria-disabled="${String(props.disabled)}"
       tabindex="${props.disabled ? -1 : 0}"
-      @click="${() => { if (!props.disabled) emit('click'); }}"
-      @keydown="${(e: KeyboardEvent) => { if (!props.disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); emit('click'); } }}"
+      @click="${() => { if (!props.disabled) { emit('click'); if (props.variant === 'filter') selected.value = !selected.value; } }}"
+      @keydown="${(e: KeyboardEvent) => { if (!props.disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); emit('click'); if (props.variant === 'filter') selected.value = !selected.value; } }}"
     >
       ${when(!!checkIcon, () => html`<span class="icon" aria-hidden="true">${checkIcon}</span>`)}
       ${props.label}

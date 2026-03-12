@@ -1,16 +1,16 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 
 component('md-icon-button', () => {
   const props = useProps({
     variant: 'standard' as 'standard' | 'filled' | 'tonal' | 'outlined',
     icon: 'more_vert',
-    selected: false,
     disabled: false,
     toggle: false,
     selectedIcon: '',
     ariaLabel: '',
   });
   const emit = useEmit();
+  const selected = defineModel('selected', false);
 
   useStyle(() => css`
     :host { display: inline-flex; vertical-align: middle; }
@@ -123,7 +123,7 @@ component('md-icon-button', () => {
     }
   `);
 
-  const displayIcon = props.toggle && props.selected && props.selectedIcon
+  const displayIcon = props.toggle && selected.value && props.selectedIcon
     ? props.selectedIcon
     : props.icon;
 
@@ -131,14 +131,14 @@ component('md-icon-button', () => {
     <button
       :class="${{
         [props.variant]: true,
-        selected: props.selected,
+        selected: selected.value,
         toggle: props.toggle,
       }}"
       :disabled="${props.disabled}"
-      :bind="${{ 'aria-label': props.ariaLabel || props.icon, 'aria-pressed': props.toggle ? String(props.selected) : null }}"
+      :bind="${{ 'aria-label': props.ariaLabel || props.icon, 'aria-pressed': props.toggle ? String(selected.value) : null }}"
       type="button"
       @click="${() => {
-        if (props.toggle) emit('change', !props.selected);
+        if (props.toggle) { emit('change', !selected.value); selected.value = !selected.value; }
         emit('click');
       }}"
     >

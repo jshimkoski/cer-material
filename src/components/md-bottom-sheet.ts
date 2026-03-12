@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 import { useEscapeKey } from '../composables/useEscapeKey';
@@ -7,12 +7,12 @@ import { useScrollLock } from '../composables/useScrollLock';
 
 component('md-bottom-sheet', () => {
   const props = useProps({
-    open: false,
     headline: '',
     showHandle: true,
     variant: 'standard' as 'standard' | 'modal',
   });
   const emit = useEmit();
+  const open = defineModel('open', false);
 
   // ── Drag-to-dismiss (plain mutable state — no re-renders needed) ──────
   let sheetEl: HTMLElement | null = null;
@@ -32,7 +32,7 @@ component('md-bottom-sheet', () => {
   const DISMISS_VELOCITY = 500;   // px / s
 
   function onHandlePointerDown(e: PointerEvent) {
-    if (!props.open) return;
+    if (!open.value) return;
     const handle = e.currentTarget as HTMLElement;
     sheetEl = (handle.closest('.modal-bottom-sheet') ?? handle.closest('.standard-bottom-sheet')) as HTMLElement | null;
     if (!sheetEl) return;
@@ -89,7 +89,7 @@ component('md-bottom-sheet', () => {
         dragDismissed = true;
         dismissedEl = target;
         emit('close');
-      };
+        open.value = false;      };
       target.addEventListener('transitionend', onEnd);
     } else {
       // Snap back to fully open.
@@ -98,10 +98,10 @@ component('md-bottom-sheet', () => {
     sheetEl = null;
   }
 
-  const handleEscKey = () => emit('close');
+  const handleEscKey = () => { emit('close'); open.value = false; };
 
   // Only modal variant uses escape key, focus trap, and scroll lock.
-  useEscapeKey(() => props.open && props.variant === 'modal', handleEscKey)();
+  useEscapeKey(() => open.value && props.variant === 'modal', handleEscKey)();
   const trap = createFocusTrap();
   useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
@@ -219,7 +219,7 @@ component('md-bottom-sheet', () => {
   // is clean when closed. The drag-dismiss flag prevents a double leave animation.
   return html`
     ${Transition({
-      show: props.open && props.variant === 'modal',
+      show: open.value && props.variant === 'modal',
       name: 'md-scrim',
       enterFrom: 'scrim-enter-from',
       enterActive: 'scrim-enter-active',
@@ -228,13 +228,13 @@ component('md-bottom-sheet', () => {
     }, html`
       <div
         class="scrim"
-        @click="${() => emit('close')}"
+        @click="${() => { emit('close'); open.value = false; }}"
       ></div>
     `)}
 
     ${props.variant === 'modal'
       ? Transition({
-          show: props.open,
+          show: open.value,
           name: 'md-modal-sheet',
           enterFrom: 'modal-enter-from',
           enterActive: 'modal-enter-active',
@@ -269,7 +269,7 @@ component('md-bottom-sheet', () => {
                 @pointermove="${onHandlePointerMove}"
                 @pointerup="${onHandlePointerUp}"
                 @pointercancel="${onHandlePointerUp}"
-                @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); emit('close'); } }}"
+                @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); emit('close'); open.value = false; } }}"
               >
                 <div class="drag-handle-bar"></div>
               </div>
@@ -285,7 +285,7 @@ component('md-bottom-sheet', () => {
           </div>
         `)
       : Transition({
-          show: props.open,
+          show: open.value,
           name: 'md-standard-sheet',
           enterFrom: 'standard-enter-from',
           enterActive: 'standard-enter-active',
@@ -316,7 +316,7 @@ component('md-bottom-sheet', () => {
                 @pointermove="${onHandlePointerMove}"
                 @pointerup="${onHandlePointerUp}"
                 @pointercancel="${onHandlePointerUp}"
-                @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); emit('close'); } }}"
+                @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); emit('close'); open.value = false; } }}"
               >
                 <div class="drag-handle-bar"></div>
               </div>

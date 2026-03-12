@@ -1,26 +1,17 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
-import { useControlledValue } from '../composables/useControlledValue';
 
 component('md-search', () => {
   const props = useProps({
-    value: '',
     placeholder: 'Search',
     leadingIcon: 'search',
     showAvatar: false,
   });
   const emit = useEmit();
-  const query = useControlledValue(() => props.value || '');
-
-  const handleInput = (e: Event) => {
-    const val = (e.target as HTMLInputElement).value;
-    query.value = val;
-    emit('input', val);
-  };
+  const modelValue = defineModel('');
 
   const handleClear = () => {
-    query.value = '';
-    emit('input', '');
+    modelValue.value = '';
     emit('clear');
   };
 
@@ -140,12 +131,11 @@ component('md-search', () => {
         type="search"
         class="search-input"
         placeholder="${props.placeholder}"
-        :value="${query.value}"
+        :model="${modelValue}"
         aria-label="${props.placeholder}"
-        @input="${handleInput}"
-        @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter') emit('search', query.value); }}"
+        @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter') emit('search', modelValue.value); }}"
       >
-      ${when(!!query.value, () => html`
+      ${when(!!modelValue.value, () => html`
         <button type="button" class="clear-btn" aria-label="Clear search" @click="${handleClear}">
           <span class="clear-icon" aria-hidden="true">close</span>
         </button>
