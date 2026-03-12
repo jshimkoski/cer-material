@@ -80,7 +80,7 @@ jobs:
 
       - name: Build library
         if: steps.should_release.outputs.value == 'true'
-        run: npm run build:lib
+        run: npm run build:all
 
       - name: Configure Git
         if: steps.should_release.outputs.value == 'true'

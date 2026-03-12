@@ -41,6 +41,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "build:lib": "vite build --mode lib",
+    "build:cdn": "vite build --mode cdn",
+    "build:all": "npm run build:lib && npm run build:cdn",
     "preview": "vite preview"
   },
   "peerDependencies": {

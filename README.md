@@ -29,6 +29,34 @@ Components use Material Symbols and Roboto. Add both to your HTML `<head>`:
 
 ---
 
+## CDN / No build tool
+
+A self-contained IIFE bundle (runtime included) is available for use without a bundler — ideal for CodePen, JSFiddle, plain HTML files, or any environment where you just want a `<script>` tag.
+
+Add the fonts and a single script to your HTML `<head>`:
+
+```html
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=swap" rel="stylesheet" />
+
+<!-- cer-material (runtime included) -->
+<script src="https://cdn.jsdelivr.net/npm/@jasonshimmy/cer-material/dist/cer-material.iife.js"></script>
+```
+
+All components are registered automatically once the script loads — no `import` needed:
+
+```html
+<md-button variant="filled" label="Save"></md-button>
+<md-text-field label="Email" type="email"></md-text-field>
+```
+
+> **Note:** The IIFE bundle includes the runtime (~78 kB gzip). If you are also using `@jasonshimmy/custom-elements-runtime` directly in the same page, be aware the runtime will be loaded twice.
+
+---
+
 ## Quick start
 
 ```ts

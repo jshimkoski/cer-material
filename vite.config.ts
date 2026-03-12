@@ -19,6 +19,25 @@ export default defineConfig(({ command, mode }) => {
 
   // `vite build` in default mode builds the showcase app.
   // `vite build --mode lib` (or `npm run build:lib`) builds the library.
+  // `vite build --mode cdn` (or `npm run build:cdn`) builds a self-contained IIFE for CDN use.
+  if (mode === 'cdn') {
+    return {
+      build: {
+        lib: {
+          entry: resolve(__dirname, 'src/index.ts'),
+          name: 'CerMaterial',
+          formats: ['iife'],
+          fileName: () => 'cer-material.iife.js',
+        },
+        // No `external` — bundle the runtime and all its subpaths so the
+        // output is a fully self-contained file usable from a CDN <script> tag.
+        sourcemap: true,
+        emptyOutDir: false,
+        outDir: 'dist',
+      },
+    };
+  }
+
   if (mode !== 'lib') {
     return {};
   }
