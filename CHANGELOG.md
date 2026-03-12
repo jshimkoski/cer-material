@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.2.0] - 2026-03-12
+
+- feat: add CDN iife build capability (920da15)
+
 ## [v0.1.2] - 2026-03-12
 
 - fix: update readme (401b122)
