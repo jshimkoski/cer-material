@@ -3,6 +3,21 @@
   "version": "0.0.0",
   "description": "Material Design 3 web components built on @jasonshimmy/custom-elements-runtime",
   "type": "module",
+  "keywords": [
+    "web-components",
+    "custom-elements",
+    "reactive",
+    "typescript",
+    "frontend",
+    "ui"
+  ],
+  "author": "Jason Shimkoski <https://jasonshimmy.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jshimkoski/cer-material.git"
+  },
+  "homepage": "https://github.com/jshimkoski/cer-material#readme",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -37,5 +52,8 @@
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-dts": "^4.5.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

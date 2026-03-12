@@ -56,18 +56,6 @@ import { applyTheme } from '@jasonshimmy/cer-material/theme';
 applyTheme();
 ```
 
-### Selective imports
-
-Import only the components you need for finer-grained bundle control:
-
-```ts
-import '@jasonshimmy/cer-material/theme';
-import '@jasonshimmy/custom-elements-runtime/css/reset.css';
-
-import '@jasonshimmy/cer-material/dist/components/md-button.js';
-import '@jasonshimmy/cer-material/dist/components/md-text-field.js';
-```
-
 ---
 
 ## Two-way bindings (`:model`)
@@ -143,7 +131,7 @@ MD3 top app bar with four layout variants, a leading navigation icon, title area
 
 **Slots:** `title` — custom title content; `trailing` — completely custom trailing area.
 
-**Events:** `nav` — leading icon clicked; `action` `(detail: { icon: string })` — a trailing icon was clicked.
+**Events:** `nav` — leading icon clicked; `action` `(detail: string)` — the clicked icon name.
 
 ```html
 <md-app-bar
@@ -164,7 +152,7 @@ Overlays a numeric label or a small dot indicator on top of slotted content.
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `value` | `string` | `''` | Badge text; empty renders a small dot |
+| `value` | `string \| number` | `''` | Badge text; empty renders a small dot |
 | `small` | `boolean` | `false` | Forces the small dot style regardless of `value` |
 
 **Slots:** default — the element the badge attaches to.
@@ -281,7 +269,7 @@ Horizontal snap-scroll carousel rendering image or color-placeholder cards with 
 | `items` | `{ id: string; headline?: string; supportingText?: string; image?: string; color?: string }[]` | `[]` | Carousel item data |
 | `variant` | `'multi-browse' \| 'uncontained' \| 'full-screen'` | `'multi-browse'` | Layout density |
 
-**Events:** `select` `(detail: { id: string })` — a card was clicked.
+**Events:** `select` `(detail: string)` — the `id` of the clicked card.
 
 ```html
 <md-carousel
@@ -307,7 +295,7 @@ MD3 checkbox with animated check/dash icon and an optional inline text label.
 | `disabled` | `boolean` | `false` | Disables interaction |
 | `label` | `string` | `''` | Inline label text |
 
-**Events:** `change` `(detail: { checked: boolean })` — state changed.
+**Events:** `change` `(detail: boolean)` — new checked state.
 
 ```html
 <md-checkbox
@@ -355,7 +343,7 @@ Full MD3 date picker with calendar grid, month/year navigation, optional date ra
 | `label` | `string` | `'Select date'` | Trigger field label |
 | `aria-label` | `string` | `'Date picker'` | Accessible label |
 
-**Events:** `change` `(detail: { iso: string })` — date selected; `close`.
+**Events:** `change` `(detail: string)` — selected date in `YYYY-MM-DD` format; `close`.
 
 ```html
 <md-date-picker
@@ -477,7 +465,7 @@ MD3 icon button with four style variants and optional toggle (pressed/selected) 
 | `disabled` | `boolean` | `false` | Disables interaction |
 | `aria-label` | `string` | `''` | Accessible label |
 
-**Events:** `click`; `change` `(detail: { selected: boolean })` — toggle state changed.
+**Events:** `click`; `change` `(detail: boolean)` — new selected state (toggle mode).
 
 ```html
 <md-icon-button icon="favorite_border" selected-icon="favorite" toggle :model:selected="${isFav}"></md-icon-button>
@@ -552,7 +540,7 @@ Contextual dropdown menu with four anchor positions, keyboard navigation, and di
 
 **Slots:** `trigger` — the element that opens the menu.
 
-**Events:** `select` `(detail: { id: string })` — item chosen; `close`.
+**Events:** `select` `(detail: string)` — the `id` of the chosen item; `close`.
 
 ```html
 <md-menu
@@ -579,7 +567,7 @@ MD3 bottom navigation bar for mobile with active pill indicator, filled icon for
 | `items` | `{ id: string; label: string; icon: string; badge?: string }[]` | `[]` | Destination definitions |
 | `active` | `string` | `''` | `id` of the active destination |
 
-**Events:** `change` `(detail: { id: string })` — destination selected.
+**Events:** `change` `(detail: string)` — the `id` of the selected destination.
 
 ```html
 <md-navigation-bar
@@ -608,7 +596,7 @@ MD3 navigation drawer in standard (in-layout, width-animated) or modal (slide-in
 
 **Slots:** default — extra content below the item list.
 
-**Events:** `close`; `change` `(detail: { id: string })` — item selected.
+**Events:** `close`; `change` `(detail: string)` — the `id` of the selected item.
 
 ```html
 <md-navigation-drawer
@@ -635,7 +623,7 @@ MD3 vertical navigation rail for tablet/desktop with optional top FAB and hambur
 | `fab-icon` | `string` | `'add'` | FAB Material Symbol |
 | `menu-icon` | `boolean` | `false` | Shows a hamburger menu icon |
 
-**Events:** `change` `(detail: { id: string })`; `fab-click`; `menu-click`.
+**Events:** `change` `(detail: string)` — the `id` of the selected destination; `fab-click`; `menu-click`.
 
 ```html
 <md-navigation-rail
@@ -682,7 +670,7 @@ MD3 radio button with animated inner circle, `name`/`value` for grouping, and an
 | `value` | `string` | `''` | Form value |
 | `label` | `string` | `''` | Inline label text |
 
-**Events:** `change` `(detail: { value: string })` — selected.
+**Events:** `change` `(detail: string)` — the `value` of the selected radio.
 
 ```html
 <md-radio name="size" value="s" label="Small"></md-radio>
@@ -703,13 +691,13 @@ MD3 search bar with a leading icon, animated clear button, and optional avatar.
 | `leading-icon` | `string` | `'search'` | Material Symbol for the leading icon |
 | `show-avatar` | `boolean` | `false` | Renders an avatar button on the trailing end |
 
-**Events:** `input` `(detail: { value: string })`; `clear`; `search` `(detail: { query: string })` — Enter key pressed.
+**Events:** `clear`; `search` `(detail: string)` — the search query when Enter is pressed.
 
 ```html
 <md-search
   placeholder="Search contacts"
   :model="${query}"
-  @search="${e => runSearch(e.detail.query)}"
+  @search="${e => runSearch(e.detail)}"
 ></md-search>
 ```
 
@@ -726,7 +714,7 @@ MD3 segmented button group for single-select or multi-select toggle behaviour.
 | `multiselect` | `boolean` | `false` | Allows multiple selections |
 | `aria-label` | `string` | `''` | Accessible group label |
 
-**Events:** `change` `(detail: { id: string \| string[] })` — selection changed.
+**Events:** `change` `(detail: string | string[])` — selected segment `id` or array of `id`s (multiselect).
 
 ```html
 <md-segmented-button
@@ -778,8 +766,6 @@ MD3 range slider with a custom-styled track, optional floating value label, and 
 | `labeled` | `boolean` | `false` | Shows a floating value bubble on drag |
 | `ticks` | `boolean` | `false` | Renders tick marks at each step |
 | `aria-label` | `string` | `''` | Accessible label |
-
-**Events:** `change` `(detail: { value: number })` — value changed.
 
 ```html
 <md-slider min="0" max="50" step="5" labeled :model="${vol}"></md-slider>
@@ -849,7 +835,7 @@ MD3 toggle switch with animated thumb, state-layer ripple, and optional check/cl
 | `disabled` | `boolean` | `false` | Disables interaction |
 | `icons` | `boolean` | `false` | Renders a check icon when on and a close icon when off |
 
-**Events:** `change` `(detail: { checked: boolean })` — toggled.
+**Events:** `change` `(detail: boolean)` — new selected state.
 
 ```html
 <md-switch :model:selected="${darkMode}" icons></md-switch>
@@ -869,7 +855,7 @@ MD3 tabbed navigation with an active indicator bar, icon and badge support, keyb
 
 **Slots:** default — the active tab panel content.
 
-**Events:** `tab-change` `(detail: { id: string })` — active tab changed.
+**Events:** `tab-change` `(detail: string)` — the `id` of the newly active tab.
 
 ```html
 <md-tabs
@@ -906,8 +892,6 @@ MD3 text field (filled or outlined) with animated floating label, leading/traili
 | `required` | `boolean` | `false` | Marks the field as required |
 | `readonly` | `boolean` | `false` | Makes the field read-only |
 
-**Events:** `change` `(detail: { value: string })` — value changed.
-
 ```html
 <md-text-field
   variant="outlined"
@@ -934,7 +918,7 @@ MD3 time picker modal with an interactive clock dial or keyboard input mode, AM/
 | `hour24` | `boolean` | `false` | Uses 24-hour format (no AM/PM) |
 | `aria-label` | `string` | `'Time picker'` | Accessible label |
 
-**Events:** `change` `(detail: { time: string })` — time selected; `close`.
+**Events:** `change` `(detail: string)` — selected time in `HH:MM` 24-hour format; `close`.
 
 ```html
 <md-time-picker
