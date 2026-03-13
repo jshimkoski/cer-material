@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.2.1] - 2026-03-13
+
+- fix: update dependencies, fix overlay animations, improve date picker, improve time picker (6a8e337)
+
 ## [v0.2.0] - 2026-03-12
 
 - feat: add CDN iife build capability (920da15)
