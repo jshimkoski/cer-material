@@ -32,39 +32,6 @@ component('md-dialog', () => {
       /* Base = fully visible; opacity: 1 and pointer-events: auto are defaults */
     }
 
-    /* Scrim enters: fade in; dialog enters: scale up */
-    .scrim-enter-from {
-      opacity: 0;
-    }
-    .scrim-enter-from .dialog {
-      transform: scale(0.92);
-      opacity: 0;
-    }
-    .scrim-enter-active {
-      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .scrim-enter-active .dialog {
-      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
-                  transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* Scrim leaves: fade out; dialog leaves: scale down */
-    .scrim-leave-to {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .scrim-leave-to .dialog {
-      transform: scale(0.92);
-      opacity: 0;
-    }
-    .scrim-leave-active {
-      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .scrim-leave-active .dialog {
-      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
-                  transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
     .dialog {
       background: var(--md-sys-color-surface-container-high, #ECE6F0);
       border-radius: 28px;
@@ -118,19 +85,56 @@ component('md-dialog', () => {
     }
   `);
 
-// Scrim + dialog are conditionally mounted via Transition. The scrim fades
-  // and the inner dialog scales via CSS descendant selectors on the scrim's
-  // transition state classes.
+// Scrim + dialog are conditionally mounted via Transition. Both the scrim
+  // and inner dialog are animated via JS hooks to avoid getComputedStyle
+  // timing issues with freshly-inserted Shadow DOM elements.
   return html`
     ${Transition({
       show: open.value,
       name: 'md-dialog-scrim',
-      enterFrom: 'scrim-enter-from',
-      enterActive: 'scrim-enter-active',
-      leaveActive: 'scrim-leave-active',
-      leaveTo: 'scrim-leave-to',
-      onBeforeEnter: scrollLock.lock,
-      onAfterEnter: trap.onAfterEnter,
+      css: false,
+      onBeforeEnter: (el) => {
+        scrollLock.lock();
+        const h = el as HTMLElement;
+        h.style.opacity = '0';
+        const dialog = h.querySelector<HTMLElement>('.dialog');
+        if (dialog) { dialog.style.transform = 'scale(0.92)'; dialog.style.opacity = '0'; }
+      },
+      onEnter: (el, done) => {
+        const h = el as HTMLElement;
+        const dialog = h.querySelector<HTMLElement>('.dialog');
+        h.offsetHeight;
+        const ease = 'cubic-bezier(0.4, 0, 0.2, 1)';
+        h.style.transition = `opacity 200ms ${ease}`;
+        h.style.opacity = '';
+        if (dialog) {
+          dialog.style.transition = `opacity 200ms ${ease}, transform 200ms ${ease}`;
+          dialog.style.transform = '';
+          dialog.style.opacity = '';
+        }
+        h.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, 250);
+      },
+      onAfterEnter: (el) => {
+        const h = el as HTMLElement;
+        h.style.transition = '';
+        h.querySelector<HTMLElement>('.dialog')?.style.setProperty('transition', '');
+        trap.onAfterEnter(h);
+      },
+      onLeave: (el, done) => {
+        const h = el as HTMLElement;
+        const dialog = h.querySelector<HTMLElement>('.dialog');
+        const ease = 'cubic-bezier(0.4, 0, 0.2, 1)';
+        h.style.transition = `opacity 200ms ${ease}`;
+        h.style.opacity = '0';
+        if (dialog) {
+          dialog.style.transition = `opacity 200ms ${ease}, transform 200ms ${ease}`;
+          dialog.style.transform = 'scale(0.92)';
+          dialog.style.opacity = '0';
+        }
+        h.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, 250);
+      },
       onAfterLeave: () => { trap.onAfterLeave(); scrollLock.unlock(); },
     }, html`
       <div

@@ -40,14 +40,6 @@ component('md-navigation-drawer', () => {
       z-index: 400;
       /* Base = fully visible; opacity: 1 and pointer-events: auto are defaults */
     }
-    .scrim-enter-from, .scrim-leave-to {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .scrim-enter-active, .scrim-leave-active {
-      transition: opacity 250ms ease-out;
-    }
-
     /* ── Modal drawer (position: fixed overlay) ─────────────────────────── */
     .drawer {
       position: fixed;
@@ -63,14 +55,6 @@ component('md-navigation-drawer', () => {
       overflow: hidden;
       /* Base = fully open; transform: none and pointer-events: auto are defaults */
     }
-    .drawer-enter-from, .drawer-leave-to {
-      transform: translateX(-100%);
-      pointer-events: none;
-    }
-    .drawer-enter-active, .drawer-leave-active {
-      transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
     /* ── Standard drawer: in-layout, body shrinks to accommodate ───── */
     .standard-drawer {
       display: flex;
@@ -192,10 +176,23 @@ component('md-navigation-drawer', () => {
     ${Transition({
       show: open.value && props.variant === 'modal',
       name: 'md-scrim',
-      enterFrom: 'scrim-enter-from',
-      enterActive: 'scrim-enter-active',
-      leaveActive: 'scrim-leave-active',
-      leaveTo: 'scrim-leave-to',
+      css: false,
+      onBeforeEnter: (el) => { (el as HTMLElement).style.opacity = '0'; },
+      onEnter: (el, done) => {
+        const h = el as HTMLElement;
+        h.offsetHeight;
+        h.style.transition = 'opacity 250ms ease-out';
+        h.style.opacity = '';
+        h.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, 300);
+      },
+      onLeave: (el, done) => {
+        const h = el as HTMLElement;
+        h.style.transition = 'opacity 250ms ease-out';
+        h.style.opacity = '0';
+        h.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, 300);
+      },
     }, html`
       <div class="scrim" @click="${() => { emit('close'); open.value = false; }}"></div>
     `)}
@@ -204,12 +201,27 @@ component('md-navigation-drawer', () => {
       ? Transition({
           show: open.value,
           name: 'md-modal-drawer',
-          enterFrom: 'drawer-enter-from',
-          enterActive: 'drawer-enter-active',
-          leaveActive: 'drawer-leave-active',
-          leaveTo: 'drawer-leave-to',
-          onBeforeEnter: scrollLock.lock,
+          css: false,
+          onBeforeEnter: (el) => {
+            scrollLock.lock();
+            (el as HTMLElement).style.transform = 'translateX(-100%)';
+          },
+          onEnter: (el, done) => {
+            const h = el as HTMLElement;
+            h.offsetHeight;
+            h.style.transition = 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)';
+            h.style.transform = '';
+            h.addEventListener('transitionend', done, { once: true });
+            setTimeout(done, 350);
+          },
           onAfterEnter: trap.onAfterEnter,
+          onLeave: (el, done) => {
+            const h = el as HTMLElement;
+            h.style.transition = 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)';
+            h.style.transform = 'translateX(-100%)';
+            h.addEventListener('transitionend', done, { once: true });
+            setTimeout(done, 350);
+          },
           onAfterLeave: () => { trap.onAfterLeave(); scrollLock.unlock(); },
         }, html`
           <div

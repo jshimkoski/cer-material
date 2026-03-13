@@ -30,14 +30,6 @@ component('md-side-sheet', () => {
       background: rgba(0, 0, 0, 0.32);
       z-index: 500;
     }
-    .scrim-enter-from, .scrim-leave-to {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .scrim-enter-active, .scrim-leave-active {
-      transition: opacity 250ms ease-out;
-    }
-
     /* ── Modal side sheet: overlays content, slides in from right ── */
     .modal-side-sheet {
       position: fixed;
@@ -53,14 +45,6 @@ component('md-side-sheet', () => {
       flex-direction: column;
       overflow: hidden;
     }
-    .modal-enter-from, .modal-leave-to {
-      transform: translateX(100%);
-      pointer-events: none;
-    }
-    .modal-enter-active, .modal-leave-active {
-      transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
     /* ── Standard side sheet: in-layout, body shrinks to accommodate ── */
     .standard-side-sheet {
       display: flex;
@@ -143,10 +127,23 @@ component('md-side-sheet', () => {
     ${Transition({
       show: open.value && props.variant === 'modal',
       name: 'md-scrim',
-      enterFrom: 'scrim-enter-from',
-      enterActive: 'scrim-enter-active',
-      leaveActive: 'scrim-leave-active',
-      leaveTo: 'scrim-leave-to',
+      css: false,
+      onBeforeEnter: (el) => { (el as HTMLElement).style.opacity = '0'; },
+      onEnter: (el, done) => {
+        const h = el as HTMLElement;
+        h.offsetHeight;
+        h.style.transition = 'opacity 250ms ease-out';
+        h.style.opacity = '';
+        h.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, 300);
+      },
+      onLeave: (el, done) => {
+        const h = el as HTMLElement;
+        h.style.transition = 'opacity 250ms ease-out';
+        h.style.opacity = '0';
+        h.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, 300);
+      },
     }, html`
       <div class="scrim" @click="${() => { emit('close'); open.value = false; }}"></div>
     `)}
@@ -155,12 +152,27 @@ component('md-side-sheet', () => {
       ? Transition({
           show: open.value,
           name: 'md-modal-side-sheet',
-          enterFrom: 'modal-enter-from',
-          enterActive: 'modal-enter-active',
-          leaveActive: 'modal-leave-active',
-          leaveTo: 'modal-leave-to',
-          onBeforeEnter: scrollLock.lock,
+          css: false,
+          onBeforeEnter: (el) => {
+            scrollLock.lock();
+            (el as HTMLElement).style.transform = 'translateX(100%)';
+          },
+          onEnter: (el, done) => {
+            const h = el as HTMLElement;
+            h.offsetHeight;
+            h.style.transition = 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)';
+            h.style.transform = '';
+            h.addEventListener('transitionend', done, { once: true });
+            setTimeout(done, 350);
+          },
           onAfterEnter: trap.onAfterEnter,
+          onLeave: (el, done) => {
+            const h = el as HTMLElement;
+            h.style.transition = 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)';
+            h.style.transform = 'translateX(100%)';
+            h.addEventListener('transitionend', done, { once: true });
+            setTimeout(done, 350);
+          },
           onAfterLeave: () => { trap.onAfterLeave(); scrollLock.unlock(); },
         }, html`
           <div

@@ -1,4 +1,4 @@
-import { component, html, css, ref, watch, computed, defineModel, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, ref, watch, computed, nextTick, defineModel, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when, each } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 import { useEscapeKey } from '../composables/useEscapeKey';
@@ -62,9 +62,13 @@ component('md-time-picker', () => {
   // Which part of the dial we're editing: 'hours' | 'minutes'
   const dialMode = ref<'hours' | 'minutes'>('hours');
 
-  // Input-mode typed strings
-  const inputH = ref(pad2(hours.value));
+  // Input-mode typed strings — display 12h format when not in hour24 mode
+  const inputH = ref(props.hour24 ? pad2(hours.value) : pad2(hours.value % 12 || 12));
   const inputM = ref(pad2(minutes.value));
+
+  // DOM refs for input-mode fields
+  const inputHRef = ref<HTMLInputElement | null>(null);
+  const inputMRef = ref<HTMLInputElement | null>(null);
 
   // Sync when prop changes externally
   watch(() => modelValue.value, (v) => {
@@ -73,7 +77,7 @@ component('md-time-picker', () => {
       hours.value   = p.hours;
       minutes.value = p.minutes;
       period.value  = p.hours < 12 ? 'AM' : 'PM';
-      inputH.value  = pad2(p.hours);
+      inputH.value  = props.hour24 ? pad2(p.hours) : pad2(p.hours % 12 || 12);
       inputM.value  = pad2(p.minutes);
     }
   });
@@ -180,7 +184,7 @@ component('md-time-picker', () => {
   const commitInputH = () => {
     const h = parseInt(inputH.value, 10);
     if (!isNaN(h)) hours.value = Math.max(props.hour24 ? 0 : 1, Math.min(props.hour24 ? 23 : 12, h));
-    inputH.value = pad2(hours.value);
+    inputH.value = props.hour24 ? pad2(hours.value) : pad2(hours.value % 12 || 12);
   };
   const commitInputM = () => {
     const m = parseInt(inputM.value, 10);
@@ -188,7 +192,39 @@ component('md-time-picker', () => {
     inputM.value = pad2(minutes.value);
   };
 
+  const stepHour = (delta: 1 | -1) => {
+    if (props.hour24) {
+      hours.value = (hours.value + delta + 24) % 24;
+    } else {
+      // Cycle 1–12; keep AM/PM unchanged
+      const h12 = hours.value % 12 || 12;
+      const next = ((h12 - 1 + delta + 12) % 12) + 1; // 1–12
+      hours.value = period.value === 'PM'
+        ? (next === 12 ? 12 : next + 12)
+        : (next === 12 ? 0 : next);
+    }
+    inputH.value = props.hour24 ? pad2(hours.value) : pad2(hours.value % 12 || 12);
+  };
+
+  const stepMinute = (delta: 1 | -1) => {
+    minutes.value = (minutes.value + delta + 60) % 60;
+    inputM.value = pad2(minutes.value);
+  };
+
   // ── confirm / cancel ──────────────────────────────────────────────────
+  /** Called on Enter from either input field — validates before confirming. */
+  const tryConfirm = () => {
+    if (hoursError.value) {
+      nextTick().then(() => inputHRef.value?.focus());
+      return;
+    }
+    if (minutesError.value) {
+      nextTick().then(() => inputMRef.value?.focus());
+      return;
+    }
+    handleOK();
+  };
+
   const handleOK = () => {
     if (currentVariant.value === 'input') { commitInputH(); commitInputM(); }
     let h = hours.value;
@@ -531,12 +567,22 @@ component('md-time-picker', () => {
               :class="${{ 'time-seg-btn': true, active: dialMode.value === 'hours' }}"
               aria-label="Hours: ${displayHours.value}. Click to edit hours."
               @click="${() => { dialMode.value = 'hours'; }}"
+              @focus="${() => { dialMode.value = 'hours'; }}"
+              @keydown="${(e: KeyboardEvent) => {
+                if (e.key === 'ArrowUp')   { e.preventDefault(); stepHour(1); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); stepHour(-1); }
+              }}"
             >${displayHours.value}</button>
             <span class="time-separator" aria-hidden="true">:</span>
             <button
               :class="${{ 'time-seg-btn': true, active: dialMode.value === 'minutes' }}"
               aria-label="Minutes: ${pad2(minutes.value)}. Click to edit minutes."
               @click="${() => { dialMode.value = 'minutes'; }}"
+              @focus="${() => { dialMode.value = 'minutes'; }}"
+              @keydown="${(e: KeyboardEvent) => {
+                if (e.key === 'ArrowUp')   { e.preventDefault(); stepMinute(1); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); stepMinute(-1); }
+              }}"
             >${pad2(minutes.value)}</button>
             ${when(!props.hour24, () => html`
               <div class="period-container" role="group" aria-label="Period">
@@ -567,10 +613,15 @@ component('md-time-picker', () => {
               inputmode="numeric"
               maxlength="2"
               aria-label="Hours"
+              :ref="${inputHRef}"
               :model="${inputH}"
               @input="${(e: Event) => e.stopPropagation()}"
               @blur="${commitInputH}"
-              @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter') { commitInputH(); (e.currentTarget as HTMLElement).blur(); } }}"
+              @keydown="${(e: KeyboardEvent) => {
+                if (e.key === 'Enter') { e.preventDefault(); tryConfirm(); }
+                else if (e.key === 'ArrowUp')   { e.preventDefault(); stepHour(1); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); stepHour(-1); }
+              }}"
             />
             <span class="input-field-label">Hour</span>
             <span :class="${{ 'input-error-text': true, show: hoursError.value }}">${props.hour24 ? '0–23' : '1–12'}</span>
@@ -583,10 +634,15 @@ component('md-time-picker', () => {
               inputmode="numeric"
               maxlength="2"
               aria-label="Minutes"
+              :ref="${inputMRef}"
               :model="${inputM}"
               @input="${(e: Event) => e.stopPropagation()}"
               @blur="${commitInputM}"
-              @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter') { commitInputM(); (e.currentTarget as HTMLElement).blur(); } }}"
+              @keydown="${(e: KeyboardEvent) => {
+                if (e.key === 'Enter') { e.preventDefault(); tryConfirm(); }
+                else if (e.key === 'ArrowUp')   { e.preventDefault(); stepMinute(1); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); stepMinute(-1); }
+              }}"
             />
             <span class="input-field-label">Minute</span>
             <span :class="${{ 'input-error-text': true, show: minutesError.value }}">0–59</span>

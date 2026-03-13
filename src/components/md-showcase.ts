@@ -66,7 +66,8 @@ component('md-showcase', () => {
   const sideSheetOpen   = ref(true);
   const sideSheetModalOpen = ref(false);
   const segSelected     = ref('day');
-  const datePickerOpen  = ref(false);
+  const datePickerOpen       = ref(false);
+  const datePickerInputOpen  = ref(false);
   const datePickerValue = ref('');
   const timePickerOpen  = ref(false);
   const timePickerValue = ref('');
@@ -409,6 +410,7 @@ component('md-showcase', () => {
         title="Material Design 3"
         leading-icon="menu"
         :trailing-icons="${['search', 'more_vert']}"
+        @nav=${() => { drawerModalOpen.value = true; }}
         @action="${(e: CustomEvent<string>) => showSnackbar('Action: ' + e.detail)}"
       ></md-app-bar>
 
@@ -1421,7 +1423,7 @@ component('md-showcase', () => {
           <h2 class="section-title">Date Picker</h2>
           <p class="section-subtitle">Date pickers let people select a date or range of dates.</p>
 
-          <div class="demo-label">Modal (dialog)</div>
+          <div class="demo-label">Modal (calendar)</div>
           <div class="row">
             <md-button variant="filled" label="Open Date Picker" icon="calendar_today"
               @click="${() => { datePickerOpen.value = true; }}">
@@ -1429,13 +1431,26 @@ component('md-showcase', () => {
             ${when(!!datePickerValue.value, () => html`<span style="font-size:14px;color:var(--md-sys-color-on-surface-variant,#49454F)">Selected: ${datePickerValue.value}</span>`)}
           </div>
           <md-date-picker
-            variant="dialog"
+            variant="modal"
             :model:open="${datePickerOpen}"
             :model="${datePickerValue}"
           ></md-date-picker>
 
+          <div class="demo-label">Modal (input)</div>
+          <div class="row">
+            <md-button variant="filled" label="Open Date Picker (Input)" icon="edit_calendar"
+              @click="${() => { datePickerInputOpen.value = true; }}">
+            </md-button>
+            ${when(!!datePickerValue.value, () => html`<span style="font-size:14px;color:var(--md-sys-color-on-surface-variant,#49454F)">Selected: ${datePickerValue.value}</span>`)}
+          </div>
+          <md-date-picker
+            variant="modal-input"
+            :model:open="${datePickerInputOpen}"
+            :model="${datePickerValue}"
+          ></md-date-picker>
+
           <div class="demo-label">Docked (inline)</div>
-          <div style="max-width:380px;min-height:460px;">
+          <div>
             <md-date-picker
               variant="docked"
               :model="${datePickerValue}"

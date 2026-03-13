@@ -116,14 +116,6 @@ component('md-bottom-sheet', () => {
       background: rgba(0, 0, 0, 0.32);
       z-index: 500;
     }
-    .scrim-enter-from, .scrim-leave-to {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .scrim-enter-active, .scrim-leave-active {
-      transition: opacity 250ms ease-out;
-    }
-
     /* ── Modal bottom sheet: overlays content with scrim ─────────── */
     .modal-bottom-sheet {
       position: fixed;
@@ -138,14 +130,6 @@ component('md-bottom-sheet', () => {
       flex-direction: column;
       overflow: hidden;
     }
-    .modal-enter-from, .modal-leave-to {
-      transform: translateY(100%);
-      pointer-events: none;
-    }
-    .modal-enter-active, .modal-leave-active {
-      transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
     /* ── Standard bottom sheet: coexists with primary content ────── */
     .standard-bottom-sheet {
       position: fixed;
@@ -221,10 +205,23 @@ component('md-bottom-sheet', () => {
     ${Transition({
       show: open.value && props.variant === 'modal',
       name: 'md-scrim',
-      enterFrom: 'scrim-enter-from',
-      enterActive: 'scrim-enter-active',
-      leaveActive: 'scrim-leave-active',
-      leaveTo: 'scrim-leave-to',
+      css: false,
+      onBeforeEnter: (el) => { (el as HTMLElement).style.opacity = '0'; },
+      onEnter: (el, done) => {
+        const h = el as HTMLElement;
+        h.offsetHeight;
+        h.style.transition = 'opacity 250ms ease-out';
+        h.style.opacity = '';
+        h.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, 300);
+      },
+      onLeave: (el, done) => {
+        const h = el as HTMLElement;
+        h.style.transition = 'opacity 250ms ease-out';
+        h.style.opacity = '0';
+        h.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, 300);
+      },
     }, html`
       <div
         class="scrim"
@@ -236,21 +233,42 @@ component('md-bottom-sheet', () => {
       ? Transition({
           show: open.value,
           name: 'md-modal-sheet',
-          enterFrom: 'modal-enter-from',
-          enterActive: 'modal-enter-active',
-          leaveActive: 'modal-leave-active',
-          leaveTo: 'modal-leave-to',
-          onBeforeLeave: () => {
-            if (dragDismissed) {
-              dragDismissed = false;
-              if (dismissedEl) {
-                dismissedEl.style.transition = 'none';
-                dismissedEl = null;
-              }
+          css: false,
+          onBeforeEnter: (el) => {
+            scrollLock.lock();
+            (el as HTMLElement).style.transform = 'translateY(100%)';
+          },
+          onEnter: (el, done) => {
+            const h = el as HTMLElement;
+            h.offsetHeight;
+            h.style.transition = 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)';
+            h.style.transform = '';
+            h.addEventListener('transitionend', done, { once: true });
+            setTimeout(done, 350);
+          },
+          onAfterEnter: trap.onAfterEnter,
+          onBeforeLeave: (_el) => {
+            // The drag-dismiss path already animated the sheet off-screen.
+            // Disable any residual inline transition so the element doesn't
+            // snap back or conflict with the coming JS leave handling.
+            if (dragDismissed && dismissedEl) {
+              dismissedEl.style.transition = 'none';
+              dismissedEl = null;
             }
           },
-          onBeforeEnter: scrollLock.lock,
-          onAfterEnter: trap.onAfterEnter,
+          onLeave: (el, done) => {
+            const h = el as HTMLElement;
+            // Sheet was already slid off-screen by the drag gesture — skip.
+            if (dragDismissed) {
+              dragDismissed = false;
+              done();
+              return;
+            }
+            h.style.transition = 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)';
+            h.style.transform = 'translateY(100%)';
+            h.addEventListener('transitionend', done, { once: true });
+            setTimeout(done, 350);
+          },
           onAfterLeave: () => { trap.onAfterLeave(); scrollLock.unlock(); },
         }, html`
           <div
