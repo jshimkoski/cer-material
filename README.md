@@ -59,6 +59,27 @@ All components are registered automatically once the script loads — no `import
 
 ---
 
+## Setup in [CER App Framework](https://github.com/jshimkoski/vite-plugin-cer-app)
+
+Install dependencies:
+
+```bash
+npm install typeface-roboto material-symbols @jasonshimmy/cer-material
+```
+
+Create a plugin in your CER App Framework project:
+
+```ts
+// plugins/cer-material.ts
+import 'typeface-roboto';
+import 'material-symbols/outlined.css';
+import '@jasonshimmy/cer-material';
+
+export default {};
+```
+
+---
+
 ## Quick start
 
 ```ts
