@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.2.2] - 2026-03-15
+
+- fix: update @jasonshimmy/custom-elements-runtime to version 3.0.0 in package.json and package-lock.json (8d9d1b5)
+- docs: update readme (e2d6d48)
+
 ## [v0.2.1] - 2026-03-13
 
 - fix: update dependencies, fix overlay animations, improve date picker, improve time picker (6a8e337)
