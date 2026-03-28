@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.3.1] - 2026-03-28
+
+- fix: make back button option in side sheet fix: improve animation in app bar (74cf2ab)
+- docs: update readme documentation (adfaf98)
+
 ## [v0.3.0] - 2026-03-28
 
 - feat: implement MD3 design tokens with theme.css and update README (fa0e314)
