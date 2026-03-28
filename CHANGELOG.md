@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.3.2] - 2026-03-28
+
+- fix: divider inset both (4fb6bbb)
+
 ## [v0.3.1] - 2026-03-28
 
 - fix: make back button option in side sheet fix: improve animation in app bar (74cf2ab)
