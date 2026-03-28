@@ -112,6 +112,13 @@ component('md-showcase', () => {
       font-family: var(--md-sys-typescale-font, 'Roboto', sans-serif);
     }
 
+    /* ── Sticky app bar ── */
+    .page > md-app-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
     /* ── Content ── */
     .main-content {
       max-width: 960px;
@@ -409,6 +416,7 @@ component('md-showcase', () => {
       <md-app-bar
         title="Material Design 3"
         leading-icon="menu"
+        variant="large"
         :trailing-icons="${['search', 'more_vert']}"
         @nav=${() => { drawerModalOpen.value = true; }}
         @action="${(e: CustomEvent<string>) => showSnackbar('Action: ' + e.detail)}"

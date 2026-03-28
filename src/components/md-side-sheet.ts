@@ -10,6 +10,7 @@ component('md-side-sheet', () => {
     headline: '',
     variant: 'standard' as 'standard' | 'modal',
     divider: true,
+    showBackButton: false
   });
   const emit = useEmit();
   const open = defineModel('open', false);
@@ -183,7 +184,10 @@ component('md-side-sheet', () => {
           >
             ${when(!!props.headline, () => html`
               <div class="sheet-header">
-                <button class="icon-btn" aria-label="Go back" @click="${() => emit('back')}">
+                <button
+                  :when="${props.showBackButton}"
+                  class="icon-btn" aria-label="Go back" @click="${() => emit('back')}"
+                >
                   <span class="icon-btn-icon">arrow_back</span>
                 </button>
                 <h2 class="sheet-headline">${props.headline}</h2>

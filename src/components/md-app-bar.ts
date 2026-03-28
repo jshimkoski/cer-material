@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-app-bar', () => {
@@ -7,73 +7,190 @@ component('md-app-bar', () => {
     title: '',
     leadingIcon: 'menu',
     trailingIcons: [] as string[],
-    scrolled: false,
   });
   const emit = useEmit();
 
   useStyle(() => css`
     :host { display: block; }
 
+    /* ── Base bar ────────────────────────────────────────────────── */
     .app-bar {
       background: var(--md-sys-color-surface, #FFFBFE);
-      display: flex;
-      align-items: center;
       width: 100%;
-      transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1),
-                  background-color 280ms;
-    }
-    .app-bar.scrolled {
-      background: var(--md-sys-color-surface-container, #F3EDF7);
-      box-shadow: var(--md-sys-elevation-2);
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+      transition: box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* ── Small / Center ── */
+    /* ── Elevation lift on scroll (all variants) ─────────────────── */
+    /* The background colour change uses a ::before overlay animated
+     * via opacity rather than background-color. Opacity is GPU-
+     * composited (no repaint) so it cannot flicker alongside the
+     * simultaneous height transition on medium/large variants.
+     * isolation: isolate on .app-bar keeps z-index: -1 contained.  */
+    .app-bar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--md-sys-color-surface-container, #ECE6F0);
+      opacity: 0;
+      will-change: opacity;
+      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      z-index: -1;
+    }
+    :host([data-scrolled]) .app-bar::before { opacity: 1; }
+
+    :host([data-scrolled]) .app-bar {
+      box-shadow: 0 1px 2px 0 rgba(0,0,0,.3),
+                  0 2px 6px 2px rgba(0,0,0,.15);
+    }
+
+    /* ── Small / Center ──────────────────────────────────────────── */
     .small, .center {
       height: 64px;
-      padding: 0 4px;
-      flex-direction: row;
-      gap: 4px;
+      display: flex;
+      align-items: center;
     }
 
-    /* ── Medium ── */
+    /* Center-aligned: title is absolutely centered across the full bar
+     * width regardless of leading/trailing icon widths.               */
+    .center { position: relative; }
+    .center .title-area {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    /* ── Medium (112 → 64 px) / Large (152 → 64 px) ─────────────── */
+    /* No height transition — height is a layout property that forces
+     * a full document reflow on every frame, which is the root cause
+     * of scroll jitter. Height snaps instantly instead; the visual
+     * change is imperceptible because the expanded title layer
+     * simultaneously fades + slides out via compositor-only properties
+     * (opacity + transform), masking the snap.
+     * By the time collapse fires the content has already scrolled
+     * collapseAt px, so the instant height reduction causes no
+     * visible layout jump.                                            */
     .medium {
-      min-height: 112px;
-      padding: 8px 4px 20px;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .medium .top-row {
+      height: 112px;
       display: flex;
-      align-items: center;
-      width: 100%;
-      padding: 0;
-      height: 64px;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
     }
-    .medium .title {
-      padding: 0 16px;
-      font-size: 24px;
-      line-height: 32px;
+    .large {
+      height: 152px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
     }
 
-    /* ── Large ── */
-    .large {
-      min-height: 152px;
-      padding: 8px 4px 28px;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .large .top-row {
-      display: flex;
-      align-items: center;
-      width: 100%;
+    /* Instant snap — no transition on height */
+    :host([data-scrolled]) .medium,
+    :host([data-scrolled]) .large {
       height: 64px;
     }
-    .large .title {
-      padding: 0 16px;
+
+    /* ── Top row: always 64 px ───────────────────────────────────── */
+    .top-row {
+      height: 64px;
+      min-height: 64px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* ── Small / center title area ───────────────────────────────── */
+    .title-area { flex: 1; min-width: 0; overflow: hidden; }
+
+    /* ── Collapsed title (medium / large top row) ────────────────── */
+    /* Invisible by default; fades in when scrolled.
+     * will-change promotes this to a GPU layer so opacity animation
+     * never triggers a repaint.                                      */
+    .collapsed-title-area {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      opacity: 0;
+      will-change: opacity;
+      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    :host([data-scrolled]) .collapsed-title-area { opacity: 1; }
+
+    /* ── Expanded title layer ─────────────────────────────────────
+     * Slides up and fades out using only compositor-friendly
+     * properties (transform + opacity). Neither triggers reflow or
+     * repaint so they cannot cause jitter even during slow scrolling.
+     * will-change ensures the GPU layer is ready before the first
+     * scroll event arrives.                                          */
+    .expanded-title-layer {
+      position: absolute;
+      top: 64px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      pointer-events: none;
+      opacity: 1;
+      transform: translateY(0);
+      will-change: transform, opacity;
+      transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity   150ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    :host([data-scrolled]) .expanded-title-layer {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+
+    /* Title pinned to the bottom of the bar. */
+    .expanded-title {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      /* Large: 88 px area; 36 px line-height; 28 px bottom → 24 px above */
+      bottom: 28px;
       font-size: 28px;
       line-height: 36px;
+      font-family: var(--md-sys-typescale-headline-medium-font, var(--md-sys-typescale-font, 'Roboto'), sans-serif);
+      font-weight: 400;
+      color: var(--md-sys-color-on-surface, #1C1B1F);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+    /* Medium: 48 px area; 32 px line-height; 8 px bottom → 8 px above */
+    .medium .expanded-title {
+      bottom: 8px;
+      font-size: 24px;
+      line-height: 32px;
+      font-family: var(--md-sys-typescale-headline-small-font, var(--md-sys-typescale-font, 'Roboto'), sans-serif);
     }
 
+    /* ── Collapsed / small title text ────────────────────────────── */
+    .title {
+      font-family: var(--md-sys-typescale-title-large-font, var(--md-sys-typescale-font, 'Roboto'), sans-serif);
+      font-size: 22px;
+      line-height: 28px;
+      font-weight: 400;
+      color: var(--md-sys-color-on-surface, #1C1B1F);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+      padding: 0 4px;
+    }
+
+    /* ── Icon button ─────────────────────────────────────────────── */
     .icon-btn {
       width: 48px;
       height: 48px;
@@ -103,54 +220,88 @@ component('md-app-bar', () => {
     .icon-btn:focus::before  { opacity: 0.12; }
     .icon-btn:active::before { opacity: 0.12; }
 
-    .nav-icon,
-    .action-icon {
+    .nav-icon, .action-icon {
       font-family: 'Material Symbols Outlined';
       font-size: 24px;
       font-weight: normal;
       font-style: normal;
       line-height: 1;
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      user-select: none;
     }
-
-    .title-area {
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .title {
-      font-family: var(--md-sys-typescale-font, 'Roboto', sans-serif);
-      font-size: 22px;
-      font-weight: 400;
-      color: var(--md-sys-color-on-surface, #1C1B1F);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding: 0 4px;
-    }
-
-    .center .title-area { text-align: center; }
 
     .trailing-actions {
       display: flex;
       align-items: center;
-      gap: 0;
       flex-shrink: 0;
     }
-
-    .top-row { display: flex; align-items: center; width: 100%; }
   `);
 
+  /* ── Scroll behaviour ────────────────────────────────────────────────
+   *
+   * Toggles [data-scrolled] on the host element when window.scrollY > 0.
+   * All visual transitions (height collapse, title crossfade, elevation)
+   * are handled entirely by :host([data-scrolled]) CSS rules inside the
+   * shadow stylesheet — no shadow-DOM element querying required.
+   *
+   * context._host is the <md-app-bar> custom element, set synchronously
+   * in the element constructor (before connectedCallback fires).
+   * ──────────────────────────────────────────────────────────────────── */
+  useOnConnected(((context: any) => {
+    const host = context._host as HTMLElement;
+    if (!host) return;
+
+    // Collapse threshold: wait until the user has scrolled past the bar's
+    // own extra height before triggering the collapse. This prevents the
+    // layout shift (152→64 px) from briefly changing scrollY and causing
+    // a feedback loop. Only expand again when fully back at the top.
+    const variant    = host.getAttribute('variant') ?? 'small';
+    const collapseAt = variant === 'large' ? 88 : variant === 'medium' ? 48 : 4;
+    let collapsed    = false;
+    let rafId: number | null = null;
+
+    // Runs once per animation frame (after layout is settled) so that
+    // reading scrollY never forces a synchronous reflow mid-transition.
+    const update = (): void => {
+      rafId = null;
+      const y = window.scrollY;
+      if (!collapsed && y > collapseAt) {
+        collapsed = true;
+        host.setAttribute('data-scrolled', '');
+      } else if (collapsed && y <= 0) {
+        collapsed = false;
+        host.removeAttribute('data-scrolled');
+      }
+    };
+
+    const onScroll = (): void => {
+      if (rafId === null) rafId = requestAnimationFrame(update);
+    };
+
+    // Sync immediately in case page loaded mid-scroll.
+    update();
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    context.__mdAppBarCleanup = (): void => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+    };
+  }) as unknown as () => void);
+
+  useOnDisconnected(((context: any) => {
+    context.__mdAppBarCleanup?.();
+    context.__mdAppBarCleanup = null;
+  }) as unknown as () => void);
+
+  /* ── Template ─────────────────────────────────────────────────────── */
   const isColumn = props.variant === 'medium' || props.variant === 'large';
   const safeTrailingIcons = Array.isArray(props.trailingIcons) ? props.trailingIcons : [];
 
   return html`
-    <header :class="${{
-      'app-bar': true,
-      [props.variant]: true,
-      scrolled: props.scrolled,
-    }}">
+    <header :class="${{ 'app-bar': true, [props.variant]: true }}">
+
       <div class="top-row">
+
         ${when(!!props.leadingIcon, () => html`
           <button type="button" class="icon-btn" aria-label="Navigation" @click="${() => emit('nav')}">
             <span class="nav-icon" aria-hidden="true">${props.leadingIcon}</span>
@@ -163,6 +314,12 @@ component('md-app-bar', () => {
           </div>
         `)}
 
+        ${when(isColumn, () => html`
+          <div class="collapsed-title-area" aria-hidden="true">
+            <span class="title">${props.title}</span>
+          </div>
+        `)}
+
         <div class="trailing-actions">
           <slot name="trailing"></slot>
           ${safeTrailingIcons.map((icon: string) => html`
@@ -171,13 +328,15 @@ component('md-app-bar', () => {
             </button>
           `)}
         </div>
+
       </div>
 
       ${when(isColumn, () => html`
-        <div class="title-area">
-          <span class="title">${props.title}<slot name="title"></slot></span>
+        <div class="expanded-title-layer">
+          <span class="expanded-title">${props.title}<slot name="title"></slot></span>
         </div>
       `)}
+
     </header>
   `;
 });

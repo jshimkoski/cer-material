@@ -792,6 +792,7 @@ MD3 side sheet — standard (in-layout, right-side panel) or modal (slide-in fro
 | `headline` | `string` | `''` | Header title text |
 | `variant` | `'standard' \| 'modal'` | `'standard'` | Layout mode |
 | `divider` | `boolean` | `true` | Renders a left-edge border |
+| `show-back-button` | `boolean` | `false` | Shows the back button in the header (modal variant) |
 
 **Slots:** default — sheet body content.
 
