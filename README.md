@@ -79,7 +79,7 @@ import 'material-symbols/outlined.css';
 import '@jasonshimmy/cer-material/theme.css';
 import '@jasonshimmy/cer-material';
 
-export default {};
+export default { name: 'cer-material' };
 ```
 
 ---
