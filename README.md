@@ -35,7 +35,7 @@ Components use Material Symbols and Roboto. Add both to your HTML `<head>`:
 
 A self-contained IIFE bundle (runtime included) is available for use without a bundler — ideal for CodePen, JSFiddle, plain HTML files, or any environment where you just want a `<script>` tag.
 
-Add the fonts and a single script to your HTML `<head>`:
+Add the fonts, theme stylesheet, and bundle script to your HTML `<head>`:
 
 ```html
 <!-- Fonts -->
@@ -43,6 +43,9 @@ Add the fonts and a single script to your HTML `<head>`:
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=swap" rel="stylesheet" />
+
+<!-- MD3 design tokens -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@jasonshimmy/cer-material/dist/theme.css" />
 
 <!-- cer-material (runtime included) -->
 <script src="https://cdn.jsdelivr.net/npm/@jasonshimmy/cer-material/dist/cer-material.iife.js"></script>
@@ -73,6 +76,7 @@ Create a plugin in your CER App Framework project:
 // plugins/cer-material.ts
 import 'typeface-roboto';
 import 'material-symbols/outlined.css';
+import '@jasonshimmy/cer-material/theme.css';
 import '@jasonshimmy/cer-material';
 
 export default {};
@@ -83,7 +87,10 @@ export default {};
 ## Quick start
 
 ```ts
-// Registers all components and applies the MD3 design token theme
+// Import the MD3 design token theme (CSS custom properties)
+import '@jasonshimmy/cer-material/theme.css';
+
+// Register all components
 import '@jasonshimmy/cer-material';
 ```
 
@@ -99,14 +106,7 @@ Then use any component tag directly in your HTML or templates:
 If you need the MD3 CSS custom properties without registering components:
 
 ```ts
-import '@jasonshimmy/cer-material/theme';
-```
-
-Or call it lazily:
-
-```ts
-import { applyTheme } from '@jasonshimmy/cer-material/theme';
-applyTheme();
+import '@jasonshimmy/cer-material/theme.css';
 ```
 
 ---
@@ -140,7 +140,7 @@ All original `change`, `close`, `tab-change`, and other events still fire for ba
 
 ## Design tokens
 
-The theme is injected as `document.adoptedStyleSheets` and exposes every MD3 system token as a CSS custom property. Override them on `:root` to customise the palette:
+The theme is a plain CSS file (`@jasonshimmy/cer-material/theme.css`) that exposes every MD3 system token as a CSS custom property on `:root`. Override them after importing to customise the palette:
 
 ```css
 :root {

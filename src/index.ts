@@ -1,7 +1,3 @@
-// Apply MD3 design tokens to the document.
-// Also exported so advanced consumers can call it lazily.
-export { applyTheme } from './theme.ts';
-
 // Material Design 3 Components
 // Each import is a side-effect that registers the custom element.
 import './components/md-app-bar.ts';

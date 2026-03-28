@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { copyFileSync } from 'node:fs';
 import dts from 'vite-plugin-dts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -47,7 +48,6 @@ export default defineConfig(({ command, mode }) => {
       lib: {
         entry: {
           index: resolve(__dirname, 'src/index.ts'),
-          theme: resolve(__dirname, 'src/theme.ts'),
         },
         formats: ['es', 'cjs'],
         fileName: (format, name) => `${name}.${format === 'es' ? 'js' : 'cjs'}`,
@@ -61,11 +61,20 @@ export default defineConfig(({ command, mode }) => {
     },
     plugins: [
       dts({
-        include: ['src/index.ts', 'src/theme.ts', 'src/components/**', 'src/composables/**'],
+        include: ['src/index.ts', 'src/components/**', 'src/composables/**'],
         exclude: ['src/main.ts', 'src/components/md-showcase.ts'],
         rollupTypes: false,
         tsconfigPath: './tsconfig.json',
       }),
+      {
+        name: 'copy-theme-css',
+        closeBundle() {
+          copyFileSync(
+            resolve(__dirname, 'src/theme.css'),
+            resolve(__dirname, 'dist/theme.css'),
+          );
+        },
+      },
     ],
   };
 });

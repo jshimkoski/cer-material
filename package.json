@@ -27,11 +27,7 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
-    "./theme": {
-      "types": "./dist/theme.d.ts",
-      "import": "./dist/theme.js",
-      "require": "./dist/theme.cjs"
-    }
+    "./theme.css": "./dist/theme.css"
   },
   "files": [
     "dist"
