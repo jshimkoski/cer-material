@@ -15,7 +15,6 @@ component('md-divider', () => {
       background: var(--md-sys-color-outline-variant, #CAC4D0);
     }
     .horizontal {
-      width: 100%;
       height: 1px;
     }
     .vertical {
