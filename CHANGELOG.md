@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.3.4] - 2026-03-29
+
+- fix: update cer dependency (3291416)
+
 ## [v0.3.3] - 2026-03-29
 
 - fix: continue work in app bar morphing logic (f59de73)
