@@ -45,7 +45,7 @@
     "@jasonshimmy/custom-elements-runtime": ">=3.0.0"
   },
   "devDependencies": {
-    "@jasonshimmy/custom-elements-runtime": "^3.0.0",
+    "@jasonshimmy/custom-elements-runtime": "^3.7.2",
     "@types/node": "^25.5.0",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
