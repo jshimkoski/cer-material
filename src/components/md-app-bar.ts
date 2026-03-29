@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected, watch } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-app-bar', () => {
@@ -92,8 +92,8 @@ component('md-app-bar', () => {
     }
 
     /* Instant snap — no transition on height */
-    :host([data-scrolled]) .medium,
-    :host([data-scrolled]) .large {
+    :host([data-collapsed]) .medium,
+    :host([data-collapsed]) .large {
       height: 64px;
     }
 
@@ -124,7 +124,7 @@ component('md-app-bar', () => {
       will-change: opacity;
       transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
     }
-    :host([data-scrolled]) .collapsed-title-area { opacity: 1; }
+    :host([data-collapsed]) .collapsed-title-area { opacity: 1; }
 
     /* ── Expanded title layer ─────────────────────────────────────
      * Slides up and fades out using only compositor-friendly
@@ -146,7 +146,7 @@ component('md-app-bar', () => {
       transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
                   opacity   150ms cubic-bezier(0.4, 0, 0.2, 1);
     }
-    :host([data-scrolled]) .expanded-title-layer {
+    :host([data-collapsed]) .expanded-title-layer {
       transform: translateY(-100%);
       opacity: 0;
     }
@@ -239,39 +239,54 @@ component('md-app-bar', () => {
 
   /* ── Scroll behaviour ────────────────────────────────────────────────
    *
-   * Toggles [data-scrolled] on the host element when window.scrollY > 0.
-   * All visual transitions (height collapse, title crossfade, elevation)
-   * are handled entirely by :host([data-scrolled]) CSS rules inside the
-   * shadow stylesheet — no shadow-DOM element querying required.
-   *
-   * context._host is the <md-app-bar> custom element, set synchronously
-   * in the element constructor (before connectedCallback fires).
-   * ──────────────────────────────────────────────────────────────────── */
+   * This component uses two state axes:
+   * - data-scrolled: true when content is under the bar (scrollY > 0)
+   * - data-collapsed: true when medium/large app bars have passed their collapse threshold
+   */
+  let isScrolledState = false;
+  let isCollapsedState = false;
+  let hostElement: HTMLElement | null = null;
+
+  const collapseAt = (): number => {
+    const variant = props.variant || 'small';
+    return variant === 'large' ? 88 : variant === 'medium' ? 48 : 0;
+  };
+
+  const isVariantCollapsible = (): boolean => props.variant === 'medium' || props.variant === 'large';
+
+  const shouldScroll = (): boolean => window.scrollY > 0;
+
+  const shouldCollapse = (): boolean => isVariantCollapsible() && window.scrollY > collapseAt();
+
+  const syncScrollState = (host: HTMLElement): void => {
+    const scrolled = shouldScroll();
+    const collapsed = shouldCollapse();
+
+    if (scrolled !== isScrolledState) {
+      isScrolledState = scrolled;
+      if (scrolled) host.setAttribute('data-scrolled', '');
+      else host.removeAttribute('data-scrolled');
+    }
+
+    if (collapsed !== isCollapsedState) {
+      isCollapsedState = collapsed;
+      if (collapsed) host.setAttribute('data-collapsed', '');
+      else host.removeAttribute('data-collapsed');
+    }
+  };
+
   useOnConnected(((context: any) => {
     const host = context._host as HTMLElement;
     if (!host) return;
+    hostElement = host;
 
-    // Collapse threshold: wait until the user has scrolled past the bar's
-    // own extra height before triggering the collapse. This prevents the
-    // layout shift (152→64 px) from briefly changing scrollY and causing
-    // a feedback loop. Only expand again when fully back at the top.
-    const variant    = host.getAttribute('variant') ?? 'small';
-    const collapseAt = variant === 'large' ? 88 : variant === 'medium' ? 48 : 4;
-    let collapsed    = false;
     let rafId: number | null = null;
 
     // Runs once per animation frame (after layout is settled) so that
     // reading scrollY never forces a synchronous reflow mid-transition.
     const update = (): void => {
       rafId = null;
-      const y = window.scrollY;
-      if (!collapsed && y > collapseAt) {
-        collapsed = true;
-        host.setAttribute('data-scrolled', '');
-      } else if (collapsed && y <= 0) {
-        collapsed = false;
-        host.removeAttribute('data-scrolled');
-      }
+      syncScrollState(host);
     };
 
     const onScroll = (): void => {
@@ -288,9 +303,12 @@ component('md-app-bar', () => {
     };
   }) as unknown as () => void);
 
+  watch(() => props.variant, () => { if (hostElement) syncScrollState(hostElement); });
+
   useOnDisconnected(((context: any) => {
     context.__mdAppBarCleanup?.();
     context.__mdAppBarCleanup = null;
+    hostElement = null;
   }) as unknown as () => void);
 
   /* ── Template ─────────────────────────────────────────────────────── */
