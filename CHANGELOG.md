@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.3.5] - 2026-04-03
+
+- fix: update readme (b992537)
+- chore: update custom-elements-runtime to version 3.7.4 (1553e41)
+
 ## [v0.3.4] - 2026-03-29
 
 - fix: update cer dependency (3291416)
