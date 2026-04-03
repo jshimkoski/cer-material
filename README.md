@@ -180,7 +180,6 @@ MD3 top app bar with four layout variants, a leading navigation icon, title area
 | `title` | `string` | `''` | Title text |
 | `leading-icon` | `string` | `'menu'` | Material Symbol for the leading nav button |
 | `trailing-icons` | `string[]` | `[]` | Array of Material Symbol names for trailing action buttons |
-| `scrolled` | `boolean` | `false` | Applies elevated/tinted scroll state |
 
 **Slots:** `title` — custom title content; `trailing` — completely custom trailing area.
 
