@@ -1,5 +1,16 @@
-import { component, html, css, useProps, useEmit, useStyle, useOnConnected, useOnDisconnected, watch } from '@jasonshimmy/custom-elements-runtime';
-import { when } from '@jasonshimmy/custom-elements-runtime/directives';
+import {
+  component,
+  html,
+  css,
+  useProps,
+  useEmit,
+  useStyle,
+  ref,
+  computed,
+  useOnConnected,
+  useOnDisconnected,
+  watch,
+} from '@jasonshimmy/custom-elements-runtime';
 
 component('md-app-bar', () => {
   const props = useProps({
@@ -8,353 +19,439 @@ component('md-app-bar', () => {
     leadingIcon: 'menu',
     trailingIcons: [] as string[],
   });
+
   const emit = useEmit();
 
-  useStyle(() => css`
-    :host { display: block; }
+  const collapsed = ref(false);
+  const isCollapsible = computed(
+    () => props.variant === 'medium' || props.variant === 'large',
+  );
 
-    /* ── Base bar ────────────────────────────────────────────────── */
-    .app-bar {
-      background: var(--md-sys-color-surface, #FFFBFE);
-      width: 100%;
-      overflow: hidden;
-      position: relative;
-      isolation: isolate;
-      transition: box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  // Persistent: page has been scrolled past top (scrollY > 0).
+  // Drives the surface-container color fill on all variants.
+  const isScrolled = ref(false);
+
+  // Transient: user is actively scrolling right now.
+  // Drives the box-shadow — it must disappear once scrolling stops,
+  // so it never shows in a static collapsed/expanded state.
+  const isScrolling = ref(false);
+  let scrollingTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // ── Collapse / expand state machine ──────────────────────────────────────
+  //
+  // Problem: the app bar is `position: sticky`. When its height changes via
+  // CSS transition, the browser adjusts the sticky element's layout, which
+  // changes `window.scrollY`, which fires the scroll event handler again.
+  // Without a lock this creates a feedback loop that races the transition.
+  //
+  // Solution: one shared timer. When `collapsed` changes we start a 220ms
+  // lock (CSS transition is 200ms + 20ms margin). While locked, all scroll
+  // events are silently ignored. When the timer fires we read `window.scrollY`
+  // as ground truth and correct the state if it drifted. If the state needs
+  // correcting, we apply it and restart the timer once — a second correction
+  // cycle cannot happen because `scrollY > 0` is a boolean that can only
+  // differ from `collapsed` in one direction at a time.
+  //
+  // Using a single `animationTimer` reference (cleared on reassignment) means
+  // rapid collapses never stack timers — only the most-recent one fires.
+
+  let animationTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const startAnimationLock = () => {
+    if (animationTimer !== null) clearTimeout(animationTimer);
+    // 300ms covers the 250ms height transition plus a small layout-settle buffer.
+    animationTimer = setTimeout(() => {
+      animationTimer = null;
+      const scrolled = window.scrollY > 0;
+      isScrolled.value = scrolled;
+      if (!isCollapsible.value) return;
+      if (collapsed.value !== scrolled) {
+        collapsed.value = scrolled;
+        // watch fires synchronously above and calls startAnimationLock,
+        // which sets the new timer. Do NOT set another timer here — that
+        // would overwrite the one watch just set, creating an orphaned timer
+        // that prematurely releases the lock.
+      }
+    }, 300);
+  };
+
+  watch(collapsed, startAnimationLock);
+
+  const onScroll = () => {
+    const scrolled = window.scrollY > 0;
+
+    // Color fill: persistent — always reflects real scrollY.
+    isScrolled.value = scrolled;
+
+    // Shadow: transient — true only while the user is actively scrolling.
+    // A debounce timer clears it ~150 ms after the last scroll event so the
+    // shadow disappears once the user stops, even if the bar is still collapsed.
+    // This runs unconditionally (not blocked by animationTimer) so the shadow
+    // is never left on by animation-induced scroll events.
+    isScrolling.value = true;
+    if (scrollingTimer !== null) clearTimeout(scrollingTimer);
+    scrollingTimer = setTimeout(() => {
+      scrollingTimer = null;
+      isScrolling.value = false;
+    }, 150);
+
+    // Collapse toggle needs the animation lock to prevent height-transition
+    // re-entrancy from toggling collapsed back and forth.
+    if (animationTimer !== null) return;
+
+    const next = isCollapsible.value && scrolled;
+    if (collapsed.value !== next) {
+      collapsed.value = next;
+      // `watch(collapsed)` fires synchronously here and calls startAnimationLock.
     }
+  };
 
-    /* ── Elevation lift on scroll (all variants) ─────────────────── */
-    /* The background colour change uses a ::before overlay animated
+  useOnConnected(() => {
+    // Sync initial state without triggering the animation lock.
+    const scrolled = window.scrollY > 0;
+    isScrolled.value = scrolled;
+    collapsed.value = isCollapsible.value && scrolled;
+    window.addEventListener('scroll', onScroll);
+  });
+
+  useOnDisconnected(() => {
+    window.removeEventListener('scroll', onScroll);
+    if (animationTimer !== null) clearTimeout(animationTimer);
+    if (scrollingTimer !== null) clearTimeout(scrollingTimer);
+  });
+
+  const safeTrailingIcons = computed(() =>
+    Array.isArray(props.trailingIcons) ? props.trailingIcons : [],
+  );
+
+  useStyle(
+    () => css`
+      :host {
+        display: block;
+      }
+
+      /* ── Base bar ────────────────────────────────────────────────── */
+      .app-bar {
+        background: var(--md-sys-color-surface, #fffbfe);
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        isolation: isolate;
+        /* Same geometry as the active shadow but fully transparent —
+         * keeps the transition alpha-only so there is no jarring
+         * spread/blur jump when the shadow fades in or out. */
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0), 0 2px 6px rgba(0, 0, 0, 0);
+        transition: box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: box-shadow;
+      }
+
+      /* ── Elevation lift on scroll (all variants) ─────────────────── */
+      /* The background colour change uses a ::before overlay animated
      * via opacity rather than background-color. Opacity is GPU-
      * composited (no repaint) so it cannot flicker alongside the
      * simultaneous height transition on medium/large variants.
      * isolation: isolate on .app-bar keeps z-index: -1 contained.  */
-    .app-bar::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--md-sys-color-surface-container, #ECE6F0);
-      opacity: 0;
-      will-change: opacity;
-      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
-      pointer-events: none;
-      z-index: -1;
-    }
-    :host([data-scrolled]) .app-bar::before { opacity: 1; }
+      .app-bar::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: var(--md-sys-color-surface-container, #ece6f0);
+        opacity: 0;
+        will-change: opacity;
+        transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        z-index: -1;
+      }
+      /* Color fill: ALL variants while scrollY > 0. */
+      .app-bar.scrolled::before {
+        opacity: 1;
+      }
+      /* Shadow: only while actively scrolling — disappears once the user stops. */
+      .app-bar.scrolling {
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
 
-    :host([data-scrolled]) .app-bar {
-      box-shadow: 0 1px 2px 0 rgba(0,0,0,.3),
-                  0 2px 6px 2px rgba(0,0,0,.15);
-    }
+      .app-bar.small,
+      .app-bar.center {
+        height: 64px;
+        display: flex;
+        align-items: center;
+      }
+      .app-bar.center {
+        justify-content: center;
+      }
 
-    /* ── Small / Center ──────────────────────────────────────────── */
-    .small, .center {
-      height: 64px;
-      display: flex;
-      align-items: center;
-    }
+      /* medium/large: flex column with animated height.
+       * A 300ms JS animation lock prevents the height-transition-induced scroll
+       * events from feeding back into the collapse state machine.
+       * box-shadow listed here too because this selector has higher specificity
+       * than .app-bar, so transition must be repeated to include both properties.
+       * Heights per M3 Expressive flexible tokens:
+       *   medium flexible ContainerHeight = 112dp
+       *   large flexible  ContainerHeight = 120dp */
+      .app-bar.medium {
+        height: 112px;
+        display: flex;
+        flex-direction: column;
+        transition: height 250ms cubic-bezier(0.2, 0, 0, 1),
+                    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: height, box-shadow;
+      }
+      .app-bar.large {
+        height: 120px;
+        display: flex;
+        flex-direction: column;
+        transition: height 250ms cubic-bezier(0.2, 0, 0, 1),
+                    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: height, box-shadow;
+      }
+      .app-bar.medium.collapsed,
+      .app-bar.large.collapsed {
+        height: 64px;
+      }
 
-    /* Center-aligned: title is absolutely centered across the full bar
-     * width regardless of leading/trailing icon widths.               */
-    .center { position: relative; }
-    .center .title-area {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
+      .top-row {
+        height: 64px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        padding: 0 4px;
+        box-sizing: border-box;
+        width: 100%;
+      }
 
-    /* ── Medium (112 → 64 px) / Large (152 → 64 px) ─────────────── */
-    /* No height transition — height is a layout property that forces
-     * a full document reflow on every frame, which is the root cause
-     * of scroll jitter. Height snaps instantly instead; the visual
-     * change is imperceptible because the expanded title layer
-     * simultaneously fades + slides out via compositor-only properties
-     * (opacity + transform), masking the snap.
-     * By the time collapse fires the content has already scrolled
-     * collapseAt px, so the instant height reduction causes no
-     * visible layout jump.                                            */
-    .medium {
-      height: 112px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-    }
-    .large {
-      height: 152px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-    }
+      /* ── Inline title (inside top-row) ─────────────────────────── */
+      /* Shown for small, center, and collapsed medium/large.
+       * It is a flex item so it occupies exactly the space between the
+       * leading button and trailing-actions — no absolute positioning,
+       * no pointer-events overlap. */
 
-    /* Instant snap — no transition on height */
-    :host([data-collapsed]) .medium,
-    :host([data-collapsed]) .large {
-      height: 64px;
-    }
+      .app-bar.center .title-area-inline {
+        text-align: center;
+      }
 
-    /* ── Top row: always 64 px ───────────────────────────────────── */
-    .top-row {
-      height: 64px;
-      min-height: 64px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      padding: 0 4px;
-      width: 100%;
-      box-sizing: border-box;
-    }
+      /* Hide the inline title for expanded medium/large — the block title
+       * below the top-row takes over. visibility:hidden removes it from the
+       * a11y tree to prevent a duplicate heading.
+       * transition override: delay visibility until after opacity fades out
+       * (200ms delay) so the fade-out is visible, not an instant snap. */
+      .app-bar.medium:not(.collapsed) .title-area-inline,
+      .app-bar.large:not(.collapsed) .title-area-inline {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                    visibility 0s 200ms;
+      }
 
-    /* ── Small / center title area ───────────────────────────────── */
-    .title-area { flex: 1; min-width: 0; overflow: hidden; }
+      /* Animate the inline title fade.
+       * visibility delay = 0 so it becomes visible immediately when .collapsed
+       * is added, allowing the opacity to then animate from 0 → 1. */
+      .title-area-inline {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        align-self: center;
+        pointer-events: none;
+        transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                    visibility 0s 0ms;
+      }
 
-    /* ── Collapsed title (medium / large top row) ────────────────── */
-    /* Invisible by default; fades in when scrolled.
-     * will-change promotes this to a GPU layer so opacity animation
-     * never triggers a repaint.                                      */
-    .collapsed-title-area {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      opacity: 0;
-      will-change: opacity;
-      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    :host([data-collapsed]) .collapsed-title-area { opacity: 1; }
+      /* Title Large (22sp) — used for small/center and collapsed medium/large.
+       * width: 100% ensures the block fills the flex parent so that
+       * overflow:hidden + text-overflow:ellipsis has a boundary to clip to. */
+      .title {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 22px;
+        line-height: 28px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 4px;
+        color: var(--md-sys-color-on-surface, #1c1b1f);
+      }
 
-    /* ── Expanded title layer ─────────────────────────────────────
-     * Slides up and fades out using only compositor-friendly
-     * properties (transform + opacity). Neither triggers reflow or
-     * repaint so they cannot cause jitter even during slow scrolling.
-     * will-change ensures the GPU layer is ready before the first
-     * scroll event arrives.                                          */
-    .expanded-title-layer {
-      position: absolute;
-      top: 64px;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      overflow: hidden;
-      pointer-events: none;
-      opacity: 1;
-      transform: translateY(0);
-      will-change: transform, opacity;
-      transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
-                  opacity   150ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    :host([data-collapsed]) .expanded-title-layer {
-      transform: translateY(-100%);
-      opacity: 0;
-    }
+      /* ── Block title (below top-row, medium/large expanded) ───────── */
+      /* flex:1 fills the remaining height in the column-flex parent (.app-bar).
+       * transform is GPU-composited and does not affect layout, so it never
+       * perturbs scrollY. The JS animation lock absorbs the single layout-shift
+       * event caused by the height transition. */
+      .title-expand-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        overflow: hidden;
+        transform: translateY(0);
+        transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                    transform 250ms cubic-bezier(0.2, 0, 0, 1);
+      }
 
-    /* Title pinned to the bottom of the bar. */
-    .expanded-title {
-      position: absolute;
-      left: 16px;
-      right: 16px;
-      /* Large: 88 px area; 36 px line-height; 28 px bottom → 24 px above */
-      bottom: 28px;
-      font-size: 28px;
-      line-height: 36px;
-      font-family: var(--md-sys-typescale-headline-medium-font, var(--md-sys-typescale-font, 'Roboto'), sans-serif);
-      font-weight: 400;
-      color: var(--md-sys-color-on-surface, #1C1B1F);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: block;
-    }
-    /* Medium: 48 px area; 32 px line-height; 8 px bottom → 8 px above */
-    .medium .expanded-title {
-      bottom: 8px;
-      font-size: 24px;
-      line-height: 32px;
-      font-family: var(--md-sys-typescale-headline-small-font, var(--md-sys-typescale-font, 'Roboto'), sans-serif);
-    }
+      /* Not needed for small/center — those variants have no block title */
+      .app-bar.small .title-expand-wrapper,
+      .app-bar.center .title-expand-wrapper {
+        display: none;
+      }
 
-    /* ── Collapsed / small title text ────────────────────────────── */
-    .title {
-      font-family: var(--md-sys-typescale-title-large-font, var(--md-sys-typescale-font, 'Roboto'), sans-serif);
-      font-size: 22px;
-      line-height: 28px;
-      font-weight: 400;
-      color: var(--md-sys-color-on-surface, #1C1B1F);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: block;
-      padding: 0 4px;
-    }
+      /* Collapsed: slide title upward, fade out, and disable pointer events.
+       * The upward translate creates a directional morph toward the top-row
+       * position; overflow:hidden on .app-bar clips it as the height shrinks. */
+      .app-bar.collapsed .title-expand-wrapper {
+        opacity: 0;
+        transform: translateY(-24px);
+        pointer-events: none;
+      }
 
-    /* ── Icon button ─────────────────────────────────────────────── */
-    .icon-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--md-sys-color-on-surface, #1C1B1F);
-      outline: none;
-      position: relative;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .icon-btn::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background: var(--md-sys-color-on-surface, #1C1B1F);
-      opacity: 0;
-      transition: opacity 200ms;
-    }
-    .icon-btn:hover::before  { opacity: 0.08; }
-    .icon-btn:focus::before  { opacity: 0.12; }
-    .icon-btn:active::before { opacity: 0.12; }
+      /* Spec padding: 16dp sides, 12dp bottom (top is against the icon row) */
+      .title-area-block {
+        padding: 0 16px 12px;
+      }
 
-    .nav-icon, .action-icon {
-      font-family: 'Material Symbols Outlined';
-      font-size: 24px;
-      font-weight: normal;
-      font-style: normal;
-      line-height: 1;
-      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-      user-select: none;
-    }
+      /* Medium flexible expanded — Headline Medium (28sp / 36sp).
+       * The remaining height after the 64px top-row and 12px bottom padding
+       * is exactly one line tall (36px), so single-line ellipsis is correct. */
+      .title-block {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 28px;
+        line-height: 36px;
+        font-weight: 400;
+        color: var(--md-sys-color-on-surface, #1c1b1f);
+      }
 
-    .trailing-actions {
-      display: flex;
-      align-items: center;
-      flex-shrink: 0;
-    }
-  `);
+      /* Large flexible expanded — Display Small (36sp / 44sp) */
+      .app-bar.large .title-block {
+        font-size: 36px;
+        line-height: 44px;
+      }
 
-  /* ── Scroll behaviour ────────────────────────────────────────────────
-   *
-   * This component uses two state axes:
-   * - data-scrolled: true when content is under the bar (scrollY > 0)
-   * - data-collapsed: true when medium/large app bars have passed their collapse threshold
-   */
-  let isScrolledState = false;
-  let isCollapsedState = false;
-  let hostElement: HTMLElement | null = null;
+      /* ── Icon button ─────────────────────────────────────────────── */
+      .icon-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--md-sys-color-on-surface, #1c1b1f);
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .icon-btn::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: var(--md-sys-color-on-surface, #1c1b1f);
+        opacity: 0;
+        transition: opacity 200ms;
+      }
+      .icon-btn:hover::before {
+        opacity: 0.08;
+      }
+      .icon-btn:focus::before {
+        opacity: 0.12;
+      }
+      .icon-btn:active::before {
+        opacity: 0.12;
+      }
+      /* M3 accessibility: keyboard focus ring (state layer overlay alone is
+       * insufficient — an outline is required for WCAG 2.4.7). */
+      .icon-btn:focus-visible {
+        outline: 3px solid var(--md-sys-color-secondary, #625b71);
+        outline-offset: 2px;
+      }
 
-  const collapseAt = (): number => {
-    const variant = props.variant || 'small';
-    return variant === 'large' ? 88 : variant === 'medium' ? 48 : 0;
-  };
+      .nav-icon,
+      .action-icon {
+        font-family: 'Material Symbols Outlined';
+        font-size: 24px;
+        font-weight: normal;
+        font-style: normal;
+        line-height: 1;
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+        user-select: none;
+      }
 
-  const isVariantCollapsible = (): boolean => props.variant === 'medium' || props.variant === 'large';
-
-  const shouldScroll = (): boolean => window.scrollY > 0;
-
-  const shouldCollapse = (): boolean => isVariantCollapsible() && window.scrollY > collapseAt();
-
-  const syncScrollState = (host: HTMLElement): void => {
-    const scrolled = shouldScroll();
-    const collapsed = shouldCollapse();
-
-    if (scrolled !== isScrolledState) {
-      isScrolledState = scrolled;
-      if (scrolled) host.setAttribute('data-scrolled', '');
-      else host.removeAttribute('data-scrolled');
-    }
-
-    if (collapsed !== isCollapsedState) {
-      isCollapsedState = collapsed;
-      if (collapsed) host.setAttribute('data-collapsed', '');
-      else host.removeAttribute('data-collapsed');
-    }
-  };
-
-  useOnConnected(((context: any) => {
-    const host = context._host as HTMLElement;
-    if (!host) return;
-    hostElement = host;
-
-    let rafId: number | null = null;
-
-    // Runs once per animation frame (after layout is settled) so that
-    // reading scrollY never forces a synchronous reflow mid-transition.
-    const update = (): void => {
-      rafId = null;
-      syncScrollState(host);
-    };
-
-    const onScroll = (): void => {
-      if (rafId === null) rafId = requestAnimationFrame(update);
-    };
-
-    // Sync immediately in case page loaded mid-scroll.
-    update();
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    context.__mdAppBarCleanup = (): void => {
-      window.removeEventListener('scroll', onScroll);
-      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
-    };
-  }) as unknown as () => void);
-
-  watch(() => props.variant, () => { if (hostElement) syncScrollState(hostElement); });
-
-  useOnDisconnected(((context: any) => {
-    context.__mdAppBarCleanup?.();
-    context.__mdAppBarCleanup = null;
-    hostElement = null;
-  }) as unknown as () => void);
-
-  /* ── Template ─────────────────────────────────────────────────────── */
-  const isColumn = props.variant === 'medium' || props.variant === 'large';
-  const safeTrailingIcons = Array.isArray(props.trailingIcons) ? props.trailingIcons : [];
+      .trailing-actions {
+        margin-inline-start: auto;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      /* Spec color roles: leading nav icon = on-surface,
+       * trailing action icons = on-surface-variant. */
+      .trailing-actions .icon-btn {
+        color: var(--md-sys-color-on-surface-variant, #49454f);
+      }
+    `,
+  );
 
   return html`
-    <header :class="${{ 'app-bar': true, [props.variant]: true }}">
-
+    <header
+      :class="${{
+        'app-bar': true,
+        [props.variant]: true,
+        collapsed: collapsed.value,
+        scrolled: isScrolled.value,
+        scrolling: isScrolling.value,
+      }}"
+    >
       <div class="top-row">
+        <button
+          :when="${!!props.leadingIcon}"
+          type="button"
+          class="icon-btn"
+          aria-label="Navigation"
+          @click="${() => emit('nav')}"
+        >
+          <span class="nav-icon" aria-hidden="true">${props.leadingIcon}</span>
+        </button>
 
-        ${when(!!props.leadingIcon, () => html`
-          <button type="button" class="icon-btn" aria-label="Navigation" @click="${() => emit('nav')}">
-            <span class="nav-icon" aria-hidden="true">${props.leadingIcon}</span>
-          </button>
-        `)}
-
-        ${when(!isColumn, () => html`
-          <div class="title-area">
-            <span class="title">${props.title}<slot name="title"></slot></span>
-          </div>
-        `)}
-
-        ${when(isColumn, () => html`
-          <div class="collapsed-title-area" aria-hidden="true">
-            <span class="title">${props.title}</span>
-          </div>
-        `)}
+        <div class="title-area-inline">
+          <span class="title" role="heading" aria-level="1">${props.title}</span>
+        </div>
 
         <div class="trailing-actions">
           <slot name="trailing"></slot>
-          ${safeTrailingIcons.map((icon: string) => html`
-            <button type="button" class="icon-btn" aria-label="${icon}" @click="${() => emit('action', icon)}">
-              <span class="action-icon" aria-hidden="true">${icon}</span>
-            </button>
-          `)}
+          ${safeTrailingIcons.value.map(
+            (icon: string) => html`
+              <button
+                type="button"
+                class="icon-btn"
+                aria-label="${icon}"
+                @click="${() => emit('action', icon)}"
+              >
+                <span class="action-icon" aria-hidden="true">${icon}</span>
+              </button>
+            `,
+          )}
         </div>
-
       </div>
 
-      ${when(isColumn, () => html`
-        <div class="expanded-title-layer">
-          <span class="expanded-title">${props.title}<slot name="title"></slot></span>
+      <div class="title-expand-wrapper">
+        <div class="title-area-block">
+          <span
+            class="title-block"
+            role="heading"
+            aria-level="1"
+            :aria-hidden="${collapsed.value}"
+          >${props.title}<slot name="title"></slot></span>
         </div>
-      `)}
-
+      </div>
     </header>
   `;
 });
