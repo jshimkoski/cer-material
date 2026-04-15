@@ -47,6 +47,9 @@ component('md-dialog', () => {
     }
     .dialog-header {
       padding: 24px 24px 0;
+      text-align: left;
+    }
+    .dialog-header.centered {
       text-align: center;
     }
     .dialog-icon {
@@ -141,9 +144,9 @@ component('md-dialog', () => {
         class="scrim"
         @click="${(e: Event) => { if (e.target === e.currentTarget) { emit('close'); open.value = false; } }}"
       >
-        <div class="dialog" role="dialog" aria-modal="true" :bind="${{ 'aria-labelledby': props.headline ? 'dialog-headline' : null }}">
-          <div class="dialog-header">
-            ${when(!!props.icon, () => html`<span class="dialog-icon">${props.icon}</span>`)}
+        <div class="dialog" role="dialog" aria-modal="true" :bind="${{ 'aria-labelledby': props.headline ? 'dialog-headline' : null, 'aria-label': props.headline ? null : 'Dialog' }}">
+          <div :class="${{ 'dialog-header': true, centered: !!props.icon }}">
+            ${when(!!props.icon, () => html`<span class="dialog-icon" aria-hidden="true">${props.icon}</span>`)}
             ${when(!!props.headline, () => html`<h2 class="dialog-headline" id="dialog-headline">${props.headline}</h2>`)}
           </div>
           <div class="dialog-content">

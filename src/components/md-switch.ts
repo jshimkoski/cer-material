@@ -1,16 +1,45 @@
 import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
+/**
+ * md-switch
+ *
+ * MD3 toggle switch.
+ * Spec: https://m3.material.io/components/switch
+ *
+ * Props:
+ *   icons     — shows check/close icons inside the thumb
+ *   label     — visible label text rendered to the right of the switch
+ *   ariaLabel — accessible label (used when no visible label is present)
+ *   disabled  — disables interaction
+ *
+ * Model:
+ *   selected — current on/off state; bindable with :model
+ *
+ * Emits:
+ *   change — fired when the switch is toggled; payload: new selected value (boolean)
+ */
 component('md-switch', () => {
   const props = useProps({
     disabled: false,
     icons: false,
+    label: '',
+    ariaLabel: '',
   });
   const emit = useEmit();
   const selected = defineModel('selected', false);
 
   useStyle(() => css`
-    :host { display: inline-flex; align-items: center; vertical-align: middle; }
+    :host { display: inline-flex; align-items: center; vertical-align: middle; gap: 16px; }
+
+    .switch-label {
+      font-family: var(--md-sys-typescale-font, 'Roboto', sans-serif);
+      font-size: 14px;
+      color: var(--md-sys-color-on-surface, #1C1B1F);
+      cursor: pointer;
+      user-select: none;
+    }
+    .disabled .switch-label { opacity: 0.38; cursor: not-allowed; }
 
     .switch {
       display: inline-flex;
@@ -41,21 +70,22 @@ component('md-switch', () => {
       padding: 0 4px;
       transition: background-color 200ms, border-color 200ms;
       position: relative;
+      overflow: hidden;
     }
     .selected .track {
       background: var(--md-sys-color-primary, #6750A4);
       border-color: var(--md-sys-color-primary, #6750A4);
     }
 
+    /* Thumb: fixed at max (28px) size, scaled down visually to avoid layout reflow */
     .thumb {
-      width: 16px;
-      height: 16px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       background: var(--md-sys-color-outline, #79747E);
-      transform: translateX(0);
+      /* Resting unselected: visually 16px (16/28 ≈ 0.571) */
+      transform: translateX(0) scale(0.571);
       transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
-                  width 200ms cubic-bezier(0.4, 0, 0.2, 1),
-                  height 200ms cubic-bezier(0.4, 0, 0.2, 1),
                   background-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
@@ -63,31 +93,30 @@ component('md-switch', () => {
       flex-shrink: 0;
       position: relative;
     }
+    /* Hover unselected: visually 20px (20/28 ≈ 0.714) */
     .switch:hover .thumb:not(.selected) {
-      width: 20px;
-      height: 20px;
+      transform: translateX(0) scale(0.714);
       background: var(--md-sys-color-on-surface-variant, #49454F);
     }
+    /* Press unselected: visually 28px */
     .switch:active .thumb:not(.selected) {
-      width: 28px;
-      height: 28px;
+      transform: translateX(0) scale(1);
       background: var(--md-sys-color-on-surface-variant, #49454F);
     }
+    /* Selected resting: visually 24px (24/28 ≈ 0.857), moved right */
     .selected .thumb {
-      width: 24px;
-      height: 24px;
       background: var(--md-sys-color-on-primary, #fff);
-      transform: translateX(20px);
+      transform: translateX(14px) scale(0.857);
     }
-    /* Selected hover: color → primary-container, size stays 24px */
+    /* Selected hover: same size, color changes */
     .switch.selected:hover .thumb {
       background: var(--md-sys-color-primary-container, #EADDFF);
+      transform: translateX(14px) scale(0.857);
     }
-    /* Selected pressed: 28px, primary-container */
+    /* Selected press: visually 28px */
     .switch.selected:active .thumb {
-      width: 28px;
-      height: 28px;
       background: var(--md-sys-color-primary-container, #EADDFF);
+      transform: translateX(14px) scale(1);
     }
 
     /* state layer */
@@ -140,6 +169,7 @@ component('md-switch', () => {
         type="checkbox"
         :checked="${selected.value}"
         :disabled="${props.disabled}"
+        :bind="${{ 'aria-checked': String(selected.value), 'aria-label': props.ariaLabel || props.label || null }}"
         @change="${(e: Event) => { emit('change', (e.target as HTMLInputElement).checked); selected.value = (e.target as HTMLInputElement).checked; }}"
       />
       <div class="track">
@@ -148,5 +178,6 @@ component('md-switch', () => {
         </div>
       </div>
     </div>
+    ${when(!!props.label, () => html`<span class="switch-label">${props.label}</span>`)}
   `;
 });

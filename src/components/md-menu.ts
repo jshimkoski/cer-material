@@ -29,7 +29,7 @@ component('md-menu', () => {
     .menu {
       position: absolute;
       background: var(--md-sys-color-surface-container, #F3EDF7);
-      border-radius: 4px;
+      border-radius: 12px;
       min-width: 112px;
       max-width: 280px;
       box-shadow: var(--md-sys-elevation-2);

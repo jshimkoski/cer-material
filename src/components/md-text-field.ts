@@ -1,5 +1,36 @@
-import { component, html, css, ref, defineModel, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, ref, defineModel, useProps, useStyle, useOnConnected, useExpose, getCurrentComponentContext } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
+
+/**
+ * md-text-field
+ *
+ * MD3 text field with filled and outlined variants.
+ * Spec: https://m3.material.io/components/text-fields
+ *
+ * Props:
+ *   variant         — 'filled' | 'outlined'
+ *   label           — floating label text
+ *   type            — native input type (text, email, password, number, …)
+ *   placeholder     — placeholder text (shown only when focused and field is empty)
+ *   disabled        — disables the field
+ *   error           — activates error state
+ *   errorText       — message shown below field when in error state
+ *   supportingText  — helper text shown below field when not in error state
+ *   leadingIcon     — Material Symbol name for the leading icon
+ *   trailingIcon    — Material Symbol name for the trailing icon
+ *   required        — marks the field as required (adds * to label)
+ *   readonly        — makes the field read-only
+ *   autofocus       — focuses the input on connect
+ *
+ * Model:
+ *   (default)  — the current text value; bindable with :model
+ *
+ * Exposes:
+ *   focus()    — programmatically focus the internal input
+ *
+ * Emits:
+ *   No component-level events; listen to native input events on the host.
+ */
 
 component('md-text-field', () => {
   const fieldId = `md-field`;
@@ -16,7 +47,13 @@ component('md-text-field', () => {
     trailingIcon: '',
     required: false,
     readonly: false,
+    autofocus: false,
   });
+  const ctx = getCurrentComponentContext() as any;
+  const focusInput = () =>
+    (ctx._host as HTMLElement)?.shadowRoot?.querySelector<HTMLInputElement>('input')?.focus();
+  useExpose({ focus: focusInput });
+  useOnConnected(() => { if (props.autofocus) focusInput(); });
   const modelValue = defineModel('');
   const focused = ref(false);
 
@@ -92,6 +129,10 @@ component('md-text-field', () => {
       width: 100%;
       padding: 12px 0 0 0;
       caret-color: var(--md-sys-color-primary, #6750A4);
+    }
+    input:focus,
+    input:focus-visible {
+      outline: none;
     }
     input:disabled { color: rgba(28,27,31,.38); cursor: not-allowed; }
     .outlined input { padding: 0; }
@@ -192,8 +233,6 @@ component('md-text-field', () => {
     .disabled .outlined { opacity: 0.38; }
   `);
 
-  const showError = props.error;
-
   return html`
     <div :class="${{ 'field-wrapper': true, disabled: props.disabled }}">
       <div
@@ -201,7 +240,7 @@ component('md-text-field', () => {
           [props.variant]: true,
           'has-leading': !!props.leadingIcon,
           'is-active': modelValue.value !== '' || focused.value,
-          error: !!showError,
+          error: props.error,
         }}"
       >
         ${when(props.variant === 'filled', () => html`<div class="filled-border"></div>`)}
@@ -224,17 +263,16 @@ component('md-text-field', () => {
               'aria-invalid': props.error ? 'true' : null,
               'aria-describedby': (props.error && props.errorText) || props.supportingText ? `${fieldId}-supporting` : null,
             }}"
-            class="focus:outline-none"
             @focus="${() => { focused.value = true; }}"
             @blur="${() => { focused.value = false; }}"
           />
-          ${when(!!props.trailingIcon, () => html`<span :class="${{ 'field-icon': true, 'trailing-icon': true, 'error-icon': !!showError }}" aria-hidden="true">${props.trailingIcon}</span>`)}
-          ${when(!props.trailingIcon && showError, () => html`<span class="field-icon trailing-icon error-icon" aria-hidden="true">error</span>`)}
+          ${when(!!props.trailingIcon, () => html`<span :class="${{ 'field-icon': true, 'trailing-icon': true, 'error-icon': props.error }}" aria-hidden="true">${props.trailingIcon}</span>`)}
+          ${when(!props.trailingIcon && props.error, () => html`<span class="field-icon trailing-icon error-icon" aria-hidden="true">error</span>`)}
         </div>
       </div>
 
-      ${when(!!(showError && props.errorText), () => html`<div :id="${fieldId}-supporting" class="support error-text">${props.errorText}</div>`)}
-      ${when(!!((!showError) && props.supportingText), () => html`<div :id="${fieldId}-supporting" class="support">${props.supportingText}</div>`)}
+      ${when(!!(props.error && props.errorText), () => html`<div :id="${fieldId}-supporting" class="support error-text">${props.errorText}</div>`)}
+      ${when(!!((!props.error) && props.supportingText), () => html`<div :id="${fieldId}-supporting" class="support">${props.supportingText}</div>`)}
     </div>
   `;
 });

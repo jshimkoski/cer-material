@@ -1,5 +1,26 @@
 import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 
+/**
+ * md-radio
+ *
+ * MD3 radio button with optional inline label.
+ * Spec: https://m3.material.io/components/radio-button
+ *
+ * Group multiple radio buttons with the same `name` prop to allow only one
+ * selection at a time at the native browser level.
+ *
+ * Props:
+ *   name     — HTML input name for grouping (required for mutual exclusion)
+ *   value    — value emitted on change and used by the native input
+ *   label    — visible label text rendered to the right of the radio
+ *   disabled — disables interaction
+ *
+ * Model:
+ *   checked — whether this radio is selected; bindable with :model
+ *
+ * Emits:
+ *   change — fired when this radio is selected; payload: `value` prop
+ */
 component('md-radio', () => {
   const props = useProps({
     disabled: false,
@@ -97,7 +118,7 @@ component('md-radio', () => {
           :disabled="${props.disabled}"
           :name="${props.name}"
           :value="${props.value}"
-          @change="${() => { emit('change', props.value); checked.value = props.value as unknown as boolean; }}"
+          @change="${() => { emit('change', props.value); checked.value = true; }}"
         />
         <div class="circle">
           <div class="inner"></div>

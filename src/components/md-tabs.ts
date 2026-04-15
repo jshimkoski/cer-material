@@ -17,7 +17,9 @@ component('md-tabs', () => {
   const emit = useEmit();
   const activeTab = defineModel('activeTab', '');
 
-  // Initialize to first tab if not set
+  // Initialize to first tab if not set — runs immediately for static props,
+  // and also via watch for dynamic prop changes.
+  if (!activeTab.value && props.tabs?.length) activeTab.value = props.tabs[0].id;
   watch(() => props.tabs, (newTabs) => {
     if (!activeTab.value && newTabs && newTabs.length > 0) {
       activeTab.value = newTabs[0].id;

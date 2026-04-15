@@ -47,7 +47,7 @@ component('md-progress', () => {
       0%   { transform: translateX(-100%) scaleX(0.5); }
       40%  { transform: translateX(0%) scaleX(0.5); }
       60%  { transform: translateX(50%) scaleX(1); }
-      100% { transform: translateX(150%) scaleX(0.5); }
+      100% { transform: translateX(220%) scaleX(0.5); }
     }
     .linear.indeterminate .linear-indicator {
       width: 50% !important;
@@ -57,43 +57,34 @@ component('md-progress', () => {
 
     /* ── Circular ── */
     .circular {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      display: inline-block;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--md-sys-color-primary, #6750A4) 0deg calc(var(--_progress, 0) * 3.6deg),
+        var(--md-sys-color-secondary-container, #E8DEF8) calc(var(--_progress, 0) * 3.6deg)
+      );
+      -webkit-mask: radial-gradient(farthest-side, transparent 83%, black 83%);
+      mask: radial-gradient(farthest-side, transparent 83%, black 83%);
+      transition: background 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .circular svg {
-      transform: rotate(-90deg);
-    }
-
-    .circular circle {
-      fill: none;
-      stroke-width: 4;
-      stroke-linecap: round;
-      transition: stroke-dashoffset 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .track-circle { stroke: var(--md-sys-color-secondary-container, #E8DEF8); }
-    .indicator-circle { stroke: var(--md-sys-color-primary, #6750A4); }
-
-    @keyframes circular-indeterminate {
-      0%   { stroke-dashoffset: 150; }
-      50%  { stroke-dashoffset: 40; }
-      100% { stroke-dashoffset: 150; }
-    }
     @keyframes circular-rotate {
-      100% { transform: rotate(270deg); }
+      to { transform: rotate(360deg); }
     }
-    .circular.indeterminate svg {
-      animation: circular-rotate 1.5s linear infinite;
-    }
-    .circular.indeterminate .indicator-circle {
-      animation: circular-indeterminate 1.5s ease-in-out infinite;
+
+    .circular.indeterminate {
+      background: none;
+      -webkit-mask: none;
+      mask: none;
+      border: 4px solid var(--md-sys-color-secondary-container, #E8DEF8);
+      border-top-color: var(--md-sys-color-primary, #6750A4);
+      box-sizing: border-box;
+      animation: circular-rotate 1.4s linear infinite;
+      transition: none;
     }
   `);
-
-  const RADIUS = 18;
-  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-  const dashoffset = CIRCUMFERENCE - (props.value / 100) * CIRCUMFERENCE;
 
   return html`
     ${when(
@@ -131,21 +122,8 @@ component('md-progress', () => {
             'aria-valuemin': '0',
             'aria-valuemax': '100',
           }}"
-        >
-          <svg width="48" height="48" viewBox="0 0 48 48">
-            <circle class="track-circle" cx="24" cy="24" r="${RADIUS}" />
-            <circle
-              class="indicator-circle"
-              cx="24"
-              cy="24"
-              r="${RADIUS}"
-              :style="${{
-                strokeDasharray: String(CIRCUMFERENCE),
-                strokeDashoffset: props.indeterminate ? undefined : String(dashoffset),
-              }}"
-            />
-          </svg>
-        </div>
+          :style="${props.indeterminate ? {} : { '--_progress': props.value }}"
+        ></div>
       `,
     )}
   `;

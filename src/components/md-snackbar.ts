@@ -93,8 +93,8 @@ component('md-snackbar', () => {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
       padding: 0;
       outline: none;
       flex-shrink: 0;

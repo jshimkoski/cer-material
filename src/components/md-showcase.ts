@@ -3,6 +3,7 @@ import {
   html,
   css,
   ref,
+  nextTick,
   useStyle,
 } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
@@ -65,6 +66,7 @@ component('md-showcase', () => {
   const bottomSheetOpen = ref(false);
   const sideSheetOpen   = ref(true);
   const sideSheetModalOpen = ref(false);
+  const sheetSearchRef = ref<{ focus: () => void } | null>(null);
   const segSelected     = ref('day');
   const datePickerOpen       = ref(false);
   const datePickerInputOpen  = ref(false);
@@ -408,6 +410,37 @@ component('md-showcase', () => {
       align-items: center;
       margin-bottom: 12px;
     }
+
+    /* ── Icon demo ── */
+    .icon-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-end;
+    }
+    .icon-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--md-sys-color-on-surface-variant, #49454F);
+    }
+
+    /* ── Density demo ── */
+    .density-col {
+      flex: 1;
+      min-width: 200px;
+    }
+    .density-col-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--md-sys-color-on-surface-variant, #49454F);
+      margin-bottom: 4px;
+    }
+
   `);
 
   return html`
@@ -464,6 +497,20 @@ component('md-showcase', () => {
             <md-button variant="tonal"    label="Send"    icon="send"    @click="${() => showSnackbar('Send!')}"></md-button>
             <md-button variant="outlined" label="Upload"  icon="upload"  @click="${() => showSnackbar('Upload!')}"></md-button>
             <md-button variant="text"     label="Explore" icon="explore" @click="${() => showSnackbar('Explore!')}"></md-button>
+          </div>
+
+          <div class="demo-label">Trailing Icons</div>
+          <div class="row">
+            <md-button variant="filled"   label="Next"    trailing-icon="arrow_forward" @click="${() => showSnackbar('Next!')}"></md-button>
+            <md-button variant="tonal"    label="Open"    trailing-icon="open_in_new"   @click="${() => showSnackbar('Open!')}"></md-button>
+            <md-button variant="outlined" label="Filter"  trailing-icon="expand_more"   @click="${() => showSnackbar('Filter!')}"></md-button>
+            <md-button variant="text"     label="More"    trailing-icon="chevron_right" @click="${() => showSnackbar('More!')}"></md-button>
+          </div>
+
+          <div class="demo-label">Leading + Trailing</div>
+          <div class="row">
+            <md-button variant="filled"   label="Share"  icon="share"   trailing-icon="expand_more" @click="${() => showSnackbar('Share!')}"></md-button>
+            <md-button variant="outlined" label="Export" icon="download" trailing-icon="expand_more" @click="${() => showSnackbar('Export!')}"></md-button>
           </div>
 
           <div class="demo-label">Disabled</div>
@@ -540,6 +587,25 @@ component('md-showcase', () => {
             <md-icon-button variant="filled"   icon="delete" disabled="true"></md-icon-button>
             <md-icon-button variant="tonal"    icon="delete" disabled="true"></md-icon-button>
             <md-icon-button variant="outlined" icon="delete" disabled="true"></md-icon-button>
+          </div>
+        </div>
+        <div class="section-divider"></div>
+
+        <!-- Icon -->
+        <div class="section">
+          <h2 class="section-title">Icon</h2>
+          <p class="section-subtitle">A lightweight wrapper around Material Symbols Outlined for declarative icon rendering.</p>
+
+          <div class="icon-grid">
+            <div class="icon-item"><md-icon icon="favorite"></md-icon><span>favorite</span></div>
+            <div class="icon-item"><md-icon icon="home"></md-icon><span>home</span></div>
+            <div class="icon-item"><md-icon icon="star"></md-icon><span>star</span></div>
+            <div class="icon-item"><md-icon icon="settings"></md-icon><span>settings</span></div>
+            <div class="icon-item"><md-icon icon="search"></md-icon><span>search</span></div>
+            <div class="icon-item"><md-icon icon="person"></md-icon><span>person</span></div>
+            <div class="icon-item"><md-icon icon="thumb_up"></md-icon><span>thumb_up</span></div>
+            <div class="icon-item"><md-icon icon="rocket_launch"></md-icon><span>rocket_launch</span></div>
+            <div class="icon-item"><md-icon icon="electric_bolt"></md-icon><span>electric_bolt</span></div>
           </div>
         </div>
         <div class="section-divider"></div>
@@ -628,6 +694,31 @@ component('md-showcase', () => {
               </div>
             </md-card>
           </div>
+
+          <div class="demo-label">With headline &amp; icon props</div>
+          <div class="cards-grid">
+            <md-card variant="elevated" headline="Headline Only">
+              <div class="card-content">
+                <p class="card-body">The card renders a built-in headline above the slot content. No extra markup needed.</p>
+              </div>
+            </md-card>
+
+            <md-card variant="filled" headline="Storage" supporting-text="82 GB used of 100 GB" icon="storage">
+              <div class="card-content">
+                <md-progress variant="linear" value="82"></md-progress>
+              </div>
+            </md-card>
+
+            <md-card variant="outlined" headline="Notifications" supporting-text="3 unread alerts" icon="notifications" clickable="true" @click="${() => showSnackbar('Notifications card clicked!')}">
+              <div style="padding:0 16px 16px">
+                <md-list>
+                  <md-list-item headline="Server restarted" leading-icon="info" density="compact"></md-list-item>
+                  <md-list-item headline="Backup complete" leading-icon="check_circle" density="compact"></md-list-item>
+                  <md-list-item headline="Disk usage warning" leading-icon="warning" density="compact"></md-list-item>
+                </md-list>
+              </div>
+            </md-card>
+          </div>
         </div>
         <div class="section-divider"></div>
 
@@ -708,6 +799,17 @@ component('md-showcase', () => {
               label="Disabled field"
               value="Cannot edit"
               disabled="true"
+              style="max-width:360px;width:100%"
+            ></md-text-field>
+          </div>
+
+          <div class="demo-label">Autofocus</div>
+          <div class="row column">
+            <md-text-field
+              :model="${textFieldValue}"
+              variant="outlined"
+              label="Auto-focused on mount"
+              autofocus="true"
               style="max-width:360px;width:100%"
             ></md-text-field>
           </div>
@@ -977,6 +1079,42 @@ component('md-showcase', () => {
               disabled="true"
             ></md-list-item>
           </md-list>
+
+          <div class="demo-label">Density variants</div>
+          <div class="row start" style="gap:20px;flex-wrap:wrap;align-items:flex-start">
+            <div class="density-col">
+              <div class="density-col-label">Default (56px) — MD3 standard</div>
+              <md-list>
+                <md-list-item headline="Item one" leading-icon="inbox" density="default"></md-list-item>
+                <md-divider></md-divider>
+                <md-list-item headline="Item two" leading-icon="send" density="default"></md-list-item>
+                <md-divider></md-divider>
+                <md-list-item headline="Item three" leading-icon="drafts" density="default"></md-list-item>
+              </md-list>
+            </div>
+            <div class="density-col">
+              <div class="density-col-label">Dense (48px) — nav / TOC</div>
+              <md-list>
+                <md-list-item headline="Introduction" leading-icon="article" density="dense" @click="${() => showSnackbar('Introduction')}"></md-list-item>
+                <md-divider></md-divider>
+                <md-list-item headline="Getting started" leading-icon="play_circle" density="dense" @click="${() => showSnackbar('Getting started')}"></md-list-item>
+                <md-divider></md-divider>
+                <md-list-item headline="API reference" leading-icon="code" density="dense" @click="${() => showSnackbar('API reference')}"></md-list-item>
+              </md-list>
+            </div>
+            <div class="density-col">
+              <div class="density-col-label">Compact (40px) — search results</div>
+              <md-list>
+                <md-list-item headline="md-button" supporting-text="Button component" density="compact" @click="${() => showSnackbar('md-button')}"></md-list-item>
+                <md-divider></md-divider>
+                <md-list-item headline="md-card" supporting-text="Card component" density="compact" @click="${() => showSnackbar('md-card')}"></md-list-item>
+                <md-divider></md-divider>
+                <md-list-item headline="md-chip" supporting-text="Chip component" density="compact" @click="${() => showSnackbar('md-chip')}"></md-list-item>
+                <md-divider></md-divider>
+                <md-list-item headline="md-dialog" supporting-text="Dialog component" density="compact" @click="${() => showSnackbar('md-dialog')}"></md-list-item>
+              </md-list>
+            </div>
+          </div>
         </div>
         <div class="section-divider"></div>
 
@@ -1144,6 +1282,11 @@ component('md-showcase', () => {
           <div class="demo-label">With avatar</div>
           <div class="search-demo">
             <md-search placeholder="Search your library" :model="${searchQuery}" show-avatar="true"></md-search>
+          </div>
+
+          <div class="demo-label">Autofocus</div>
+          <div class="search-demo">
+            <md-search placeholder="Focused on mount" :model="${searchQuery}" autofocus="true"></md-search>
           </div>
         </div>
         <div class="section-divider"></div>
@@ -1386,7 +1529,7 @@ component('md-showcase', () => {
               variant="filled"
               label="Open Modal Side Sheet"
               icon="view_sidebar"
-              @click="${() => { sideSheetModalOpen.value = true; }}"
+              @click="${() => { sideSheetModalOpen.value = true; nextTick().then(() => sheetSearchRef.value?.focus()); }}"
             ></md-button>
           </div>
           <md-side-sheet
@@ -1395,6 +1538,7 @@ component('md-showcase', () => {
             headline="Filters"
           >
             <div class="sheet-content-demo">
+              <md-search :ref="${sheetSearchRef}" placeholder="Search filters" style="margin-bottom:16px"></md-search>
               <p style="margin:0 0 16px">Refine your search results using the filters below.</p>
               <div style="display:flex;flex-direction:column;gap:12px">
                 <md-checkbox label="In stock only"></md-checkbox>

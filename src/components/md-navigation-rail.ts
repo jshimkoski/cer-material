@@ -225,10 +225,10 @@ component('md-navigation-rail', () => {
         Array.isArray(props.items) ? props.items : [],
         (item: NavItem) => html`
           <button
+            type="button"
             key="${item.id}"
             :class="${{ 'nav-item': true, active: active.value === item.id }}"
-            aria-label="${item.label}"
-            :bind="${{ 'aria-current': active.value === item.id ? 'page' : null }}"
+            :bind="${{ 'aria-label': item.badge && typeof item.badge !== 'boolean' ? `${item.label}, ${item.badge} notifications` : item.label, 'aria-current': active.value === item.id ? 'page' : null }}"
             @click="${() => { emit('change', item.id); active.value = item.id; }}"
           >
             <div class="indicator">

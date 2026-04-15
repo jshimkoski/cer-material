@@ -214,6 +214,7 @@ component('md-side-sheet', () => {
             h.style.transition = 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)';
             h.style.width = '400px';
             h.addEventListener('transitionend', () => done(), { once: true });
+            setTimeout(done, 350);
           },
           onAfterEnter: (el) => {
             const h = el as HTMLElement;
@@ -229,6 +230,7 @@ component('md-side-sheet', () => {
             h.style.transition = 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)';
             h.style.width = '0';
             h.addEventListener('transitionend', () => done(), { once: true });
+            setTimeout(done, 350);
           },
           onAfterLeave: (el) => {
             const h = el as HTMLElement;

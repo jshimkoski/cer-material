@@ -1,4 +1,4 @@
-import { component, html, css, ref, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, ref, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-tooltip', () => {
@@ -11,17 +11,32 @@ component('md-tooltip', () => {
   const emit = useEmit();
   const visible = ref(false);
   let hideTimer: ReturnType<typeof setTimeout> | null = null;
+  let showTimer: ReturnType<typeof setTimeout> | null = null;
 
-  const show = () => {
+  const show = (immediate = false) => {
     if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
-    visible.value = true;
+    if (immediate) {
+      if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+      visible.value = true;
+    } else if (!visible.value) {
+      // MD3: 500ms delay before plain tooltip appears on hover.
+      // Rich tooltips and keyboard focus show immediately.
+      showTimer = setTimeout(() => { visible.value = true; showTimer = null; }, 500);
+    }
   };
   const scheduleHide = () => {
+    if (showTimer) { clearTimeout(showTimer); showTimer = null; }
     hideTimer = setTimeout(() => { visible.value = false; }, 100);
   };
   const cancelHide = () => {
     if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
   };
+
+  useOnDisconnected(() => {
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+    visible.value = false;
+  });
 
   useStyle(() => css`
     :host { display: inline-flex; vertical-align: middle; }
@@ -121,9 +136,9 @@ component('md-tooltip', () => {
   return html`
     <div
       class="anchor"
-      @mouseenter="${show}"
+      @mouseenter="${() => show(props.variant === 'rich')}"
       @mouseleave="${scheduleHide}"
-      @focusin="${show}"
+      @focusin="${() => show(true)}"
       @focusout="${scheduleHide}"
     >
       <slot></slot>

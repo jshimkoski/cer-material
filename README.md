@@ -246,13 +246,14 @@ Slide-up bottom sheet with optional drag-to-dismiss, focus trap, and scroll lock
 
 ### `<md-button>`
 
-MD3 button in five style variants with optional leading icon.
+MD3 button in five style variants with optional leading and trailing icons.
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | `variant` | `'filled' \| 'outlined' \| 'text' \| 'elevated' \| 'tonal'` | `'filled'` | Visual style |
 | `label` | `string` | `''` | Button text |
 | `icon` | `string` | `''` | Leading Material Symbol name |
+| `trailing-icon` | `string` | `''` | Trailing Material Symbol name |
 | `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | Native button type |
 | `disabled` | `boolean` | `false` | Disables the button |
 
@@ -260,6 +261,7 @@ MD3 button in five style variants with optional leading icon.
 <md-button variant="filled" label="Save" icon="save"></md-button>
 <md-button variant="outlined" label="Cancel"></md-button>
 <md-button variant="text" label="Learn more"></md-button>
+<md-button variant="tonal" label="Send" trailing-icon="send"></md-button>
 ```
 
 ---
@@ -292,12 +294,15 @@ Horizontally connected group of buttons sharing a unified variant style.
 
 ### `<md-card>`
 
-MD3 card container that optionally becomes an interactive button with a ripple state layer.
+MD3 card container that optionally becomes an interactive button with a ripple state layer. An optional header area supports an icon, headline, and supporting text displayed above the slotted content.
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | `variant` | `'elevated' \| 'filled' \| 'outlined'` | `'elevated'` | Visual style |
 | `clickable` | `boolean` | `false` | Makes the whole card an accessible button |
+| `headline` | `string` | `''` | Card header headline text |
+| `supporting-text` | `string` | `''` | Card header supporting/subtitle text |
+| `icon` | `string` | `''` | Material Symbol shown in the card header beside the headline |
 
 **Slots:** default — card content.
 
@@ -307,6 +312,11 @@ MD3 card container that optionally becomes an interactive button with a ripple s
 <md-card variant="outlined" clickable @click="${openDetail}">
   <h3>Card Title</h3>
   <p>Supporting text goes here.</p>
+</md-card>
+
+<!-- With header icon and headline -->
+<md-card variant="elevated" headline="Notifications" supporting-text="3 unread" icon="notifications">
+  <p>Card body content.</p>
 </md-card>
 ```
 
@@ -385,14 +395,14 @@ Full MD3 date picker with calendar grid, month/year navigation, optional date ra
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `variant` | `'dialog' \| 'docked'` | `'dialog'` | Modal dialog or inline docked layout |
+| `variant` | `'docked' \| 'modal' \| 'modal-input'` | `'modal'` | Docked dropdown calendar, modal dialog with calendar, or modal dialog with text input |
 | `value` | `string` | `''` | Selected date (`YYYY-MM-DD`) |
 | `range-start` | `string` | `''` | Range start date (`YYYY-MM-DD`) |
 | `range-end` | `string` | `''` | Range end date (`YYYY-MM-DD`) |
 | `min` | `string` | `''` | Minimum selectable date |
 | `max` | `string` | `''` | Maximum selectable date |
 | `open` | `boolean` | `false` | Controls visibility |
-| `label` | `string` | `'Select date'` | Trigger field label |
+| `label` | `string` | `'Date'` | Trigger field label (docked variant) |
 | `aria-label` | `string` | `'Date picker'` | Accessible label |
 
 **Events:** `change` `(detail: string)` — selected date in `YYYY-MM-DD` format; `close`.
@@ -503,6 +513,22 @@ FAB speed dial that expands upward to reveal labeled action items. Only one inst
 
 ---
 
+### `<md-icon>`
+
+Lightweight wrapper around Material Symbols Outlined for declarative icon rendering in shadow DOM.
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `icon` | `string` | `''` | Material Symbol name (e.g. `'home'`, `'favorite'`, `'settings'`) |
+
+```html
+<md-icon icon="home"></md-icon>
+<md-icon icon="favorite"></md-icon>
+<md-icon icon="notifications"></md-icon>
+```
+
+---
+
 ### `<md-icon-button>`
 
 MD3 icon button with four style variants and optional toggle (pressed/selected) behaviour.
@@ -550,6 +576,7 @@ MD3 list container and individual list items with leading/trailing content, head
 | `disabled` | `boolean` | `false` | Disables the item |
 | `selected` | `boolean` | `false` | Highlights the item as active |
 | `type` | `'text' \| 'link' \| 'checkbox' \| 'radio'` | `'text'` | Item interaction type |
+| `density` | `'default' \| 'dense' \| 'compact'` | `'default'` | Vertical density — `default` 56 px (MD3 standard), `dense` 48 px (nav/TOC), `compact` 40 px (search results/dropdowns) |
 
 **Slots:** `leading` — custom leading content; default — inline content after headline; `trailing` — custom trailing content.
 
@@ -742,6 +769,7 @@ MD3 search bar with a leading icon, animated clear button, and optional avatar.
 | `placeholder` | `string` | `'Search'` | Placeholder text |
 | `leading-icon` | `string` | `'search'` | Material Symbol for the leading icon |
 | `show-avatar` | `boolean` | `false` | Renders an avatar button on the trailing end |
+| `autofocus` | `boolean` | `false` | Focuses the input on mount; retries after animated containers finish entering |
 
 **Events:** `clear`; `search` `(detail: string)` — the search query when Enter is pressed.
 
@@ -887,11 +915,15 @@ MD3 toggle switch with animated thumb, state-layer ripple, and optional check/cl
 | `selected` | `boolean` | `false` | On/off state |
 | `disabled` | `boolean` | `false` | Disables interaction |
 | `icons` | `boolean` | `false` | Renders a check icon when on and a close icon when off |
+| `label` | `string` | `''` | Visible label text rendered beside the switch |
+| `aria-label` | `string` | `''` | Accessible label when no visible label is present |
 
 **Events:** `change` `(detail: boolean)` — new selected state.
 
 ```html
 <md-switch :model:selected="${darkMode}" icons></md-switch>
+<md-switch label="Notifications" :model:selected="${notifs}"></md-switch>
+<md-switch aria-label="Enable dark mode" :model:selected="${darkMode}"></md-switch>
 ```
 
 ---
@@ -944,6 +976,7 @@ MD3 text field (filled or outlined) with animated floating label, leading/traili
 | `trailing-icon` | `string` | `''` | Trailing Material Symbol |
 | `required` | `boolean` | `false` | Marks the field as required |
 | `readonly` | `boolean` | `false` | Makes the field read-only |
+| `autofocus` | `boolean` | `false` | Focuses the input on mount; retries after animated containers finish entering |
 
 ```html
 <md-text-field
@@ -1018,11 +1051,11 @@ Advanced consumers can re-use the internal composable utilities directly. All ar
 | Export | Description |
 |---|---|
 | `useControlledValue(getProp)` | Syncs an internal reactive value to a prop, returning a `ReactiveState`. |
-| `useEscapeKey(guard, onEscape)` | Registers a global Escape key listener with an active-guard callback. Cleans up automatically. |
-| `createFocusReturn()` | Captures the current focus target and restores it when `.return()` is called. |
-| `createFocusTrap()` | Traps keyboard focus within a DOM element; call `.activate(el)` and `.deactivate()`. |
-| `useListKeyNav(options)` | Adds keyboard arrow-key navigation for a list of DOM items. |
-| `useScrollLock()` | Returns `{ lock(), unlock() }` to prevent `<body>` scrolling while an overlay is open. |
+| `useEscapeKey(guard, onEscape)` | Registers a global Escape key listener with an active-guard callback. Cleans up automatically. Returns a composable — call the result immediately: `useEscapeKey(guard, fn)()`. |
+| `createFocusReturn()` | Saves the currently focused element on `onAfterEnter` and restores it on `onAfterLeave`. Wire into a `Transition`: `{ onAfterEnter: focusReturn.onAfterEnter, onAfterLeave: focusReturn.onAfterLeave }`. |
+| `createFocusTrap()` | Traps keyboard focus within an overlay element. Wire into a `Transition`: `{ onAfterEnter: trap.onAfterEnter, onAfterLeave: trap.onAfterLeave }`. Call `trap.cleanup()` from `useOnDisconnected` to prevent leaks. |
+| `useListKeyNav(options)` | Returns a `keydown` handler that implements arrow-key, Home, and End navigation within a list container. |
+| `useScrollLock()` | Returns `{ lock(), unlock() }` to prevent `<body>` scrolling while an overlay is open. Reference-counted — multiple overlays stack safely. |
 
 ---
 

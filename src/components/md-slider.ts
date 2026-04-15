@@ -1,6 +1,24 @@
 import { component, html, css, computed, defineModel, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each } from '@jasonshimmy/custom-elements-runtime/directives';
 
+/**
+ * md-slider
+ *
+ * MD3 continuous and discrete slider.
+ * Spec: https://m3.material.io/components/sliders
+ *
+ * Props:
+ *   min       — minimum value (default 0)
+ *   max       — maximum value (default 100)
+ *   step      — step increment (default 1; use 1 for continuous)
+ *   disabled  — disables interaction
+ *   labeled   — shows a floating value label above the thumb
+ *   ticks     — shows discrete tick marks along the track
+ *   ariaLabel — accessible label for the range input
+ *
+ * Model:
+ *   (default) — current numeric value; bindable with :model
+ */
 component('md-slider', () => {
   const props = useProps({
     min: 0,

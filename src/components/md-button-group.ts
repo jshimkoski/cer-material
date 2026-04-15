@@ -95,10 +95,9 @@ component('md-button-group', () => {
     .filled .group-btn::before { background: var(--md-sys-color-on-primary, #FFFFFF); }
     .filled .group-btn:hover   { box-shadow: var(--md-sys-elevation-1); }
     .filled .group-btn:disabled { background: rgba(28,27,31,.12); color: rgba(28,27,31,.38); }
-    /* Divider between filled buttons */
+    /* Divider between filled buttons — use rgba on border, not opacity on element */
     .filled .group-btn + .group-btn {
-      border-left: 1px solid var(--md-sys-color-on-primary, #FFFFFF);
-      opacity: 0.5;
+      border-left: 1px solid rgba(255, 255, 255, 0.38);
     }
 
     /* ── Outlined ── */
@@ -120,8 +119,7 @@ component('md-button-group', () => {
     .tonal .group-btn::before { background: var(--md-sys-color-on-secondary-container, #1D192B); }
     .tonal .group-btn:hover   { box-shadow: var(--md-sys-elevation-1); }
     .tonal .group-btn + .group-btn {
-      border-left: 1px solid var(--md-sys-color-on-secondary-container, #1D192B);
-      opacity: 0.2;
+      border-left: 1px solid rgba(29, 25, 43, 0.2);
     }
     .tonal .group-btn:disabled { background: rgba(28,27,31,.12); color: rgba(28,27,31,.38); }
 

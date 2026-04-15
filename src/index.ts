@@ -15,6 +15,7 @@ import './components/md-divider.ts';
 import './components/md-fab-menu.ts';
 import './components/md-fab.ts';
 import './components/md-icon-button.ts';
+import './components/md-icon.ts';
 import './components/md-list.ts';
 import './components/md-loading-indicator.ts';
 import './components/md-menu.ts';

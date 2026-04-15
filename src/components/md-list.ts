@@ -30,7 +30,13 @@ component('md-list-item', () => {
     trailingSupportingText: '',
     disabled: false,
     selected: false,
-    type: 'text' as 'text' | 'link' | 'checkbox' | 'radio',
+    /**
+     * Controls vertical density of the list item.
+     * - `'default'`  — MD3 standard 56 px single-line height
+     * - `'dense'`    — 48 px, for navigation drawers, TOC, and secondary lists
+     * - `'compact'`  — 40 px, for search results, dropdowns, and dense data lists
+     */
+    density: 'default' as 'default' | 'dense' | 'compact',
   });
   const emit = useEmit();
 
@@ -50,6 +56,9 @@ component('md-list-item', () => {
       transition: background-color 200ms;
       color: var(--md-sys-color-on-surface, #1C1B1F);
     }
+    /* Density variants */
+    .list-item.density-dense   { min-height: 48px; padding: 4px 16px; }
+    .list-item.density-compact { min-height: 40px; padding: 4px 16px; font-size: 14px; }
     .list-item::before {
       content: '';
       position: absolute;
@@ -125,8 +134,8 @@ component('md-list-item', () => {
       :class="${{
         'list-item': true,
         selected: props.selected,
-        disabled: props.disabled,
-      }}"
+        disabled: props.disabled,        'density-dense': props.density === 'dense',
+        'density-compact': props.density === 'compact',      }}"
       role="listitem"
       tabindex="${props.disabled ? -1 : 0}"
       @click="${() => !props.disabled && emit('click')}"
@@ -134,7 +143,7 @@ component('md-list-item', () => {
     >
       ${when(!!props.leadingIcon, () => html`
         <div class="leading-slot">
-          <span class="leading-icon">${props.leadingIcon}</span>
+          <span class="leading-icon" aria-hidden="true">${props.leadingIcon}</span>
         </div>
       `)}
       ${when(!props.leadingIcon, () => html`<slot name="leading" class="leading-slot"></slot>`)}
@@ -151,7 +160,7 @@ component('md-list-item', () => {
           <span class="trailing-text">${props.trailingSupportingText}</span>
         `)}
           ${when(!!props.trailingIcon, () => html`
-          <span class="trailing-icon">${props.trailingIcon}</span>
+          <span class="trailing-icon" aria-hidden="true">${props.trailingIcon}</span>
         `)}
         <slot name="trailing"></slot>
       </div>

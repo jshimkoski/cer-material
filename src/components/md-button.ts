@@ -1,11 +1,29 @@
 import { component, html, css, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
+/**
+ * md-button
+ *
+ * MD3 button with five variants.
+ * Spec: https://m3.material.io/components/buttons
+ *
+ * Props:
+ *   variant      — 'filled' | 'outlined' | 'text' | 'elevated' | 'tonal'
+ *   label        — button text (can also be set via the default slot)
+ *   icon         — Material Symbol name for the leading icon
+ *   trailingIcon — Material Symbol name for the trailing icon
+ *   type         — native button type: 'button' | 'submit' | 'reset'
+ *   disabled     — disables the button
+ *
+ * Slots:
+ *   (default) — button label text (used alongside or instead of `label` prop)
+ */
 component('md-button', () => {
   const props = useProps({
     variant: 'filled' as 'filled' | 'outlined' | 'text' | 'elevated' | 'tonal',
     label: '',
     icon: '',
+    trailingIcon: '',
     type: 'button' as 'button' | 'submit' | 'reset',
     disabled: false,
   });
@@ -97,9 +115,15 @@ component('md-button', () => {
     .tonal:hover   { box-shadow: var(--md-sys-elevation-1); }
     .tonal:disabled { background: rgba(28,27,31,.12); color: rgba(28,27,31,.38); box-shadow: none; }
 
-    /* icon with text: reduce left padding for non-text variants; text variant swaps l/r */
+    /* leading icon: reduce left padding */
     .has-icon { padding-left: 16px; }
     .text.has-icon { padding-left: 12px; padding-right: 16px; }
+    /* trailing icon: reduce right padding */
+    .has-trailing-icon { padding-right: 16px; }
+    .text.has-trailing-icon { padding-right: 12px; padding-left: 16px; }
+    /* both icons */
+    .has-icon.has-trailing-icon { padding-left: 16px; padding-right: 16px; }
+    .text.has-icon.has-trailing-icon { padding-left: 12px; padding-right: 12px; }
 
     .icon {
       font-family: 'Material Symbols Outlined';
@@ -121,11 +145,13 @@ component('md-button', () => {
       :class="${{
         [props.variant]: true,
         'has-icon': !!props.icon,
+        'has-trailing-icon': !!props.trailingIcon,
       }}"
       :disabled="${props.disabled}"
     >
       ${when(!!props.icon, () => html`<span class="icon" aria-hidden="true">${props.icon}</span>`)}
       ${props.label}<slot></slot>
+      ${when(!!props.trailingIcon, () => html`<span class="icon" aria-hidden="true">${props.trailingIcon}</span>`)}
     </button>
   `;
 });

@@ -1,4 +1,4 @@
-import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useEmit, useProps, useStyle, useOnConnected, useExpose, getCurrentComponentContext } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-search', () => {
@@ -6,9 +6,15 @@ component('md-search', () => {
     placeholder: 'Search',
     leadingIcon: 'search',
     showAvatar: false,
+    autofocus: false,
   });
   const emit = useEmit();
   const modelValue = defineModel('');
+  const ctx = getCurrentComponentContext() as any;
+  const focusInput = () =>
+    (ctx._host as HTMLElement)?.shadowRoot?.querySelector<HTMLInputElement>('input')?.focus();
+  useExpose({ focus: focusInput });
+  useOnConnected(() => { if (props.autofocus) focusInput(); });
 
   const handleClear = () => {
     modelValue.value = '';

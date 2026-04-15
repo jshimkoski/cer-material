@@ -18,6 +18,7 @@ import {
   useEmit,
   useStyle,
   useOnDisconnected,
+  getCurrentComponentContext,
 } from '@jasonshimmy/custom-elements-runtime';
 import { when, each } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
@@ -287,6 +288,34 @@ component('md-date-picker', () => {
 
   // ── Calendar navigation ──────────────────────────────────────────────
   const view = ref<'day' | 'year'>('day');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ctx = getCurrentComponentContext() as any;
+
+  const scrollYearIntoView = () => {
+    // when() inserts the list asynchronously; wait two animation frames so
+    // the DOM is fully painted before measuring geometry.
+    // getBoundingClientRect() is used instead of offsetTop because offsetTop
+    // inside a shadow root measures from the shadow host, not the scrollable
+    // container, giving a wildly wrong scroll position.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const shadow = (ctx._host as HTMLElement)?.shadowRoot;
+        if (!shadow) return;
+        const list = shadow.querySelector<HTMLElement>('.year-list');
+        if (!list) return;
+        const selected = list.querySelector<HTMLElement>('.year-item.selected');
+        if (!selected) return;
+        const listRect = list.getBoundingClientRect();
+        const selectedRect = selected.getBoundingClientRect();
+        list.scrollTop +=
+          selectedRect.top - listRect.top - list.clientHeight / 2 + selected.clientHeight / 2;
+      });
+    });
+  };
+
+  watch(view, (newView) => {
+    if (newView === 'year') scrollYearIntoView();
+  });
   const viewYear = ref(new Date().getFullYear());
   const viewMonth = ref(new Date().getMonth());
 
@@ -859,20 +888,24 @@ component('md-date-picker', () => {
 
       /* ── Year selector ──────────────────────────────────────── */
       .year-list {
-        padding: 8px 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        max-height: 280px;
+        display: grid;
+        grid-template-columns: repeat(3, 72px);
+        gap: 0;
+        justify-content: center;
+        max-height: 288px;
         overflow-y: auto;
+        padding: 16px 0 8px;
+        box-sizing: border-box;
+        width: 100%;
       }
       .year-item {
         font-family: var(--md-sys-typescale-font, 'Roboto', sans-serif);
         font-size: 14px;
+        font-weight: 400;
         height: 36px;
         line-height: 36px;
-        min-width: 72px;
-        padding: 0 20px;
+        width: 72px;
+        padding: 0;
         border-radius: 18px;
         cursor: pointer;
         color: var(--md-sys-color-on-surface, #1c1b1f);
@@ -881,7 +914,7 @@ component('md-date-picker', () => {
         outline: none;
         text-align: center;
       }
-      .year-item:hover {
+      .year-item:hover:not(.selected) {
         background: color-mix(
           in srgb,
           var(--md-sys-color-on-surface, #1c1b1f) 8%,
@@ -891,6 +924,7 @@ component('md-date-picker', () => {
       .year-item.selected {
         background: var(--md-sys-color-primary, #6750a4);
         color: var(--md-sys-color-on-primary, #ffffff);
+        font-weight: 500;
       }
       .year-item:focus-visible {
         outline: 2px solid var(--md-sys-color-primary, #6750a4);

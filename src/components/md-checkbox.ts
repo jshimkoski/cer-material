@@ -1,5 +1,22 @@
 import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 
+/**
+ * md-checkbox
+ *
+ * MD3 checkbox with optional indeterminate state and inline label.
+ * Spec: https://m3.material.io/components/checkbox
+ *
+ * Props:
+ *   indeterminate — shows the indeterminate (minus) icon instead of checked/unchecked
+ *   disabled      — disables interaction
+ *   label         — visible label text rendered to the right of the checkbox
+ *
+ * Model:
+ *   checked — current checked state; bindable with :model
+ *
+ * Emits:
+ *   change — fired when checked state changes; payload: new checked value (boolean)
+ */
 component('md-checkbox', () => {
   const props = useProps({
     indeterminate: false,

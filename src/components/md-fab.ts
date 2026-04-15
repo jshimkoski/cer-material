@@ -107,14 +107,11 @@ component('md-fab', () => {
     .label { font-size: 14px; font-weight: 500; }
   `);
 
-  const colorClass = props.variant === 'surface' ? 'surface-variant' : props.variant;
-  const sizeClass = props.label ? 'extended' : props.size;
-
   return html`
     <button
       :class="${{
-        [colorClass]: true,
-        [sizeClass]: true,
+        [props.variant === 'surface' ? 'surface-variant' : props.variant]: true,
+        [props.label ? 'extended' : props.size]: true,
         lowered: props.lowered,
       }}"
       :bind="${{ 'aria-label': props.ariaLabel || props.label || props.icon }}"

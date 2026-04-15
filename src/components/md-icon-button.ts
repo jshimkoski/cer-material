@@ -1,5 +1,27 @@
 import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 
+/**
+ * md-icon-button
+ *
+ * MD3 icon button with standard, filled, tonal, and outlined variants,
+ * each supporting an optional toggle (selected/unselected) state.
+ * Spec: https://m3.material.io/components/icon-buttons
+ *
+ * Props:
+ *   variant      — 'standard' | 'filled' | 'tonal' | 'outlined'
+ *   icon         — Material Symbol name for the icon
+ *   selectedIcon — icon to show when selected (toggle only; falls back to `icon`)
+ *   toggle       — enables toggling between selected and unselected states
+ *   disabled     — disables the button
+ *   ariaLabel    — accessible label (defaults to `icon` name)
+ *
+ * Model:
+ *   selected — whether the button is currently selected; bindable with :model
+ *
+ * Emits:
+ *   change — fired when the toggle state changes; payload: new selected value (boolean)
+ *   click  — fired on every click (toggle and non-toggle)
+ */
 component('md-icon-button', () => {
   const props = useProps({
     variant: 'standard' as 'standard' | 'filled' | 'tonal' | 'outlined',
@@ -123,10 +145,6 @@ component('md-icon-button', () => {
     }
   `);
 
-  const displayIcon = props.toggle && selected.value && props.selectedIcon
-    ? props.selectedIcon
-    : props.icon;
-
   return html`
     <button
       :class="${{
@@ -142,7 +160,7 @@ component('md-icon-button', () => {
         emit('click');
       }}"
     >
-      <span class="icon" aria-hidden="true">${displayIcon}</span>
+      <span class="icon" aria-hidden="true">${props.toggle && selected.value && props.selectedIcon ? props.selectedIcon : props.icon}</span>
     </button>
   `;
 });

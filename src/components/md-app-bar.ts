@@ -130,43 +130,21 @@ component('md-app-bar', () => {
         display: block;
       }
 
-      /* ── Base bar ────────────────────────────────────────────────── */
+      /* ── Base bar ────────────────────────────────────────────────────────── */
       .app-bar {
         background: var(--md-sys-color-surface, #fffbfe);
         width: 100%;
-        overflow: hidden;
         position: relative;
-        isolation: isolate;
-        /* Same geometry as the active shadow but fully transparent —
-         * keeps the transition alpha-only so there is no jarring
-         * spread/blur jump when the shadow fades in or out. */
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0), 0 2px 6px rgba(0, 0, 0, 0);
-        transition: box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
-        will-change: box-shadow;
+        transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      /* ── Elevation lift on scroll (all variants) ─────────────────── */
-      /* The background colour change uses a ::before overlay animated
-     * via opacity rather than background-color. Opacity is GPU-
-     * composited (no repaint) so it cannot flicker alongside the
-     * simultaneous height transition on medium/large variants.
-     * isolation: isolate on .app-bar keeps z-index: -1 contained.  */
-      .app-bar::before {
-        content: '';
-        position: absolute;
-        inset: 0;
+      /* Background fill when page is scrolled */
+      .app-bar.scrolled {
         background: var(--md-sys-color-surface-container, #ece6f0);
-        opacity: 0;
-        will-change: opacity;
-        transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
-        pointer-events: none;
-        z-index: -1;
       }
-      /* Color fill: ALL variants while scrollY > 0. */
-      .app-bar.scrolled::before {
-        opacity: 1;
-      }
-      /* Shadow: only while actively scrolling — disappears once the user stops. */
+      /* Shadow while actively scrolling */
       .app-bar.scrolling {
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.15);
       }
@@ -194,16 +172,18 @@ component('md-app-bar', () => {
         display: flex;
         flex-direction: column;
         transition: height 250ms cubic-bezier(0.2, 0, 0, 1),
+                    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
                     box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
-        will-change: height, box-shadow;
+        will-change: height;
       }
       .app-bar.large {
         height: 120px;
         display: flex;
         flex-direction: column;
         transition: height 250ms cubic-bezier(0.2, 0, 0, 1),
+                    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
                     box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
-        will-change: height, box-shadow;
+        will-change: height;
       }
       .app-bar.medium.collapsed,
       .app-bar.large.collapsed {
@@ -324,10 +304,10 @@ component('md-app-bar', () => {
         color: var(--md-sys-color-on-surface, #1c1b1f);
       }
 
-      /* Large flexible expanded — Display Small (36sp / 44sp) */
+      /* Large flexible expanded — Headline Large (32sp / 40sp) */
       .app-bar.large .title-block {
-        font-size: 36px;
-        line-height: 44px;
+        font-size: 32px;
+        line-height: 40px;
       }
 
       /* ── Icon button ─────────────────────────────────────────────── */
@@ -336,9 +316,10 @@ component('md-app-bar', () => {
         height: 48px;
         border-radius: 50%;
         border: none;
+        padding: 0;
         background: transparent;
         cursor: pointer;
-        display: inline-flex;
+        display: flex;
         align-items: center;
         justify-content: center;
         color: var(--md-sys-color-on-surface, #1c1b1f);
@@ -384,6 +365,7 @@ component('md-app-bar', () => {
           'GRAD' 0,
           'opsz' 24;
         user-select: none;
+        pointer-events: none;
       }
 
       .trailing-actions {
