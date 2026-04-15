@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.5.0] - 2026-04-15
+
+- feat: add size variations to md-icon component and showcase (6e48278)
+
 ## [v0.4.0] - 2026-04-15
 
 - feat: enhance components with new features and improvements (f321698)
