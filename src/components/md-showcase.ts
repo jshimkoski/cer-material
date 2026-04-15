@@ -76,6 +76,10 @@ component('md-showcase', () => {
   const timePickerVariant = ref<'dial' | 'input'>('dial');
   const activeTab          = ref('tab1');
   const iconToggleSelected = ref(false);
+  const listNotifChecked   = ref(true);
+  const listSyncChecked    = ref(false);
+  const listDarkChecked    = ref(true);
+  const listRadioValue     = ref('standard');
   const textFieldValue     = ref('');
   const searchQuery        = ref('');
 
@@ -1123,6 +1127,119 @@ component('md-showcase', () => {
               </md-list>
             </div>
           </div>
+          <div class="demo-label">type="link" — navigates on click (href + optional target)</div>
+          <md-list>
+            <md-list-item
+              type="link"
+              headline="Material Design 3 guidelines"
+              supporting-text="m3.material.io"
+              leading-icon="open_in_new"
+              href="https://m3.material.io/components/lists"
+              target="_blank"
+            ></md-list-item>
+            <md-divider></md-divider>
+            <md-list-item
+              type="link"
+              headline="Changelog"
+              leading-icon="history"
+              href="#"
+            ></md-list-item>
+            <md-divider></md-divider>
+            <md-list-item
+              type="link"
+              headline="Disabled link"
+              leading-icon="block"
+              href="https://example.com"
+              disabled="true"
+            ></md-list-item>
+          </md-list>
+
+          <div class="demo-label">type="checkbox" — row toggles :model:checked; emits change</div>
+          <md-list>
+            <md-list-item
+              type="checkbox"
+              headline="Enable notifications"
+              supporting-text="Receive push alerts"
+              leading-icon="notifications"
+              :model:checked="${listNotifChecked}"
+              @change="${(e: CustomEvent<boolean>) => showSnackbar('Notifications: ' + e.detail)}"
+            ></md-list-item>
+            <md-divider></md-divider>
+            <md-list-item
+              type="checkbox"
+              headline="Auto-sync"
+              leading-icon="sync"
+              :model:checked="${listSyncChecked}"
+              @change="${(e: CustomEvent<boolean>) => showSnackbar('Auto-sync: ' + e.detail)}"
+            ></md-list-item>
+            <md-divider></md-divider>
+            <md-list-item
+              type="checkbox"
+              headline="Dark mode"
+              leading-icon="dark_mode"
+              :model:checked="${listDarkChecked}"
+              @change="${(e: CustomEvent<boolean>) => showSnackbar('Dark mode: ' + e.detail)}"
+            ></md-list-item>
+            <md-divider></md-divider>
+            <md-list-item
+              type="checkbox"
+              headline="Indeterminate (static)"
+              leading-icon="indeterminate_check_box"
+              indeterminate="true"
+            ></md-list-item>
+            <md-divider></md-divider>
+            <md-list-item
+              type="checkbox"
+              headline="Disabled"
+              leading-icon="lock"
+              checked="true"
+              disabled="true"
+            ></md-list-item>
+          </md-list>
+
+          <div class="demo-label">type="radio" — use role="radiogroup" + aria-label; no dividers inside a radio group</div>
+          <md-list role="radiogroup" aria-label="Delivery options">
+            <md-list-item
+              type="radio"
+              headline="Standard delivery"
+              supporting-text="5–7 business days · Free"
+              leading-icon="local_shipping"
+              name="delivery"
+              value="standard"
+              :model:checked="${listRadioValue.value === 'standard'}"
+              @change="${() => { listRadioValue.value = 'standard'; }}"
+            ></md-list-item>
+            <md-list-item
+              type="radio"
+              headline="Express delivery"
+              supporting-text="2–3 business days · $9.99"
+              leading-icon="rocket_launch"
+              name="delivery"
+              value="express"
+              :model:checked="${listRadioValue.value === 'express'}"
+              @change="${() => { listRadioValue.value = 'express'; }}"
+            ></md-list-item>
+            <md-list-item
+              type="radio"
+              headline="Overnight delivery"
+              supporting-text="Next business day · $24.99"
+              leading-icon="bolt"
+              name="delivery"
+              value="overnight"
+              :model:checked="${listRadioValue.value === 'overnight'}"
+              @change="${() => { listRadioValue.value = 'overnight'; }}"
+            ></md-list-item>
+            <md-list-item
+              type="radio"
+              headline="Disabled option"
+              supporting-text="Currently unavailable"
+              leading-icon="block"
+              name="delivery"
+              value="disabled-opt"
+              disabled="true"
+            ></md-list-item>
+          </md-list>
+
         </div>
         <div class="section-divider"></div>
 

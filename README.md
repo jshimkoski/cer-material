@@ -562,7 +562,7 @@ MD3 list container and individual list items with leading/trailing content, head
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `role` | `string` | `'list'` | ARIA role |
+| `role` | `'list' \| 'radiogroup'` | `'list'` | ARIA role — use `'radiogroup'` when all children are `type="radio"` list items |
 
 **Slots:** default — `<md-list-item>` children.
 
@@ -577,18 +577,66 @@ MD3 list container and individual list items with leading/trailing content, head
 | `trailing-supporting-text` | `string` | `''` | Trailing metadata text |
 | `disabled` | `boolean` | `false` | Disables the item |
 | `selected` | `boolean` | `false` | Highlights the item as active |
-| `type` | `'text' \| 'link' \| 'checkbox' \| 'radio'` | `'text'` | Item interaction type |
+| `type` | `'text' \| 'link' \| 'checkbox' \| 'radio'` | `'text'` | Item interaction type — see type details below |
+| `href` | `string` | `''` | Navigation URL — only used when `type="link"`; passed directly to the `<a>` element |
+| `target` | `string` | `''` | Anchor target — only used when `type="link"`, e.g. `'_blank'`; sets `rel="noopener noreferrer"` automatically |
+| `indeterminate` | `boolean` | `false` | Mixed/indeterminate state — only used when `type="checkbox"`; sets `aria-checked="mixed"` |
+| `name` | `string` | `''` | Radio group name — only used when `type="radio"` |
+| `value` | `string` | `''` | Radio value emitted on `change` — only used when `type="radio"` |
 | `density` | `'default' \| 'dense' \| 'compact'` | `'default'` | Vertical density — `default` 56 px (MD3 standard), `dense` 48 px (nav/TOC), `compact` 40 px (search results/dropdowns) |
+
+**Model:** `:model:checked` — two-way binding for `type="checkbox"` and `type="radio"`.
 
 **Slots:** `leading` — custom leading content; default — inline content after headline; `trailing` — custom trailing content.
 
-**Events:** `click`
+**Events:** `click`; `change` `(detail: boolean)` — new checked state (checkbox); `change` `(detail: string)` — selected value (radio).
+
+##### Type details
+
+| `type` | Element | Behaviour |
+|---|---|---|
+| `'text'` | `<div>` | Standard list item; emits `click` |
+| `'link'` | `<a>` | Navigates to `href`; supports CMD+click, middle-click, and right-click context menus natively. Omit `href` or set `disabled` to prevent navigation. |
+| `'checkbox'` | `<div role="checkbox">` | Trailing checkbox; clicking the row toggles `checked` and emits `change` |
+| `'radio'` | `<div role="radio">` | Trailing radio; clicking the row selects the item and emits `change` with `value`. Mutual exclusion must be managed by the parent. |
+
+> **SPA router (vite-plugin-cer-app):** Use `@click` with `e.preventDefault()` + `navigateTo(href)` to intercept internal links. External URLs (`http://…`) or `target="_blank"` items should not prevent default — let the browser handle them.
 
 ```html
+<!-- type="text" (default) -->
 <md-list>
   <md-list-item headline="Inbox" leading-icon="inbox" trailing-supporting-text="24"></md-list-item>
   <md-list-item headline="Sent" leading-icon="send" selected></md-list-item>
   <md-list-item headline="Trash" leading-icon="delete" disabled></md-list-item>
+</md-list>
+
+<!-- type="link" — renders as <a>; CMD+click / right-click work natively -->
+<md-list>
+  <md-list-item type="link" headline="Documentation" leading-icon="open_in_new"
+    href="https://example.com/docs" target="_blank"></md-list-item>
+  <md-list-item type="link" headline="Settings" leading-icon="settings"
+    href="/settings"></md-list-item>
+</md-list>
+
+<!-- type="checkbox" -->
+<md-list>
+  <md-list-item type="checkbox" headline="Enable notifications" leading-icon="notifications"
+    :model:checked="${notifEnabled}"
+    @change="${(e) => notifEnabled = e.detail}"></md-list-item>
+  <md-list-item type="checkbox" headline="Dark mode" leading-icon="dark_mode"
+    :model:checked="${darkMode}"></md-list-item>
+</md-list>
+
+<!-- type="radio" — use role="radiogroup" + aria-label; omit md-divider inside the group -->
+<md-list role="radiogroup" aria-label="Delivery method">
+  <md-list-item type="radio" headline="Standard" supporting-text="Free · 5–7 days"
+    name="delivery" value="standard"
+    :model:checked="${delivery === 'standard'}"
+    @change="${() => delivery = 'standard'}"></md-list-item>
+  <md-list-item type="radio" headline="Express" supporting-text="$9.99 · 2–3 days"
+    name="delivery" value="express"
+    :model:checked="${delivery === 'express'}"
+    @change="${() => delivery = 'express'}"></md-list-item>
 </md-list>
 ```
 
