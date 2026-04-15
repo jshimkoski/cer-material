@@ -1,8 +1,11 @@
 import { component, html, css, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 
+type IconSize = 20 | 24 | 40 | 48;
+
 component('md-icon', () => {
   const props = useProps({
     icon: '',
+    size: 24 as IconSize,
   });
 
   useStyle(() => css`
@@ -10,7 +13,7 @@ component('md-icon', () => {
 
     .icon {
       font-family: 'Material Symbols Outlined';
-      font-size: 24px;
+      font-size: ${props.size}px;
       font-weight: normal;
       font-style: normal;
       display: inline-block;
@@ -18,7 +21,7 @@ component('md-icon', () => {
       letter-spacing: normal;
       text-transform: none;
       white-space: nowrap;
-      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' ${props.size};
     }
   `);
 

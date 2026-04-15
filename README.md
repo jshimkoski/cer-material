@@ -520,11 +520,13 @@ Lightweight wrapper around Material Symbols Outlined for declarative icon render
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | `icon` | `string` | `''` | Material Symbol name (e.g. `'home'`, `'favorite'`, `'settings'`) |
+| `size` | `20 \| 24 \| 40 \| 48` | `24` | Icon size in dp. Also sets the `opsz` font variation axis so stroke weight and detail adapt correctly at each size. |
 
 ```html
 <md-icon icon="home"></md-icon>
-<md-icon icon="favorite"></md-icon>
-<md-icon icon="notifications"></md-icon>
+<md-icon icon="home" size="20"></md-icon>
+<md-icon icon="home" size="40"></md-icon>
+<md-icon icon="home" size="48"></md-icon>
 ```
 
 ---

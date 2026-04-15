@@ -607,6 +607,14 @@ component('md-showcase', () => {
             <div class="icon-item"><md-icon icon="rocket_launch"></md-icon><span>rocket_launch</span></div>
             <div class="icon-item"><md-icon icon="electric_bolt"></md-icon><span>electric_bolt</span></div>
           </div>
+
+          <div class="demo-label">Sizes</div>
+          <div class="row" style="align-items: flex-end; gap: 24px;">
+            <div class="icon-item"><md-icon icon="star" size="20"></md-icon><span>20</span></div>
+            <div class="icon-item"><md-icon icon="star" size="24"></md-icon><span>24</span></div>
+            <div class="icon-item"><md-icon icon="star" size="40"></md-icon><span>40</span></div>
+            <div class="icon-item"><md-icon icon="star" size="48"></md-icon><span>48</span></div>
+          </div>
         </div>
         <div class="section-divider"></div>
 
