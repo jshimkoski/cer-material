@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.4.0] - 2026-04-15
+
+- feat: enhance components with new features and improvements (f321698)
+
 ## [v0.3.5] - 2026-04-03
 
 - fix: update readme (b992537)
