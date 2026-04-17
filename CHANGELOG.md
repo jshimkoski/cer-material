@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.7.0] - 2026-04-17
+
+- feat: add JITCSS utility for MD3 semantic color roles and update build configuration (e750511)
+
 ## [v0.6.0] - 2026-04-15
 
 - feat: enhance md-list and md-showcase components with ARIA roles and interaction types (dad31f5)
