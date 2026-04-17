@@ -27,7 +27,12 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
-    "./theme.css": "./dist/theme.css"
+    "./theme.css": "./dist/theme.css",
+    "./jit-css": {
+      "types": "./dist/jit-css.d.ts",
+      "import": "./dist/jit-css.js",
+      "require": "./dist/jit-css.cjs"
+    }
   },
   "files": [
     "dist"

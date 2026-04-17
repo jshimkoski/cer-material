@@ -48,6 +48,7 @@ export default defineConfig(({ command, mode }) => {
       lib: {
         entry: {
           index: resolve(__dirname, 'src/index.ts'),
+          'jit-css': resolve(__dirname, 'src/jit-css.ts'),
         },
         formats: ['es', 'cjs'],
         fileName: (format, name) => `${name}.${format === 'es' ? 'js' : 'cjs'}`,
@@ -61,7 +62,7 @@ export default defineConfig(({ command, mode }) => {
     },
     plugins: [
       dts({
-        include: ['src/index.ts', 'src/components/**', 'src/composables/**'],
+        include: ['src/index.ts', 'src/jit-css.ts', 'src/components/**', 'src/composables/**'],
         exclude: ['src/main.ts', 'src/components/md-showcase.ts'],
         rollupTypes: false,
         tsconfigPath: './tsconfig.json',
