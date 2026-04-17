@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.7.1] - 2026-04-17
+
+- fix: update class name convention for JITCSS utility to remove hyphens (fec2b5f)
+
 ## [v0.7.0] - 2026-04-17
 
 - feat: add JITCSS utility for MD3 semantic color roles and update build configuration (e750511)
