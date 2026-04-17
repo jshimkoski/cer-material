@@ -13,59 +13,59 @@
  * })
  * ```
  *
- * Class name convention: `<utility>-md-<role>`
+ * Class name convention: `<utility>-md<role>`
  * Examples:
- *   bg-md-primary          → background: var(--md-sys-color-primary)
- *   text-md-on-primary      → color: var(--md-sys-color-on-primary)
- *   border-md-surface      → border-color: var(--md-sys-color-surface)
+ *   bg-mdprimary          → background: var(--md-sys-color-primary)
+ *   text-mdonprimary      → color: var(--md-sys-color-on-primary)
+ *   border-mdsurface      → border-color: var(--md-sys-color-surface)
  */
 export const customColors: Record<string, Record<string, string>> = {
   // ── Primary ──────────────────────────────────────────────────────────────
-  'md-primary':              { DEFAULT: 'var(--md-sys-color-primary)' },
-  'md-on-primary':           { DEFAULT: 'var(--md-sys-color-on-primary)' },
-  'md-primary-container':    { DEFAULT: 'var(--md-sys-color-primary-container)' },
-  'md-on-primary-container': { DEFAULT: 'var(--md-sys-color-on-primary-container)' },
+  mdprimary:              { DEFAULT: 'var(--md-sys-color-primary)' },
+  mdonprimary:            { DEFAULT: 'var(--md-sys-color-on-primary)' },
+  mdprimarycontainer:     { DEFAULT: 'var(--md-sys-color-primary-container)' },
+  mdonprimarycontainer:   { DEFAULT: 'var(--md-sys-color-on-primary-container)' },
 
   // ── Secondary ─────────────────────────────────────────────────────────────
-  'md-secondary':              { DEFAULT: 'var(--md-sys-color-secondary)' },
-  'md-on-secondary':           { DEFAULT: 'var(--md-sys-color-on-secondary)' },
-  'md-secondary-container':    { DEFAULT: 'var(--md-sys-color-secondary-container)' },
-  'md-on-secondary-container': { DEFAULT: 'var(--md-sys-color-on-secondary-container)' },
+  mdsecondary:            { DEFAULT: 'var(--md-sys-color-secondary)' },
+  mdonsecondary:          { DEFAULT: 'var(--md-sys-color-on-secondary)' },
+  mdsecondarycontainer:   { DEFAULT: 'var(--md-sys-color-secondary-container)' },
+  mdonsecondarycontainer: { DEFAULT: 'var(--md-sys-color-on-secondary-container)' },
 
   // ── Tertiary ──────────────────────────────────────────────────────────────
-  'md-tertiary':              { DEFAULT: 'var(--md-sys-color-tertiary)' },
-  'md-on-tertiary':           { DEFAULT: 'var(--md-sys-color-on-tertiary)' },
-  'md-tertiary-container':    { DEFAULT: 'var(--md-sys-color-tertiary-container)' },
-  'md-on-tertiary-container': { DEFAULT: 'var(--md-sys-color-on-tertiary-container)' },
+  mdtertiary:             { DEFAULT: 'var(--md-sys-color-tertiary)' },
+  mdontertiary:           { DEFAULT: 'var(--md-sys-color-on-tertiary)' },
+  mdtertiarycontainer:    { DEFAULT: 'var(--md-sys-color-tertiary-container)' },
+  mdontertiarycontainer:  { DEFAULT: 'var(--md-sys-color-on-tertiary-container)' },
 
   // ── Error ─────────────────────────────────────────────────────────────────
-  'md-error':              { DEFAULT: 'var(--md-sys-color-error)' },
-  'md-on-error':           { DEFAULT: 'var(--md-sys-color-on-error)' },
-  'md-error-container':    { DEFAULT: 'var(--md-sys-color-error-container)' },
-  'md-on-error-container': { DEFAULT: 'var(--md-sys-color-on-error-container)' },
+  mderror:                { DEFAULT: 'var(--md-sys-color-error)' },
+  mdonerror:              { DEFAULT: 'var(--md-sys-color-on-error)' },
+  mderrorcontainer:       { DEFAULT: 'var(--md-sys-color-error-container)' },
+  mdonerrorcontainer:     { DEFAULT: 'var(--md-sys-color-on-error-container)' },
 
   // ── Surface & Background ──────────────────────────────────────────────────
-  'md-background':                    { DEFAULT: 'var(--md-sys-color-background)' },
-  'md-on-background':                 { DEFAULT: 'var(--md-sys-color-on-background)' },
-  'md-surface':                       { DEFAULT: 'var(--md-sys-color-surface)' },
-  'md-on-surface':                    { DEFAULT: 'var(--md-sys-color-on-surface)' },
-  'md-surface-variant':               { DEFAULT: 'var(--md-sys-color-surface-variant)' },
-  'md-on-surface-variant':            { DEFAULT: 'var(--md-sys-color-on-surface-variant)' },
-  'md-surface-container-lowest':      { DEFAULT: 'var(--md-sys-color-surface-container-lowest)' },
-  'md-surface-container-low':         { DEFAULT: 'var(--md-sys-color-surface-container-low)' },
-  'md-surface-container':             { DEFAULT: 'var(--md-sys-color-surface-container)' },
-  'md-surface-container-high':        { DEFAULT: 'var(--md-sys-color-surface-container-high)' },
-  'md-surface-container-highest':     { DEFAULT: 'var(--md-sys-color-surface-container-highest)' },
+  mdbackground:                 { DEFAULT: 'var(--md-sys-color-background)' },
+  mdonbackground:               { DEFAULT: 'var(--md-sys-color-on-background)' },
+  mdsurface:                    { DEFAULT: 'var(--md-sys-color-surface)' },
+  mdonsurface:                  { DEFAULT: 'var(--md-sys-color-on-surface)' },
+  mdsurfacevariant:             { DEFAULT: 'var(--md-sys-color-surface-variant)' },
+  mdonsurfacevariant:           { DEFAULT: 'var(--md-sys-color-on-surface-variant)' },
+  mdsurfacecontainerlowest:     { DEFAULT: 'var(--md-sys-color-surface-container-lowest)' },
+  mdsurfacecontainerlow:        { DEFAULT: 'var(--md-sys-color-surface-container-low)' },
+  mdsurfacecontainer:           { DEFAULT: 'var(--md-sys-color-surface-container)' },
+  mdsurfacecontainerhigh:       { DEFAULT: 'var(--md-sys-color-surface-container-high)' },
+  mdsurfacecontainerhighest:    { DEFAULT: 'var(--md-sys-color-surface-container-highest)' },
 
   // ── Inverse ───────────────────────────────────────────────────────────────
-  'md-inverse-surface':    { DEFAULT: 'var(--md-sys-color-inverse-surface)' },
-  'md-inverse-on-surface': { DEFAULT: 'var(--md-sys-color-inverse-on-surface)' },
-  'md-inverse-primary':    { DEFAULT: 'var(--md-sys-color-inverse-primary)' },
+  mdinversesurface:       { DEFAULT: 'var(--md-sys-color-inverse-surface)' },
+  mdinverseonsurface:     { DEFAULT: 'var(--md-sys-color-inverse-on-surface)' },
+  mdinverseprimary:       { DEFAULT: 'var(--md-sys-color-inverse-primary)' },
 
   // ── Utility ───────────────────────────────────────────────────────────────
-  'md-outline':         { DEFAULT: 'var(--md-sys-color-outline)' },
-  'md-outline-variant': { DEFAULT: 'var(--md-sys-color-outline-variant)' },
-  'md-shadow':          { DEFAULT: 'var(--md-sys-color-shadow)' },
-  'md-scrim':           { DEFAULT: 'var(--md-sys-color-scrim)' },
-  'md-surface-tint':    { DEFAULT: 'var(--md-sys-color-surface-tint)' },
+  mdoutline:              { DEFAULT: 'var(--md-sys-color-outline)' },
+  mdoutlinevariant:       { DEFAULT: 'var(--md-sys-color-outline-variant)' },
+  mdshadow:               { DEFAULT: 'var(--md-sys-color-shadow)' },
+  mdscrim:                { DEFAULT: 'var(--md-sys-color-scrim)' },
+  mdsurfacetint:          { DEFAULT: 'var(--md-sys-color-surface-tint)' },
 }
