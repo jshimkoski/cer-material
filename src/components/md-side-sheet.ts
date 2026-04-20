@@ -166,7 +166,7 @@ component('md-side-sheet', () => {
             h.addEventListener('transitionend', done, { once: true });
             setTimeout(done, 350);
           },
-          onAfterEnter: trap.onAfterEnter,
+          onAfterEnter: (el) => { emit('open'); trap.onAfterEnter(el as HTMLElement); },
           onLeave: (el, done) => {
             const h = el as HTMLElement;
             h.style.transition = 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)';
