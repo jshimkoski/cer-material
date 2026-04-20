@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.7.2] - 2026-04-20
+
+- fix: update onAfterEnter handler to emit 'open' event in md-side-sheet component (db86aee)
+
 ## [v0.7.1] - 2026-04-17
 
 - fix: update class name convention for JITCSS utility to remove hyphens (fec2b5f)
