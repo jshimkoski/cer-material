@@ -32,29 +32,66 @@
       "types": "./dist/jit-css.d.ts",
       "import": "./dist/jit-css.js",
       "require": "./dist/jit-css.cjs"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js",
+      "require": "./dist/vite.cjs"
+    },
+    "./components/*": {
+      "types": "./dist/components/*.d.ts",
+      "import": "./dist/components/*.js",
+      "require": "./dist/components/*.cjs"
+    },
+    "./composables/*": {
+      "types": "./dist/composables/*.d.ts",
+      "import": "./dist/composables/*.js",
+      "require": "./dist/composables/*.cjs"
     }
   },
   "files": [
     "dist"
   ],
-  "sideEffects": true,
+  "sideEffects": [
+    "./src/index.ts",
+    "./src/components/*.ts",
+    "./dist/index.js",
+    "./dist/index.cjs",
+    "./dist/components/*.js",
+    "./dist/components/*.cjs",
+    "**/*.css"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "build:lib": "vite build --mode lib",
+    "validate": "npm run typecheck && npm test && npm run build:all",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "npm run build:lib",
+    "build:showcase": "vite build",
+    "build:lib": "tsc && vite build --mode lib",
     "build:cdn": "vite build --mode cdn",
     "build:all": "npm run build:lib && npm run build:cdn",
     "preview": "vite preview"
   },
+  "dependencies": {
+    "opentype.js": "^1.3.4",
+    "subset-font": "^2.5.0",
+    "wawoff2": "^2.0.1"
+  },
   "peerDependencies": {
-    "@jasonshimmy/custom-elements-runtime": ">=3.0.0"
+    "@jasonshimmy/custom-elements-runtime": ">=3.9.0"
   },
   "devDependencies": {
-    "@jasonshimmy/custom-elements-runtime": "^3.7.4",
+    "@jasonshimmy/custom-elements-runtime": "^3.9.0",
     "@types/node": "^25.5.0",
+    "happy-dom": "^20.8.9",
+    "jsdom": "^29.1.1",
+    "material-symbols": "^0.46.0",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
-    "vite-plugin-dts": "^4.5.4"
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^4.1.4"
   },
   "publishConfig": {
     "access": "public"

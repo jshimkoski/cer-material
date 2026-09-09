@@ -250,8 +250,7 @@ component('md-split-button', () => {
       <!-- Primary action -->
       <button
         class="primary-btn"
-        ?disabled="${props.disabled}"
-        @click="${() => emit('click')}"
+        :disabled="${props.disabled}"
       >
         ${props.icon ? html`<span class="btn-icon" aria-hidden="true">${props.icon}</span>` : null}
         ${props.label}
@@ -266,7 +265,7 @@ component('md-split-button', () => {
         aria-haspopup="true"
         aria-expanded="${menuOpen.value}"
         aria-label="More actions"
-        ?disabled="${props.disabled}"
+        :disabled="${props.disabled}"
         @click="${(e: Event) => { e.stopPropagation(); menuOpen.value = !menuOpen.value; }}"
       >
         <span :class="${{ 'arrow-icon': true, open: menuOpen.value }}" aria-hidden="true">arrow_drop_down</span>
@@ -296,7 +295,7 @@ component('md-split-button', () => {
             <button
               class="menu-item"
               role="menuitem"
-              ?disabled="${item.disabled}"
+              :disabled="${item.disabled}"
               @click="${(e: Event) => { e.stopPropagation(); emit('select', { id: item.id }); menuOpen.value = false; }}"
             >
               ${when(!!item.icon, () => html`<span class="btn-icon" aria-hidden="true">${item.icon}</span>`)}

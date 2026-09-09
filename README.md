@@ -67,20 +67,45 @@ All components are registered automatically once the script loads — no `import
 Install dependencies:
 
 ```bash
-npm install typeface-roboto material-symbols @jasonshimmy/cer-material
+npm install @jasonshimmy/cer-material material-symbols
 ```
 
-Create a plugin in your CER App Framework project:
+Add the integration to `cer.config.ts`:
 
 ```ts
-// plugins/cer-material.ts
-import 'typeface-roboto';
-import 'material-symbols/outlined.css';
-import '@jasonshimmy/cer-material/theme.css';
-import '@jasonshimmy/cer-material';
+import { defineConfig } from '@jasonshimmy/vite-plugin-cer-app'
+import { cerMaterial } from '@jasonshimmy/cer-material/vite'
 
-export default { name: 'cer-material' };
+export default defineConfig({
+  integrations: [cerMaterial()],
+})
 ```
+
+That single integration:
+
+- resolves each rendered `md-*` tag to its per-component registration module;
+- imports the MD3 theme and local Material Symbols stylesheet in generated
+  client and server entries; and
+- replaces the multi-megabyte symbols font with a content-addressed production
+  subset containing only icons discovered in application and component code.
+
+Components therefore work directly in templates without an eager root import
+or an app-local registration plugin, while unused components remain out of the
+page chunks. Include icon names that are assembled dynamically or loaded from
+a CMS because static analysis cannot discover them:
+
+```ts
+export default defineConfig({
+  integrations: [cerMaterial({
+    symbols: { include: ['icon_loaded_from_your_cms'] },
+  })],
+})
+```
+
+Set `theme: false` or `symbols: false` only when the application deliberately
+supplies those resources itself. If Roboto is bundled locally, the standalone
+`robotoPreload()` Vite helper can preload its `roboto-latin-400*.woff2` asset;
+it is not needed when the application uses its system-font fallback.
 
 ---
 
@@ -93,6 +118,22 @@ import '@jasonshimmy/cer-material/theme.css';
 // Register all components
 import '@jasonshimmy/cer-material';
 ```
+
+For the smallest startup and bundle cost, register only the components an
+entry point uses:
+
+```ts
+import '@jasonshimmy/cer-material/theme.css';
+import '@jasonshimmy/cer-material/components/md-button';
+import '@jasonshimmy/cer-material/components/md-text-field';
+
+// Composables are independently importable too.
+import { useScrollLock } from '@jasonshimmy/cer-material/composables/useScrollLock';
+```
+
+The root import remains the simplest option when an application uses most of
+the library. Per-component imports avoid evaluating and registering unrelated
+custom elements and let bundlers omit their code.
 
 Then use any component tag directly in your HTML or templates:
 
@@ -306,7 +347,7 @@ MD3 card container that optionally becomes an interactive button with a ripple s
 
 **Slots:** default — card content.
 
-**Events:** `click` — emitted when `clickable` is `true`.
+**Events:** native composed `click` — delivered once when the interactive card is activated.
 
 ```html
 <md-card variant="outlined" clickable @click="${openDetail}">
@@ -380,7 +421,7 @@ MD3 chip in four variants — assist, filter (toggle), input (removable), and su
 | `selected` | `boolean` | `false` | Active state (filter variant) |
 | `disabled` | `boolean` | `false` | Disables interaction |
 
-**Events:** `click`; `remove` — the × button was tapped (input variant only).
+**Events:** native composed `click` (delivered once); `remove` — the × button was tapped (input variant only).
 
 ```html
 <md-chip variant="filter" label="Unread" :model:selected="${filterUnread}"></md-chip>
@@ -476,7 +517,7 @@ MD3 Floating Action Button in four color variants, four sizes, and an extended (
 | `lowered` | `boolean` | `false` | Reduces elevation |
 | `aria-label` | `string` | `''` | Accessible label |
 
-**Events:** `click`
+**Events:** native composed `click` (delivered once)
 
 ```html
 <md-fab icon="edit" variant="primary"></md-fab>
@@ -545,7 +586,7 @@ MD3 icon button with four style variants and optional toggle (pressed/selected) 
 | `disabled` | `boolean` | `false` | Disables interaction |
 | `aria-label` | `string` | `''` | Accessible label |
 
-**Events:** `click`; `change` `(detail: boolean)` — new selected state (toggle mode).
+**Events:** native composed `click` (delivered once); `change` `(detail: boolean)` — new selected state (toggle mode).
 
 ```html
 <md-icon-button icon="favorite_border" selected-icon="favorite" toggle :model:selected="${isFav}"></md-icon-button>
@@ -589,7 +630,7 @@ MD3 list container and individual list items with leading/trailing content, head
 
 **Slots:** `leading` — custom leading content; default — inline content after headline; `trailing` — custom trailing content.
 
-**Events:** `click`; `change` `(detail: boolean)` — new checked state (checkbox); `change` `(detail: string)` — selected value (radio).
+**Events:** native composed `click` (delivered once); `change` `(detail: boolean)` — new checked state (checkbox); `change` `(detail: string)` — selected value (radio).
 
 ##### Type details
 
@@ -939,7 +980,7 @@ MD3 split button combining a primary action and an arrow-toggle dropdown for sec
 | `disabled` | `boolean` | `false` | Disables both sections |
 | `items` | `{ id: string; label: string; icon?: string; disabled?: boolean }[]` | `[]` | Dropdown action definitions |
 
-**Events:** `click` — primary button pressed; `select` `(detail: { id: string })` — dropdown item chosen.
+**Events:** native composed `click` (delivered once) — primary button pressed; `select` `(detail: { id: string })` — dropdown item chosen.
 
 ```html
 <md-split-button

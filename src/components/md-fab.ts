@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-fab', () => {
@@ -10,7 +10,6 @@ component('md-fab', () => {
     lowered: false,
     ariaLabel: '',
   });
-  const emit = useEmit();
 
   useStyle(() => css`
     :host { display: inline-flex; }
@@ -116,7 +115,6 @@ component('md-fab', () => {
       }}"
       :bind="${{ 'aria-label': props.ariaLabel || props.label || props.icon }}"
       type="button"
-      @click="${() => emit('click')}"
     >
       <span class="icon" aria-hidden="true">${props.icon}</span>
       ${when(!!props.label, () => html`<span class="label">${props.label}</span>`)}

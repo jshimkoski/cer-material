@@ -153,8 +153,13 @@ component('md-chip', () => {
         role="${props.variant === 'filter' ? 'checkbox' : 'button'}"
         :bind="${{ 'aria-checked': props.variant === 'filter' ? String(selected.value) : null, 'aria-disabled': props.disabled ? 'true' : null }}"
         tabindex="${props.disabled ? -1 : 0}"
-        @click="${() => { if (!props.disabled) { emit('click'); if (props.variant === 'filter') selected.value = !selected.value; } }}"
-        @keydown="${(e: KeyboardEvent) => { if (!props.disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); emit('click'); if (props.variant === 'filter') selected.value = !selected.value; } }}"
+        @click="${() => { if (!props.disabled && props.variant === 'filter') selected.value = !selected.value; }}"
+        @keydown="${(e: KeyboardEvent) => {
+          if (!props.disabled && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            (e.currentTarget as HTMLElement).click();
+          }
+        }}"
       >
         ${when(!!(props.variant === 'filter' && selected.value ? 'check' : props.icon), () => html`<span class="icon" aria-hidden="true">${props.variant === 'filter' && selected.value ? 'check' : props.icon}</span>`)}
         ${props.label}

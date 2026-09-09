@@ -157,7 +157,6 @@ component('md-icon-button', () => {
       type="button"
       @click="${() => {
         if (props.toggle) { emit('change', !selected.value); selected.value = !selected.value; }
-        emit('click');
       }}"
     >
       <span class="icon" aria-hidden="true">${props.toggle && selected.value && props.selectedIcon ? props.selectedIcon : props.icon}</span>

@@ -1,15 +1,34 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { copyFileSync } from 'node:fs';
+import { copyFileSync, readdirSync } from 'node:fs';
 import dts from 'vite-plugin-dts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+function sourceEntries(
+  directory: 'components' | 'composables',
+): Record<string, string> {
+  const sourceDir = resolve(__dirname, 'src', directory);
+  return Object.fromEntries(
+    readdirSync(sourceDir)
+      .filter((file) => file.endsWith('.ts') && file !== 'md-showcase.ts')
+      .map((file) => [
+        `${directory}/${file.slice(0, -3)}`,
+        resolve(sourceDir, file),
+      ]),
+  );
+}
+
 // Shared externals — never bundle the runtime; consumers provide it.
+// opentype.js, wawoff2, and subset-font are regular dependencies (auto-installed).
+// They are loaded at runtime via createRequire so Rollup never sees them as static imports —
+// they don't need to be listed here.
 const external = [
   '@jasonshimmy/custom-elements-runtime',
   /^@jasonshimmy\/custom-elements-runtime\/.*/,
+  'vite',
+  /^node:/,
 ];
 
 export default defineConfig(({ command, mode }) => {
@@ -49,6 +68,9 @@ export default defineConfig(({ command, mode }) => {
         entry: {
           index: resolve(__dirname, 'src/index.ts'),
           'jit-css': resolve(__dirname, 'src/jit-css.ts'),
+          vite: resolve(__dirname, 'src/vite.ts'),
+          ...sourceEntries('components'),
+          ...sourceEntries('composables'),
         },
         formats: ['es', 'cjs'],
         fileName: (format, name) => `${name}.${format === 'es' ? 'js' : 'cjs'}`,
@@ -62,13 +84,13 @@ export default defineConfig(({ command, mode }) => {
     },
     plugins: [
       dts({
-        include: ['src/index.ts', 'src/jit-css.ts', 'src/components/**', 'src/composables/**'],
+        include: ['src/index.ts', 'src/jit-css.ts', 'src/vite.ts', 'src/components/**', 'src/composables/**'],
         exclude: ['src/main.ts', 'src/components/md-showcase.ts'],
         rollupTypes: false,
         tsconfigPath: './tsconfig.json',
       }),
       {
-        name: 'copy-theme-css',
+        name: 'copy-assets',
         closeBundle() {
           copyFileSync(
             resolve(__dirname, 'src/theme.css'),

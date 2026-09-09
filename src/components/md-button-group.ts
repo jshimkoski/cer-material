@@ -164,7 +164,7 @@ component('md-button-group', () => {
         <button
           class="group-btn"
           aria-label="${item.label}"
-          ?disabled="${props.disabled || item.disabled}"
+          :disabled="${props.disabled || item.disabled}"
           @click="${(e: Event) => { e.stopPropagation(); emit('click', { id: item.id, index: i }); }}"
         >
           ${when(!!item.icon, () => html`<span class="btn-icon" aria-hidden="true">${item.icon}</span>`)}

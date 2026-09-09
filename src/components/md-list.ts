@@ -1,4 +1,4 @@
-import { component, html, css, defineModel, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useProps, useEmit, useHost, useOnConnected, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-list', () => {
@@ -12,6 +12,17 @@ component('md-list', () => {
      */
     role: 'list' as 'list' | 'radiogroup',
   });
+  const host = useHost();
+  const syncListRole = () => {
+    if (host && host.getAttribute('role') !== props.role) {
+      host.setAttribute('role', props.role);
+    }
+  };
+  // Custom-element constructors may not add attributes to themselves. Sync
+  // immediately only after connection, and use the lifecycle hook for the
+  // first render performed during element construction.
+  if (host?.isConnected) syncListRole();
+  useOnConnected(syncListRole);
 
   useStyle(() => css`
     :host { display: block; }
@@ -22,7 +33,7 @@ component('md-list', () => {
   `);
 
   return html`
-    <div class="list" role="${props.role}">
+    <div class="list" :role="${host ? null : props.role}">
       <slot></slot>
     </div>
   `;
@@ -66,6 +77,7 @@ component('md-list-item', () => {
   });
   const emit = useEmit();
   const checked = defineModel('checked', false);
+  const host = useHost();
 
   const handleActivate = () => {
     if (props.disabled) return;
@@ -78,10 +90,68 @@ component('md-list-item', () => {
         emit('change', props.value);
       }
     }
-    // type='link': navigation is handled natively by the <a href> element.
-    // type='text': no side effects.
-    emit('click');
+    // The native click from the internal interactive element is composed and
+    // reaches the custom-element host. Emitting another `click` here would
+    // invoke consumer handlers twice.
   };
+
+  const hostRole =
+    props.type === 'checkbox' ? 'checkbox' :
+    props.type === 'radio' ? 'radio' :
+    'listitem';
+  const setHostAttribute = (name: string, value: string | null) => {
+    if (!host) return;
+    if (value === null) host.removeAttribute(name);
+    else if (host.getAttribute(name) !== value) host.setAttribute(name, value);
+  };
+
+  const syncHostSemantics = () => {
+    if (!host) return;
+    setHostAttribute('role', hostRole);
+    setHostAttribute('tabindex', props.type === 'link' ? null : String(props.disabled ? -1 : 0));
+    setHostAttribute(
+      'aria-checked',
+      props.type === 'checkbox'
+        ? (props.indeterminate ? 'mixed' : String(checked.value))
+        : props.type === 'radio'
+          ? String(checked.value)
+          : null,
+    );
+    setHostAttribute(
+      'aria-disabled',
+      props.type !== 'link' && props.disabled ? 'true' : null,
+    );
+    setHostAttribute(
+      'aria-current',
+      props.type === 'text' && props.selected ? 'true' : null,
+    );
+  };
+
+  if (host?.isConnected) syncHostSemantics();
+
+  useOnConnected(() => {
+    if (!host) return;
+    syncHostSemantics();
+    const onClick = () => {
+      if (props.type !== 'link') handleActivate();
+    };
+    const onKeydown = (event: KeyboardEvent) => {
+      if (
+        props.type !== 'link' &&
+        !props.disabled &&
+        (event.key === 'Enter' || event.key === ' ')
+      ) {
+        event.preventDefault();
+        handleActivate();
+      }
+    };
+    host.addEventListener('click', onClick);
+    host.addEventListener('keydown', onKeydown);
+    return () => {
+      host.removeEventListener('click', onClick);
+      host.removeEventListener('keydown', onKeydown);
+    };
+  });
 
   useStyle(() => css`
     :host { display: block; }
@@ -305,47 +375,47 @@ component('md-list-item', () => {
   // pointer-events:none in CSS. tabindex="-1" removes them from the Tab order.
   if (props.type === 'link') {
     return html`
-      <a
-        :class="${classObj}"
-        :href="${props.href || null}"
-        :target="${props.target || null}"
-        :rel="${props.target === '_blank' ? 'noopener noreferrer' : null}"
-        :aria-disabled="${props.disabled ? 'true' : null}"
-        :aria-current="${props.selected ? 'page' : null}"
-        tabindex="${props.disabled ? -1 : 0}"
-        @click="${(e: MouseEvent) => { if (props.disabled) { e.preventDefault(); return; } handleActivate(); }}"
-      >
-        ${renderInner()}
-      </a>
+      <div :role="${host ? null : 'listitem'}">
+        <a
+          :class="${classObj}"
+          :href="${props.href || null}"
+          :target="${props.target || null}"
+          :rel="${props.target === '_blank' ? 'noopener noreferrer' : null}"
+          :aria-disabled="${props.disabled ? 'true' : null}"
+          :aria-current="${props.selected ? 'page' : null}"
+          tabindex="${props.disabled ? -1 : 0}"
+          @click="${(e: MouseEvent) => { if (props.disabled) e.preventDefault(); }}"
+        >
+          ${renderInner()}
+        </a>
+      </div>
     `;
   }
 
   return html`
     <div
       :class="${classObj}"
-      :role="${
+      :role="${host ? null :
         props.type === 'checkbox' ? 'checkbox' :
         props.type === 'radio'    ? 'radio'    :
         'listitem'
       }"
-      :aria-checked="${
+      :aria-checked="${host ? null :
         props.type === 'checkbox'
           ? (props.indeterminate ? 'mixed' : String(checked.value))
           : props.type === 'radio'
             ? String(checked.value)
             : null
       }"
-      :aria-disabled="${
+      :aria-disabled="${host ? null :
         (props.type === 'checkbox' || props.type === 'radio') && props.disabled
           ? 'true'
           : null
       }"
-      :aria-current="${props.type === 'text' && props.selected ? 'true' : null}"
-      tabindex="${props.disabled ? -1 : 0}"
-      @click="${handleActivate}"
-      @keydown="${(e: KeyboardEvent) => { if (!props.disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); handleActivate(); } }}"
+      :aria-current="${host ? null : props.type === 'text' && props.selected ? 'true' : null}"
+      :tabindex="${host ? null : props.disabled ? -1 : 0}"
     >
       ${renderInner()}
     </div>
   `;
-});
+}, { hydrate: 'visible' });

@@ -347,10 +347,11 @@ component('md-date-picker', () => {
   // ── Pending / staging (modal variants) ──────────────────────────────
   const pendingValue = ref(modelValue.value);
 
-  // ── Non-reactive text buffer ─────────────────────────────────────────
-  // Plain `let` variable: @input writes to it without triggering re-renders,
-  // so the input element's cursor position is never reset mid-typing.
-  let inputBuffer = '';
+  // ── Persistent text buffer ───────────────────────────────────────────
+  // VDOM event handlers are replaced after reactive renders. A ref keeps the
+  // buffer shared across those closures; it is never read during rendering,
+  // so writes do not subscribe or trigger a cursor-resetting render.
+  const inputBuffer = ref('');
 
   // Reactive source for the input field's displayed value — updated only
   // when the modal opens or when switching to input mode so the field is
@@ -374,8 +375,8 @@ component('md-date-picker', () => {
       if (!isOpen) return;
       const mv = modelValue.value;
       if (pendingValue.value !== mv) pendingValue.value = mv;
-      inputBuffer = fmtDisplay(mv);
-      inputDisplayValue.value = inputBuffer;
+      inputBuffer.value = fmtDisplay(mv);
+      inputDisplayValue.value = inputBuffer.value;
       inputError.value = false;
       if (view.value !== 'day') view.value = 'day';
       const nextMode = props.variant === 'modal-input' ? 'input' : 'calendar';
@@ -388,8 +389,8 @@ component('md-date-picker', () => {
     () => props.variant,
     (v) => {
       modalMode.value = v === 'modal-input' ? 'input' : 'calendar';
-      inputBuffer = fmtDisplay(pendingValue.value);
-      inputDisplayValue.value = inputBuffer;
+      inputBuffer.value = fmtDisplay(pendingValue.value);
+      inputDisplayValue.value = inputBuffer.value;
       inputError.value = false;
     },
   );
@@ -492,7 +493,7 @@ component('md-date-picker', () => {
 
       // Guard 2: read the live DOM value via the :ref-bound element so we
       // never depend on inputBuffer being in sync.
-      const raw = (inputElRef.value ? inputElRef.value.value : inputBuffer).trim();
+      const raw = (inputElRef.value ? inputElRef.value.value : inputBuffer.value).trim();
       if (raw) {
         const parsed = parseDisplay(raw);
         if (!parsed) {
@@ -503,8 +504,8 @@ component('md-date-picker', () => {
         }
         // Valid — normalise, stage, and commit.
         inputError.value = false;
-        inputBuffer = fmtDisplay(parsed);
-        inputDisplayValue.value = inputBuffer;
+        inputBuffer.value = fmtDisplay(parsed);
+        inputDisplayValue.value = inputBuffer.value;
         pendingValue.value = parsed;
         syncView(parsed);
       }
@@ -529,8 +530,11 @@ component('md-date-picker', () => {
     () => handleCancel(),
   )();
   const trap = createFocusTrap();
-  useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
+  useOnDisconnected(() => {
+    trap.cleanup();
+    scrollLock.unlock();
+  });
 
   // Stable references — defined once at setup scope so they are not recreated
   // on every render, preventing event listener churn on every re-render.
@@ -1269,8 +1273,8 @@ component('md-date-picker', () => {
 
   // ── Modal input body ───────────────────────────────────────────────────
   // `inputDisplayValue` (reactive) initialises the field on open / mode-switch.
-  // `inputBuffer` (plain let) captures every keystroke without triggering
-  // re-renders, preserving cursor position.  Validation runs on blur and Enter.
+  // `inputBuffer` captures every keystroke without being read by rendering,
+  // preserving cursor position. Validation runs on blur and Enter.
   const renderInputBody = () => html`
     <div class="input-body">
       <label :class="${{ 'input-field-label': true, error: inputError.value }}"
@@ -1287,7 +1291,7 @@ component('md-date-picker', () => {
           :ref="${inputElRef}"
           @input="${(e: Event) => {
             const val = (e.target as HTMLInputElement).value;
-            inputBuffer = val;
+            inputBuffer.value = val;
             if (inputError.value) {
               // Keep inputDisplayValue fresh while in error state so the
               // re-render triggered by clearing the error uses the current text
@@ -1298,7 +1302,7 @@ component('md-date-picker', () => {
           }}"
           @blur="${(e: FocusEvent) => {
             const val = (e.target as HTMLInputElement).value;
-            inputBuffer = val;
+            inputBuffer.value = val;
             if (!val.trim()) {
               inputError.value = false;
               return;
@@ -1306,8 +1310,8 @@ component('md-date-picker', () => {
             const iso = parseDisplay(val);
             if (iso) {
               inputError.value = false;
-              inputBuffer = fmtDisplay(iso);
-              inputDisplayValue.value = inputBuffer;
+              inputBuffer.value = fmtDisplay(iso);
+              inputDisplayValue.value = inputBuffer.value;
               pendingValue.value = iso;
               syncView(iso);
             } else {
@@ -1321,13 +1325,13 @@ component('md-date-picker', () => {
             if (e.key !== 'Enter') return;
             e.preventDefault();
             const val = (e.target as HTMLInputElement).value;
-            inputBuffer = val;
+            inputBuffer.value = val;
             if (!val.trim()) return;
             const iso = parseDisplay(val);
             if (iso) {
               inputError.value = false;
-              inputBuffer = fmtDisplay(iso);
-              inputDisplayValue.value = inputBuffer;
+              inputBuffer.value = fmtDisplay(iso);
+              inputDisplayValue.value = inputBuffer.value;
               Promise.resolve().then(() => {
                 pendingValue.value = iso;
                 syncView(iso);
@@ -1372,13 +1376,13 @@ component('md-date-picker', () => {
             : 'Switch to text input'}"
           @click="${() => {
             if (modalMode.value === 'calendar') {
-              inputBuffer = fmtDisplay(pendingValue.value);
-              inputDisplayValue.value = inputBuffer;
+              inputBuffer.value = fmtDisplay(pendingValue.value);
+              inputDisplayValue.value = inputBuffer.value;
               inputError.value = false;
               modalMode.value = 'input';
               nextTick().then(() => inputElRef.value?.focus());
             } else {
-              const iso = parseDisplay(inputBuffer);
+              const iso = parseDisplay(inputBuffer.value);
               if (iso) {
                 pendingValue.value = iso;
                 syncView(iso);

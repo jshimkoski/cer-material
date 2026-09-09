@@ -1,4 +1,4 @@
-import { component, html, css, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-card', () => {
@@ -9,7 +9,6 @@ component('md-card', () => {
     supportingText: '',
     icon: '',
   });
-  const emit = useEmit();
 
   useStyle(() => css`
     :host { display: block; }
@@ -103,11 +102,10 @@ component('md-card', () => {
       }}"
       tabindex="${props.clickable ? '0' : undefined}"
       :bind="${{ role: props.clickable ? 'button' : null }}"
-      @click="${() => props.clickable && emit('click')}"
       @keydown="${(e: KeyboardEvent) => {
         if (props.clickable && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
-          emit('click');
+          (e.currentTarget as HTMLElement).click();
         }
       }}"
     >

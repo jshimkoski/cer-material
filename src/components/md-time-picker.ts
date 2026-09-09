@@ -241,8 +241,11 @@ component('md-time-picker', () => {
   // ── focus/scroll management ───────────────────────────────────────────
   useEscapeKey(() => open.value, () => { emit('close'); open.value = false; })();
   const trap = createFocusTrap();
-  useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
+  useOnDisconnected(() => {
+    trap.cleanup();
+    scrollLock.unlock();
+  });
 
   // ── styles ────────────────────────────────────────────────────────────
   useStyle(() => css`

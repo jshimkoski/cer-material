@@ -26,8 +26,11 @@ component('md-navigation-drawer', () => {
 
   useEscapeKey(() => open.value && props.variant === 'modal', () => { emit('close'); open.value = false; })();
   const trap = createFocusTrap();
-  useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
+  useOnDisconnected(() => {
+    trap.cleanup();
+    scrollLock.unlock();
+  });
 
   useStyle(() => css`
     :host { display: contents; }
@@ -306,4 +309,3 @@ component('md-navigation-drawer', () => {
     }
   `;
 });
-

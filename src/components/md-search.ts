@@ -1,4 +1,4 @@
-import { component, html, css, defineModel, useEmit, useProps, useStyle, useOnConnected, useExpose, getCurrentComponentContext } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, useEmit, useProps, useStyle, useExpose, getCurrentComponentContext } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-search', () => {
@@ -7,6 +7,9 @@ component('md-search', () => {
     leadingIcon: 'search',
     showAvatar: false,
     autofocus: false,
+    listboxId: '',
+    activeDescendant: '',
+    expanded: false,
   });
   const emit = useEmit();
   const modelValue = defineModel('');
@@ -14,7 +17,6 @@ component('md-search', () => {
   const focusInput = () =>
     (ctx._host as HTMLElement)?.shadowRoot?.querySelector<HTMLInputElement>('input')?.focus();
   useExpose({ focus: focusInput });
-  useOnConnected(() => { if (props.autofocus) focusInput(); });
 
   const handleClear = () => {
     modelValue.value = '';
@@ -138,6 +140,12 @@ component('md-search', () => {
         class="search-input"
         placeholder="${props.placeholder}"
         :model="${modelValue}"
+        :autofocus="${props.autofocus}"
+        :role="${props.listboxId ? 'combobox' : null}"
+        :aria-autocomplete="${props.listboxId ? 'list' : null}"
+        :aria-controls="${props.listboxId || null}"
+        :aria-activedescendant="${props.activeDescendant || null}"
+        :aria-expanded="${props.listboxId ? String(props.expanded) : null}"
         aria-label="${props.placeholder}"
         @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter') emit('search', modelValue.value); }}"
       >

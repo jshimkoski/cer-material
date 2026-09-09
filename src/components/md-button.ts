@@ -14,6 +14,8 @@ import { when } from '@jasonshimmy/custom-elements-runtime/directives';
  *   trailingIcon — Material Symbol name for the trailing icon
  *   type         — native button type: 'button' | 'submit' | 'reset'
  *   disabled     — disables the button
+ *   href         — renders a native link instead of a button
+ *   target/rel   — native link navigation attributes
  *
  * Slots:
  *   (default) — button label text (used alongside or instead of `label` prop)
@@ -26,11 +28,14 @@ component('md-button', () => {
     trailingIcon: '',
     type: 'button' as 'button' | 'submit' | 'reset',
     disabled: false,
+    href: '',
+    target: '',
+    rel: '',
   });
   useStyle(() => css`
     :host { display: inline-flex; vertical-align: middle; }
 
-    button {
+    button, a {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -52,11 +57,13 @@ component('md-button', () => {
       user-select: none;
       white-space: nowrap;
       -webkit-font-smoothing: antialiased;
+      box-sizing: border-box;
+      text-decoration: none;
     }
-    button:disabled { cursor: not-allowed; pointer-events: none; }
+    button:disabled, a[aria-disabled="true"] { cursor: not-allowed; pointer-events: none; }
 
     /* state layer */
-    button::before {
+    button::before, a::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -65,9 +72,9 @@ component('md-button', () => {
       transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
       pointer-events: none;
     }
-    button:hover::before  { opacity: 0.08; }
-    button:focus::before  { opacity: 0.12; }
-    button:active::before { opacity: 0.12; }
+    button:hover::before, a:hover::before  { opacity: 0.08; }
+    button:focus::before, a:focus::before  { opacity: 0.12; }
+    button:active::before, a:active::before { opacity: 0.12; }
 
     /* ── Filled ── */
     .filled {
@@ -139,19 +146,34 @@ component('md-button', () => {
     }
   `);
 
-  return html`
-    <button
-      :type="${props.type}"
-      :class="${{
-        [props.variant]: true,
-        'has-icon': !!props.icon,
-        'has-trailing-icon': !!props.trailingIcon,
-      }}"
-      :disabled="${props.disabled}"
-    >
-      ${when(!!props.icon, () => html`<span class="icon" aria-hidden="true">${props.icon}</span>`)}
-      ${props.label}<slot></slot>
-      ${when(!!props.trailingIcon, () => html`<span class="icon" aria-hidden="true">${props.trailingIcon}</span>`)}
-    </button>
+  const classes = {
+    [props.variant]: true,
+    'has-icon': !!props.icon,
+    'has-trailing-icon': !!props.trailingIcon,
+  };
+  const content = () => html`
+    ${when(!!props.icon, () => html`<span class="icon" aria-hidden="true">${props.icon}</span>`)}
+    ${props.label}<slot></slot>
+    ${when(!!props.trailingIcon, () => html`<span class="icon" aria-hidden="true">${props.trailingIcon}</span>`)}
   `;
+
+  return props.href
+    ? html`
+        <a
+          :href="${props.disabled ? null : props.href}"
+          :target="${props.target || null}"
+          :rel="${props.rel || (props.target === '_blank' ? 'noopener noreferrer' : null)}"
+          :aria-disabled="${props.disabled ? 'true' : null}"
+          :tabindex="${props.disabled ? -1 : null}"
+          :class="${classes}"
+          @click="${(event: Event) => { if (props.disabled) event.preventDefault(); }}"
+        >${content()}</a>
+      `
+    : html`
+        <button
+          :type="${props.type}"
+          :class="${classes}"
+          :disabled="${props.disabled}"
+        >${content()}</button>
+      `;
 });

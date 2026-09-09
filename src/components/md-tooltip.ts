@@ -10,31 +10,39 @@ component('md-tooltip', () => {
   });
   const emit = useEmit();
   const visible = ref(false);
-  let hideTimer: ReturnType<typeof setTimeout> | null = null;
-  let showTimer: ReturnType<typeof setTimeout> | null = null;
+  // Event handlers are replaced as the VDOM patches after reactive renders.
+  // Refs keep pending timers shared by both the old and new handler closures.
+  const hideTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+  const showTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
   const show = (immediate = false) => {
-    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    if (hideTimer.value) { clearTimeout(hideTimer.value); hideTimer.value = null; }
     if (immediate) {
-      if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+      if (showTimer.value) { clearTimeout(showTimer.value); showTimer.value = null; }
       visible.value = true;
     } else if (!visible.value) {
       // MD3: 500ms delay before plain tooltip appears on hover.
       // Rich tooltips and keyboard focus show immediately.
-      showTimer = setTimeout(() => { visible.value = true; showTimer = null; }, 500);
+      showTimer.value = setTimeout(() => {
+        visible.value = true;
+        showTimer.value = null;
+      }, 500);
     }
   };
   const scheduleHide = () => {
-    if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-    hideTimer = setTimeout(() => { visible.value = false; }, 100);
+    if (showTimer.value) { clearTimeout(showTimer.value); showTimer.value = null; }
+    hideTimer.value = setTimeout(() => {
+      visible.value = false;
+      hideTimer.value = null;
+    }, 100);
   };
   const cancelHide = () => {
-    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    if (hideTimer.value) { clearTimeout(hideTimer.value); hideTimer.value = null; }
   };
 
   useOnDisconnected(() => {
-    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
-    if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+    if (hideTimer.value) { clearTimeout(hideTimer.value); hideTimer.value = null; }
+    if (showTimer.value) { clearTimeout(showTimer.value); showTimer.value = null; }
     visible.value = false;
   });
 

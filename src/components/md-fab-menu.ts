@@ -1,4 +1,4 @@
-import { component, html, css, ref, watch, useProps, useEmit, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, ref, watch, useProps, useEmit, useStyle, useOnDisconnected, useHost } from '@jasonshimmy/custom-elements-runtime';
 import { when, each } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 import { useEscapeKey } from '../composables/useEscapeKey';
@@ -32,7 +32,7 @@ interface FabMenuItem {
 
 // Singleton: only one FAB menu may be open at a time across the whole page.
 // When a new FAB opens it calls this to close the previously open one.
-let _activeFabClose: (() => void) | null = null;
+let _activeFab: { host: HTMLElement; close: () => void } | null = null;
 
 component('md-fab-menu', () => {
   const props = useProps({
@@ -44,11 +44,12 @@ component('md-fab-menu', () => {
     open: false,
   });
   const emit = useEmit();
+  const host = useHost();
   const open = ref(props.open);
   watch(() => props.open, v => { open.value = v; });
 
   const closeMenu = () => {
-    if (_activeFabClose === closeMenu) _activeFabClose = null;
+    if (_activeFab?.host === host) _activeFab = null;
     open.value = false;
     emit('update:open', false);
     emit('close');
@@ -59,10 +60,10 @@ component('md-fab-menu', () => {
       closeMenu();
     } else {
       // Close any other open FAB menu before opening this one.
-      if (_activeFabClose) _activeFabClose();
+      if (_activeFab) _activeFab.close();
       open.value = true;
       emit('update:open', true);
-      _activeFabClose = closeMenu;
+      if (host) _activeFab = { host, close: closeMenu };
       emit('open');
     }
   };
@@ -74,6 +75,9 @@ component('md-fab-menu', () => {
   };
 
   useEscapeKey(() => open.value, closeMenu)();
+  useOnDisconnected(() => {
+    if (_activeFab?.host === host) _activeFab = null;
+  });
 
   useStyle(() => css`
     :host { display: inline-flex; }
@@ -271,7 +275,7 @@ component('md-fab-menu', () => {
               class="menu-item"
               role="menuitem"
               aria-label="${item.label}"
-              ?disabled="${item.disabled}"
+              :disabled="${item.disabled}"
               @click="${(e: Event) => { e.stopPropagation(); selectItem(item); }}"
             >
               <span class="menu-item-icon" aria-hidden="true">${item.icon}</span>
@@ -285,7 +289,7 @@ component('md-fab-menu', () => {
         :class="${{ 'fab-trigger': true, open: open.value }}"
         aria-label="${props.ariaLabel}"
         aria-expanded="${open.value}"
-        aria-haspopup="true"
+        aria-haspopup="menu"
         @click="${() => toggle()}"
       >
         <span class="fab-trigger-icon" aria-hidden="true">

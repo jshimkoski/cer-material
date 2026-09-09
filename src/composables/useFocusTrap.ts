@@ -110,6 +110,33 @@ function findAutofocusDeep(root: Element | ShadowRoot): HTMLElement | null {
   return null;
 }
 
+function findPendingAutofocusCustomElement(
+  root: Element | ShadowRoot,
+): HTMLElement | null {
+  for (const child of Array.from(root.children)) {
+    const el = child as HTMLElement;
+    if (el.tagName === 'SLOT') {
+      for (const assigned of (el as HTMLSlotElement).assignedElements({ flatten: true })) {
+        const found = findPendingAutofocusCustomElement(assigned);
+        if (found) return found;
+      }
+      continue;
+    }
+    if (
+      el.hasAttribute('autofocus') &&
+      el.localName.includes('-') &&
+      !customElements.get(el.localName)
+    ) {
+      return el;
+    }
+    const found = el.shadowRoot
+      ? findPendingAutofocusCustomElement(el.shadowRoot)
+      : findPendingAutofocusCustomElement(el);
+    if (found) return found;
+  }
+  return null;
+}
+
 function getDeepActiveElement(): HTMLElement | null {
   let el: Element | null = document.activeElement;
   while (el?.shadowRoot?.activeElement) el = el.shadowRoot.activeElement;
@@ -154,6 +181,7 @@ export function createFocusTrap() {
     const state = {
       container: null as Element | null,
       previousFocus: null as HTMLElement | null,
+      generation: 0,
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -171,9 +199,14 @@ export function createFocusTrap() {
 
     ctx.__mdFocusTrap = {
       onAfterEnter(el: HTMLElement) {
-        state.container = el;
-        state.previousFocus = getDeepActiveElement();
-        document.addEventListener('keydown', handleKeyDown);
+        const isNewActivation = state.container !== el;
+        if (isNewActivation) {
+          state.container = el;
+          state.generation++;
+          state.previousFocus = getDeepActiveElement();
+          document.addEventListener('keydown', handleKeyDown);
+        }
+        const generation = state.generation;
         // Don't steal focus if autofocus (or anything else) has already moved
         // focus inside the overlay.
         //
@@ -197,16 +230,46 @@ export function createFocusTrap() {
           // Honour [autofocus] on slotted content (browser won't fire it for
           // dynamically-inserted custom overlays). Falls back to the first
           // tabbable element if no [autofocus] target is found.
-          (findAutofocusDeep(el) ?? getFocusableDeep(el)[0])?.focus();
+          // Slot assignment and nested custom-element upgrade can lag the
+          // overlay transition by a task. Search the overlay host as a second
+          // composed-tree entry point so autofocus still works before a slot's
+          // assignedElements() view catches up.
+          const overlayHost = ctx._host as HTMLElement;
+          const initialTarget =
+            findAutofocusDeep(el) ??
+            findAutofocusDeep(overlayHost) ??
+            getFocusableDeep(el)[0];
+          initialTarget?.focus();
+
+          // If the autofocus target itself has not registered yet, retry once
+          // its shadow root and native control are available. Guard the retry
+          // so a closed/reopened overlay or a user's later focus move is never
+          // overridden by a stale promise.
+          const pendingAutofocus =
+            findPendingAutofocusCustomElement(el) ??
+            findPendingAutofocusCustomElement(overlayHost);
+          if (pendingAutofocus) {
+            const activeAfterFallback = getDeepActiveElement();
+            void customElements.whenDefined(pendingAutofocus.localName).then(() => {
+              if (
+                state.container !== el ||
+                state.generation !== generation ||
+                getDeepActiveElement() !== activeAfterFallback
+              ) return;
+              (findAutofocusDeep(el) ?? findAutofocusDeep(overlayHost))?.focus();
+            });
+          }
         }
       },
       onAfterLeave() {
+        state.generation++;
         document.removeEventListener('keydown', handleKeyDown);
         state.previousFocus?.focus();
         state.previousFocus = null;
         state.container = null;
       },
       cleanup() {
+        state.generation++;
         document.removeEventListener('keydown', handleKeyDown);
         state.container = null;
       },
@@ -219,4 +282,3 @@ export function createFocusTrap() {
     cleanup: () => void;
   };
 }
-

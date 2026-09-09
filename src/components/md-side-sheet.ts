@@ -18,8 +18,11 @@ component('md-side-sheet', () => {
   // Only modal variant uses escape key, focus trap, and scroll lock.
   useEscapeKey(() => open.value && props.variant === 'modal', () => { emit('close'); open.value = false; })();
   const trap = createFocusTrap();
-  useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
+  useOnDisconnected(() => {
+    trap.cleanup();
+    scrollLock.unlock();
+  });
 
   useStyle(() => css`
     :host { display: contents; }
@@ -156,6 +159,11 @@ component('md-side-sheet', () => {
           css: false,
           onBeforeEnter: (el) => {
             scrollLock.lock();
+            // Trap and initialize focus as soon as the dialog enters the DOM.
+            // Waiting for the slide animation to finish leaves keyboard focus
+            // on the page for ~300 ms and can race lazily registered slotted
+            // controls (for example an autofocus search component).
+            trap.onAfterEnter(el as HTMLElement);
             (el as HTMLElement).style.transform = 'translateX(100%)';
           },
           onEnter: (el, done) => {
@@ -163,10 +171,16 @@ component('md-side-sheet', () => {
             h.offsetHeight;
             h.style.transition = 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)';
             h.style.transform = '';
+            // DSD controls may complete a queued hydration just after the
+            // opening event and temporarily drop focus. Re-run the idempotent
+            // focus activation after those already-queued tasks settle.
+            setTimeout(() => {
+              if (open.value && props.variant === 'modal') trap.onAfterEnter(h);
+            }, 0);
             h.addEventListener('transitionend', done, { once: true });
             setTimeout(done, 350);
           },
-          onAfterEnter: (el) => { emit('open'); trap.onAfterEnter(el as HTMLElement); },
+          onAfterEnter: (el) => { trap.onAfterEnter(el as HTMLElement); emit('open'); },
           onLeave: (el, done) => {
             const h = el as HTMLElement;
             h.style.transition = 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)';

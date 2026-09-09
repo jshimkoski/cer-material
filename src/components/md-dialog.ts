@@ -15,8 +15,11 @@ component('md-dialog', () => {
 
   useEscapeKey(() => open.value, () => { emit('close'); open.value = false; })();
   const trap = createFocusTrap();
-  useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
+  useOnDisconnected(() => {
+    trap.cleanup();
+    scrollLock.unlock();
+  });
 
   useStyle(() => css`
     :host { display: contents; }

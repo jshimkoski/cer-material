@@ -1,4 +1,4 @@
-import { component, html, css, defineModel, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, ref, defineModel, useProps, useEmit, useStyle, useOnDisconnected } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 import { Transition } from '@jasonshimmy/custom-elements-runtime/transitions';
 import { useEscapeKey } from '../composables/useEscapeKey';
@@ -14,17 +14,20 @@ component('md-bottom-sheet', () => {
   const emit = useEmit();
   const open = defineModel('open', false);
 
-  // ── Drag-to-dismiss (plain mutable state — no re-renders needed) ──────
-  let sheetEl: HTMLElement | null = null;
-  let dragStartY = 0;
-  let dragStartTime = 0;
-  let isDragging = false;
+  // ── Drag-to-dismiss state ─────────────────────────────────────────────
+  // Pointer handlers are replaced when the VDOM patches. Refs preserve an
+  // in-flight gesture across those handler closures without being tracked by
+  // rendering (these values are read only from event/transition callbacks).
+  const sheetEl = ref<HTMLElement | null>(null);
+  const dragStartY = ref(0);
+  const dragStartTime = ref(0);
+  const isDragging = ref(false);
   // Set to true by the drag dismiss path so onBeforeLeave skips a redundant animation.
-  let dragDismissed = false;
+  const dragDismissed = ref(false);
   // Holds the element reference between transitionend and onBeforeLeave so
   // the hook can disable the leave transition without relying on sheetEl
   // (which is nulled out at the end of onHandlePointerUp).
-  let dismissedEl: HTMLElement | null = null;
+  const dismissedEl = ref<HTMLElement | null>(null);
 
   // Thresholds per MD3 spec guidance:
   // dismiss if dragged more than 40% of sheet height, or flicked fast.
@@ -34,16 +37,16 @@ component('md-bottom-sheet', () => {
   function onHandlePointerDown(e: PointerEvent) {
     if (!open.value) return;
     const handle = e.currentTarget as HTMLElement;
-    sheetEl = (handle.closest('.modal-bottom-sheet') ?? handle.closest('.standard-bottom-sheet')) as HTMLElement | null;
-    if (!sheetEl) return;
+    sheetEl.value = (handle.closest('.modal-bottom-sheet') ?? handle.closest('.standard-bottom-sheet')) as HTMLElement | null;
+    if (!sheetEl.value) return;
 
-    isDragging    = true;
-    dragStartY    = e.clientY;
-    dragStartTime = performance.now();
+    isDragging.value = true;
+    dragStartY.value = e.clientY;
+    dragStartTime.value = performance.now();
 
     // Disable the CSS transition while the finger is down so the sheet
     // tracks the pointer with zero lag.
-    sheetEl.style.transition = 'none';
+    sheetEl.value.style.transition = 'none';
     // Route all subsequent pointer events to this element (works across
     // shadow-DOM boundary and when the pointer leaves the handle bounds).
     handle.setPointerCapture(e.pointerId);
@@ -51,51 +54,51 @@ component('md-bottom-sheet', () => {
   }
 
   function onHandlePointerMove(e: PointerEvent) {
-    if (!isDragging || !sheetEl) return;
+    if (!isDragging.value || !sheetEl.value) return;
     // Only allow downward translation (clamp negative deltas to 0).
-    const delta = Math.max(0, e.clientY - dragStartY);
-    sheetEl.style.transform = `translateY(${delta}px)`;
+    const delta = Math.max(0, e.clientY - dragStartY.value);
+    sheetEl.value.style.transform = `translateY(${delta}px)`;
   }
 
   function onHandlePointerUp(e: PointerEvent) {
-    if (!isDragging || !sheetEl) return;
-    isDragging = false;
+    if (!isDragging.value || !sheetEl.value) return;
+    isDragging.value = false;
 
-    const delta    = Math.max(0, e.clientY - dragStartY);
-    const elapsed  = (performance.now() - dragStartTime) / 1000; // seconds
+    const delta    = Math.max(0, e.clientY - dragStartY.value);
+    const elapsed  = (performance.now() - dragStartTime.value) / 1000; // seconds
     const velocity = elapsed > 0 ? delta / elapsed : 0;
 
     const shouldDismiss =
-      delta    > sheetEl.offsetHeight * DISMISS_RATIO ||
+      delta    > sheetEl.value.offsetHeight * DISMISS_RATIO ||
       velocity > DISMISS_VELOCITY;
 
     // Re-enable the CSS transition for snap-back.
-    sheetEl.style.transition = '';
+    sheetEl.value.style.transition = '';
 
     if (shouldDismiss) {
       // Explicitly set the transition inline for the off-screen slide — the
       // CER leave classes (sheet-leave-active) haven't been applied yet at
       // this point, so clearing the inline transition above would leave no
       // active transition and the transform change would be instant.
-      sheetEl.style.transition = 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)';
-      sheetEl.style.transform = 'translateY(100%)';
-      const target = sheetEl;
+      sheetEl.value.style.transition = 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)';
+      sheetEl.value.style.transform = 'translateY(100%)';
+      const target = sheetEl.value;
       const onEnd = () => {
         target.removeEventListener('transitionend', onEnd);
         // Mark as drag-dismissed so the Transition onBeforeLeave hook skips
         // its own animation — the sheet is already off-screen at this point.
         // Do NOT clear the inline transform here; clearing it would snap the
         // sheet back to translateY(0) before the leave animation begins.
-        dragDismissed = true;
-        dismissedEl = target;
+        dragDismissed.value = true;
+        dismissedEl.value = target;
         emit('close');
         open.value = false;      };
       target.addEventListener('transitionend', onEnd);
     } else {
       // Snap back to fully open.
-      sheetEl.style.transform = '';
+      sheetEl.value.style.transform = '';
     }
-    sheetEl = null;
+    sheetEl.value = null;
   }
 
   const handleEscKey = () => { emit('close'); open.value = false; };
@@ -103,8 +106,15 @@ component('md-bottom-sheet', () => {
   // Only modal variant uses escape key, focus trap, and scroll lock.
   useEscapeKey(() => open.value && props.variant === 'modal', handleEscKey)();
   const trap = createFocusTrap();
-  useOnDisconnected(() => trap.cleanup());
   const scrollLock = useScrollLock();
+  useOnDisconnected(() => {
+    isDragging.value = false;
+    sheetEl.value = null;
+    dismissedEl.value = null;
+    dragDismissed.value = false;
+    trap.cleanup();
+    scrollLock.unlock();
+  });
 
   useStyle(() => css`
     :host { display: contents; }
@@ -248,19 +258,22 @@ component('md-bottom-sheet', () => {
           },
           onAfterEnter: trap.onAfterEnter,
           onBeforeLeave: (_el) => {
+            // Release state immediately. Waiting for transitionend can strand
+            // the global lock when navigation interrupts/removes the overlay.
+            scrollLock.unlock();
             // The drag-dismiss path already animated the sheet off-screen.
             // Disable any residual inline transition so the element doesn't
             // snap back or conflict with the coming JS leave handling.
-            if (dragDismissed && dismissedEl) {
-              dismissedEl.style.transition = 'none';
-              dismissedEl = null;
+            if (dragDismissed.value && dismissedEl.value) {
+              dismissedEl.value.style.transition = 'none';
+              dismissedEl.value = null;
             }
           },
           onLeave: (el, done) => {
             const h = el as HTMLElement;
             // Sheet was already slid off-screen by the drag gesture — skip.
-            if (dragDismissed) {
-              dragDismissed = false;
+            if (dragDismissed.value) {
+              dragDismissed.value = false;
               done();
               return;
             }
@@ -269,13 +282,13 @@ component('md-bottom-sheet', () => {
             h.addEventListener('transitionend', done, { once: true });
             setTimeout(done, 350);
           },
-          onAfterLeave: () => { trap.onAfterLeave(); scrollLock.unlock(); },
+          onAfterLeave: () => { trap.onAfterLeave(); },
         }, html`
           <div
             class="modal-bottom-sheet"
             role="dialog"
             aria-modal="true"
-            :bind="${{ 'aria-labelledby': props.headline ? 'bottom-sheet-headline' : null }}"
+            :bind="${{ 'aria-label': props.headline || null }}"
           >
             ${when(props.showHandle, () => html`
               <div
@@ -294,7 +307,7 @@ component('md-bottom-sheet', () => {
             `)}
             ${when(!!props.headline, () => html`
               <div class="sheet-header">
-                <h2 class="sheet-headline" id="bottom-sheet-headline">${props.headline}</h2>
+                <h2 class="sheet-headline">${props.headline}</h2>
               </div>
             `)}
             <div class="sheet-content">
@@ -310,11 +323,11 @@ component('md-bottom-sheet', () => {
           leaveActive: 'standard-leave-active',
           leaveTo: 'standard-leave-to',
           onBeforeLeave: () => {
-            if (dragDismissed) {
-              dragDismissed = false;
-              if (dismissedEl) {
-                dismissedEl.style.transition = 'none';
-                dismissedEl = null;
+            if (dragDismissed.value) {
+              dragDismissed.value = false;
+              if (dismissedEl.value) {
+                dismissedEl.value.style.transition = 'none';
+                dismissedEl.value = null;
               }
             }
           },
@@ -322,7 +335,7 @@ component('md-bottom-sheet', () => {
           <div
             class="standard-bottom-sheet"
             role="complementary"
-            :bind="${{ 'aria-labelledby': props.headline ? 'bottom-sheet-headline' : null }}"
+            :bind="${{ 'aria-label': props.headline || null }}"
           >
             ${when(props.showHandle, () => html`
               <div
@@ -341,7 +354,7 @@ component('md-bottom-sheet', () => {
             `)}
             ${when(!!props.headline, () => html`
               <div class="sheet-header">
-                <h2 class="sheet-headline" id="bottom-sheet-headline">${props.headline}</h2>
+                <h2 class="sheet-headline">${props.headline}</h2>
               </div>
             `)}
             <div class="sheet-content">
