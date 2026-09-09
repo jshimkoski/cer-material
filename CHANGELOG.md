@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.9.1] - 2026-09-09
+
+- fix(ci): use npm trusted publishing (369f51c)
+
 ## [v0.9.0] - 2026-09-09
 
 - feat: update readme (ab5fd18)
