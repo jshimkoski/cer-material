@@ -4,7 +4,7 @@ Material Design 3 web components built on [`@jasonshimmy/custom-elements-runtime
 
 All components are standard custom elements — framework-agnostic and usable in plain HTML, React, Vue, Angular, Svelte, or any other environment.
 
-To see live demos and usage examples, see [https://cer-material.netlify.app/](https://cer-material.netlify.app/).
+For live demos and usage examples, see [https://cer-material.netlify.app/](https://cer-material.netlify.app/).
 
 Learn more about the author at [jasonshimmy.com](https://jasonshimmy.com) and check out the [changelog](./CHANGELOG.md) for recent updates.
 
