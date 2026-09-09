@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.9.0] - 2026-09-09
+
+- feat: update readme (ab5fd18)
+
 ## [v0.8.0] - 2026-09-09
 
 - feat: improve most component behavior (707ddb3)
