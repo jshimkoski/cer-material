@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.8.0] - 2026-09-09
+
+- feat: improve most component behavior (707ddb3)
+
 ## [v0.7.2] - 2026-04-20
 
 - fix: update onAfterEnter handler to emit 'open' event in md-side-sheet component (db86aee)
