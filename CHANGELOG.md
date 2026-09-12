@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.9.2] - 2026-09-12
+
+- fix: Upgrade tooling and fix CommonJS font loading (85dae41)
+
 ## [v0.9.1] - 2026-09-09
 
 - fix(ci): use npm trusted publishing (369f51c)
