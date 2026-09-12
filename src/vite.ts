@@ -216,7 +216,10 @@ async function _subsetFont(
   inputBuf: Buffer,
   iconNames: Set<string>,
 ): Promise<Buffer | null> {
-  const _require = createRequire(import.meta.url)
+  // Rolldown replaces `import.meta` with an empty object in CommonJS output.
+  // Prefer Node's CJS filename there while retaining the module URL in ESM.
+  const requireAnchor = typeof __filename === 'string' ? __filename : import.meta.url
+  const _require = createRequire(requireAnchor)
 
   // Dependencies — auto-installed.
   let wawoff2: { decompress: (buf: Buffer) => Promise<Uint8Array> }
@@ -358,6 +361,7 @@ export function materialSymbols(options: MaterialSymbolsOptions = {}): Plugin {
 
   return {
     name: 'cer-material-symbols-subset',
+    enforce: 'pre',
     apply: 'build',
 
     configResolved(config) {
