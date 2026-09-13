@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.10.0] - 2026-09-13
+
+- feat: Add Generated Material Theme Presets (d9fc37a)
+- feat: Add static Material themes and prose bridge (7fb1c02)
+
 ## [v0.9.2] - 2026-09-12
 
 - fix: Upgrade tooling and fix CommonJS font loading (85dae41)
