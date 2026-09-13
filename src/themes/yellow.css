@@ -1,0 +1,148 @@
+/* Generated from CER yellow-500 (#eab308) using Material Color Utilities. */
+:root {
+  --md-sys-color-primary: #785a00;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #ffdf9a;
+  --md-sys-color-on-primary-container: #251a00;
+  --md-sys-color-secondary: #6b5d3f;
+  --md-sys-color-on-secondary: #ffffff;
+  --md-sys-color-secondary-container: #f4e0bb;
+  --md-sys-color-on-secondary-container: #241a04;
+  --md-sys-color-tertiary: #496547;
+  --md-sys-color-on-tertiary: #ffffff;
+  --md-sys-color-tertiary-container: #cbebc5;
+  --md-sys-color-on-tertiary-container: #062109;
+  --md-sys-color-error: #ba1a1a;
+  --md-sys-color-on-error: #ffffff;
+  --md-sys-color-error-container: #ffdad6;
+  --md-sys-color-on-error-container: #410002;
+  --md-sys-color-background: #fffbff;
+  --md-sys-color-on-background: #1e1b16;
+  --md-sys-color-surface: #fffbff;
+  --md-sys-color-on-surface: #1e1b16;
+  --md-sys-color-surface-variant: #ede1cf;
+  --md-sys-color-on-surface-variant: #4d4639;
+  --md-sys-color-outline: #7f7667;
+  --md-sys-color-outline-variant: #d0c5b4;
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-scrim: #000000;
+  --md-sys-color-inverse-surface: #33302a;
+  --md-sys-color-inverse-on-surface: #f7f0e7;
+  --md-sys-color-inverse-primary: #f7be1d;
+  --md-sys-color-surface-container-lowest: #ffffff;
+  --md-sys-color-surface-container-low: #faf2e9;
+  --md-sys-color-surface-container: #f4ede4;
+  --md-sys-color-surface-container-high: #efe7de;
+  --md-sys-color-surface-container-highest: #e9e1d9;
+  --md-sys-color-surface-tint: #785a00;
+  --cer-color-primary-50: #fff8f2;
+  --cer-color-primary-100: #ffefd3;
+  --cer-color-primary-200: #ffdf9a;
+  --cer-color-primary-300: #f7be1d;
+  --cer-color-primary-400: #d7a400;
+  --cer-color-primary-500: #b68a00;
+  --cer-color-primary-600: #967200;
+  --cer-color-primary-700: #785a00;
+  --cer-color-primary-800: #5a4300;
+  --cer-color-primary-900: #3f2e00;
+  --cer-color-primary-950: #251a00;
+  --cer-color-secondary-50: #fff8f2;
+  --cer-color-secondary-100: #ffefd3;
+  --cer-color-secondary-200: #f4e0bb;
+  --cer-color-secondary-300: #d7c4a0;
+  --cer-color-secondary-400: #bba987;
+  --cer-color-secondary-500: #9f8f6e;
+  --cer-color-secondary-600: #857556;
+  --cer-color-secondary-700: #6b5d3f;
+  --cer-color-secondary-800: #52452a;
+  --cer-color-secondary-900: #3a2f15;
+  --cer-color-secondary-950: #241a04;
+  --cer-color-neutral-50: #fff8f2;
+  --cer-color-neutral-100: #f7f0e7;
+  --cer-color-neutral-200: #e9e1d9;
+  --cer-color-neutral-300: #ccc5bd;
+  --cer-color-neutral-400: #b1aaa2;
+  --cer-color-neutral-500: #969088;
+  --cer-color-neutral-600: #7b766f;
+  --cer-color-neutral-700: #625e57;
+  --cer-color-neutral-800: #4a4640;
+  --cer-color-neutral-900: #33302a;
+  --cer-color-neutral-950: #1e1b16;
+  --cer-color-error-50: #fff8f7;
+  --cer-color-error-100: #ffedea;
+  --cer-color-error-200: #ffdad6;
+  --cer-color-error-300: #ffb4ab;
+  --cer-color-error-400: #ff897d;
+  --cer-color-error-500: #ff5449;
+  --cer-color-error-600: #de3730;
+  --cer-color-error-700: #ba1a1a;
+  --cer-color-error-800: #93000a;
+  --cer-color-error-900: #690005;
+  --cer-color-error-950: #410002;
+  --md-sys-typescale-font: 'Roboto', 'Google Sans', sans-serif;
+  --md-sys-shape-corner-none: 0px;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 9999px;
+  --md-sys-elevation-1: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px 1px rgba(0,0,0,.15);
+  --md-sys-elevation-2: 0 1px 2px rgba(0,0,0,.3), 0 2px 6px 2px rgba(0,0,0,.15);
+  --md-sys-elevation-3: 0 4px 8px 3px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.3);
+  --md-sys-elevation-4: 0 6px 10px 4px rgba(0,0,0,.15), 0 2px 3px rgba(0,0,0,.3);
+}
+
+body {
+  font-family: var(--md-sys-typescale-font);
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
+}
+
+#app {
+  min-height: 100vh;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --md-sys-color-primary: #f7be1d;
+    --md-sys-color-on-primary: #3f2e00;
+    --md-sys-color-primary-container: #5a4300;
+    --md-sys-color-on-primary-container: #ffdf9a;
+    --md-sys-color-secondary: #d7c4a0;
+    --md-sys-color-on-secondary: #3a2f15;
+    --md-sys-color-secondary-container: #52452a;
+    --md-sys-color-on-secondary-container: #f4e0bb;
+    --md-sys-color-tertiary: #afcfaa;
+    --md-sys-color-on-tertiary: #1c361c;
+    --md-sys-color-tertiary-container: #324d31;
+    --md-sys-color-on-tertiary-container: #cbebc5;
+    --md-sys-color-error: #ffb4ab;
+    --md-sys-color-on-error: #690005;
+    --md-sys-color-error-container: #93000a;
+    --md-sys-color-on-error-container: #ffb4ab;
+    --md-sys-color-background: #1e1b16;
+    --md-sys-color-on-background: #e9e1d9;
+    --md-sys-color-surface: #1e1b16;
+    --md-sys-color-on-surface: #e9e1d9;
+    --md-sys-color-surface-variant: #4d4639;
+    --md-sys-color-on-surface-variant: #d0c5b4;
+    --md-sys-color-outline: #999080;
+    --md-sys-color-outline-variant: #4d4639;
+    --md-sys-color-shadow: #000000;
+    --md-sys-color-scrim: #000000;
+    --md-sys-color-inverse-surface: #e9e1d9;
+    --md-sys-color-inverse-on-surface: #33302a;
+    --md-sys-color-inverse-primary: #785a00;
+    --md-sys-color-surface-container-lowest: #100e09;
+    --md-sys-color-surface-container-low: #1e1b16;
+    --md-sys-color-surface-container: #221f1a;
+    --md-sys-color-surface-container-high: #2d2a24;
+    --md-sys-color-surface-container-highest: #38342e;
+    --md-sys-color-surface-tint: #f7be1d;
+    --md-sys-elevation-1: 0 1px 2px rgba(0,0,0,.6), 0 1px 3px 1px rgba(0,0,0,.4);
+    --md-sys-elevation-2: 0 1px 2px rgba(0,0,0,.6), 0 2px 6px 2px rgba(0,0,0,.4);
+    --md-sys-elevation-3: 0 4px 8px 3px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.6);
+    --md-sys-elevation-4: 0 6px 10px 4px rgba(0,0,0,.4), 0 2px 3px rgba(0,0,0,.6);
+  }
+}

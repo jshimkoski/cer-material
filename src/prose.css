@@ -1,0 +1,26 @@
+:root {
+  /* CER prose tokens inherit through component shadow roots. Keep this bridge
+     semantic so every Material family preset and color-scheme stays in sync. */
+  --cer-prose-body: var(--md-sys-color-on-surface);
+  --cer-prose-headings: var(--md-sys-color-on-surface);
+  --cer-prose-lead: var(--md-sys-color-on-surface-variant);
+  --cer-prose-links: var(--md-sys-color-primary);
+  --cer-prose-links-hover: var(--md-sys-color-primary);
+  --cer-prose-bold: var(--md-sys-color-on-surface);
+  --cer-prose-quotes: var(--md-sys-color-on-surface-variant);
+  --cer-prose-quote-border: var(--md-sys-color-outline-variant);
+  --cer-prose-code: var(--md-sys-color-on-surface);
+  --cer-prose-code-bg: var(--md-sys-color-surface-container);
+  --cer-prose-pre-code: var(--md-sys-color-on-surface);
+  --cer-prose-pre-bg: var(--md-sys-color-surface-container);
+  --cer-prose-pre-border: var(--md-sys-color-outline-variant);
+  --cer-prose-hr: var(--md-sys-color-outline-variant);
+  --cer-prose-caps: var(--md-sys-color-on-surface-variant);
+  --cer-prose-list-marker: var(--md-sys-color-on-surface-variant);
+  --cer-prose-list-marker-strong: var(--md-sys-color-on-surface-variant);
+  --cer-prose-counters: var(--md-sys-color-on-surface-variant);
+  --cer-prose-bullets: var(--md-sys-color-outline);
+  --cer-prose-img-caption: var(--md-sys-color-on-surface-variant);
+  --cer-prose-table-border: var(--md-sys-color-outline-variant);
+  --cer-prose-table-head: var(--md-sys-color-on-surface);
+}
