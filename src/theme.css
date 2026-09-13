@@ -48,6 +48,54 @@
   --md-sys-color-scrim:                 #000000;
   --md-sys-color-surface-tint:          #6750A4;
 
+  /* ── CER semantic palettes ───────────────────
+     These static tonal scales let existing CER utilities such as
+     bg-primary-700 and prose-primary use the same palette as Material. */
+  --cer-color-primary-50: #fdf7ff;
+  --cer-color-primary-100: #f6eeff;
+  --cer-color-primary-200: #eaddff;
+  --cer-color-primary-300: #d0bcff;
+  --cer-color-primary-400: #b69df8;
+  --cer-color-primary-500: #9a83db;
+  --cer-color-primary-600: #8069bf;
+  --cer-color-primary-700: #6750a4;
+  --cer-color-primary-800: #4f378b;
+  --cer-color-primary-900: #381e72;
+  --cer-color-primary-950: #21005d;
+  --cer-color-secondary-50: #fdf7ff;
+  --cer-color-secondary-100: #f6eeff;
+  --cer-color-secondary-200: #e8def8;
+  --cer-color-secondary-300: #ccc2dc;
+  --cer-color-secondary-400: #b0a7c0;
+  --cer-color-secondary-500: #958da4;
+  --cer-color-secondary-600: #7b748a;
+  --cer-color-secondary-700: #625b71;
+  --cer-color-secondary-800: #4a4458;
+  --cer-color-secondary-900: #332d41;
+  --cer-color-secondary-950: #1d192b;
+  --cer-color-neutral-50: #fdf8fd;
+  --cer-color-neutral-100: #f4eff4;
+  --cer-color-neutral-200: #e6e1e5;
+  --cer-color-neutral-300: #cac5ca;
+  --cer-color-neutral-400: #aeaaae;
+  --cer-color-neutral-500: #938f94;
+  --cer-color-neutral-600: #79767a;
+  --cer-color-neutral-700: #605d62;
+  --cer-color-neutral-800: #49454f;
+  --cer-color-neutral-900: #313033;
+  --cer-color-neutral-950: #1c1b1f;
+  --cer-color-error-50: #fff8f7;
+  --cer-color-error-100: #ffedea;
+  --cer-color-error-200: #f9dedc;
+  --cer-color-error-300: #f2b8b5;
+  --cer-color-error-400: #ff897d;
+  --cer-color-error-500: #ff5449;
+  --cer-color-error-600: #de3730;
+  --cer-color-error-700: #b3261e;
+  --cer-color-error-800: #8c1d18;
+  --cer-color-error-900: #601410;
+  --cer-color-error-950: #410e0b;
+
   /* ── Elevation shadows ─────────────────────── */
   --md-sys-elevation-1: 0 1px 2px rgba(0,0,0,.3),   0 1px 3px 1px rgba(0,0,0,.15);
   --md-sys-elevation-2: 0 1px 2px rgba(0,0,0,.3),   0 2px 6px 2px rgba(0,0,0,.15);

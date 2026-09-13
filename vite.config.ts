@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { copyFileSync, readdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readdirSync } from 'node:fs';
 import dts from 'vite-plugin-dts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -84,7 +84,7 @@ export default defineConfig(({ command, mode }) => {
     },
     plugins: [
       dts({
-        include: ['src/index.ts', 'src/jit-css.ts', 'src/vite.ts', 'src/components/**', 'src/composables/**'],
+        include: ['src/index.ts', 'src/jit-css.ts', 'src/vite.ts', 'src/theme-presets.ts', 'src/components/**', 'src/composables/**'],
         exclude: ['src/main.ts', 'src/components/md-showcase.ts'],
         rollupTypes: false,
         tsconfigPath: './tsconfig.json',
@@ -96,6 +96,16 @@ export default defineConfig(({ command, mode }) => {
             resolve(__dirname, 'src/theme.css'),
             resolve(__dirname, 'dist/theme.css'),
           );
+          copyFileSync(
+            resolve(__dirname, 'src/prose.css'),
+            resolve(__dirname, 'dist/prose.css'),
+          );
+          const sourceThemes = resolve(__dirname, 'src/themes');
+          const outputThemes = resolve(__dirname, 'dist/themes');
+          mkdirSync(outputThemes, { recursive: true });
+          for (const file of readdirSync(sourceThemes).filter(file => file.endsWith('.css'))) {
+            copyFileSync(resolve(sourceThemes, file), resolve(outputThemes, file));
+          }
         },
       },
     ],

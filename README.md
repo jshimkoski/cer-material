@@ -46,6 +46,7 @@ Add the fonts, theme stylesheet, and bundle script to your HTML `<head>`:
 
 <!-- MD3 design tokens -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@jasonshimmy/cer-material/dist/theme.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@jasonshimmy/cer-material/dist/prose.css" />
 
 <!-- cer-material (runtime included) -->
 <script src="https://cdn.jsdelivr.net/npm/@jasonshimmy/cer-material/dist/cer-material.iife.js"></script>
@@ -84,7 +85,7 @@ export default defineConfig({
 That single integration:
 
 - resolves each rendered `md-*` tag to its per-component registration module;
-- imports the MD3 theme and local Material Symbols stylesheet in generated
+- imports the MD3 theme, CER prose bridge, and local Material Symbols stylesheet in generated
   client and server entries; and
 - replaces the multi-megabyte symbols font with a content-addressed production
   subset containing only icons discovered in application and component code.
@@ -107,6 +108,21 @@ supplies those resources itself. If Roboto is bundled locally, the standalone
 `robotoPreload()` Vite helper can preload its `roboto-latin-400*.woff2` asset;
 it is not needed when the application uses its system-font fallback.
 
+Choose any CER extended color family without generating a theme in the browser:
+
+```ts
+export default defineConfig({
+  integrations: [cerMaterial({
+    theme: { family: 'violet' },
+  })],
+})
+```
+
+The package ships all 25 presets as static CSS. Only the selected file is
+imported, so family selection adds no client JavaScript and does not include the
+other themes. Set `prose: false` when the application supplies its own prose
+token mapping.
+
 ---
 
 ## Quick start
@@ -114,6 +130,7 @@ it is not needed when the application uses its system-font fallback.
 ```ts
 // Import the MD3 design token theme (CSS custom properties)
 import '@jasonshimmy/cer-material/theme.css';
+import '@jasonshimmy/cer-material/prose.css';
 
 // Register all components
 import '@jasonshimmy/cer-material';
@@ -124,6 +141,7 @@ entry point uses:
 
 ```ts
 import '@jasonshimmy/cer-material/theme.css';
+import '@jasonshimmy/cer-material/prose.css';
 import '@jasonshimmy/cer-material/components/md-button';
 import '@jasonshimmy/cer-material/components/md-text-field';
 
@@ -149,6 +167,18 @@ If you need the MD3 CSS custom properties without registering components:
 ```ts
 import '@jasonshimmy/cer-material/theme.css';
 ```
+
+Import a static family preset instead of the default theme when desired:
+
+```ts
+import '@jasonshimmy/cer-material/themes/violet.css';
+import '@jasonshimmy/cer-material/prose.css';
+```
+
+Available families: `mauve`, `olive`, `mist`, `taupe`, `slate`, `gray`,
+`zinc`, `stone`, `red`, `orange`, `amber`, `yellow`, `lime`, `green`,
+`emerald`, `teal`, `cyan`, `sky`, `blue`, `indigo`, `violet`, `purple`,
+`fuchsia`, `pink`, and `rose`.
 
 ---
 
@@ -192,6 +222,31 @@ The theme is a plain CSS file (`@jasonshimmy/cer-material/theme.css`) that expos
 ```
 
 Dark mode is handled automatically via `@media (prefers-color-scheme: dark)`.
+
+### CER utility and prose colors
+
+The default theme and every family preset also define the CER `primary`,
+`secondary`, `neutral`, and `error` tonal scales. Existing Custom Elements
+Runtime utilities therefore follow the selected Material theme automatically:
+
+```html
+<section class="bg-primary-700 text-primary-50"></section>
+<article class="prose prose-primary"></article>
+```
+
+Use a Material role directly with an arbitrary custom-property utility; it
+requires no `customColors` configuration:
+
+```html
+<section class="bg-(--md-sys-color-primary-container) text-(--md-sys-color-on-primary-container)"></section>
+<article class="prose prose-(--md-sys-color-primary)"></article>
+```
+
+`prose.css` maps body, heading, link, code-surface, and border tokens to MD3
+semantic roles. Because those tokens inherit through shadow roots, prose tracks
+the chosen family and light/dark preference without JavaScript. The existing
+`@jasonshimmy/cer-material/jit-css` `customColors` aliases remain available for
+applications that prefer names such as `bg-mdprimary`.
 
 **Available token groups:**
 

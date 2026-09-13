@@ -3,6 +3,12 @@ import { createRequire } from 'node:module'
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import {
+  isMaterialThemeFamily,
+  type MaterialThemeFamily,
+} from './theme-presets'
+
+export { materialThemeFamilies, type MaterialThemeFamily } from './theme-presets'
 
 const MATERIAL_COMPONENT_MODULES = {
   'md-app-bar': 'md-app-bar',
@@ -51,8 +57,10 @@ export function materialComponentResolver(tag: string): string | undefined {
 }
 
 export interface CerMaterialOptions {
-  /** Include the default Material color/typography tokens. Defaults to true. */
-  theme?: boolean
+  /** Include Material tokens, optionally using a pre-generated CER color family. Defaults to true. */
+  theme?: boolean | { family: MaterialThemeFamily }
+  /** Bridge Material semantic roles to inherited CER prose tokens. Defaults to true with a theme. */
+  prose?: boolean
   /** Include and production-subset Material Symbols, or configure dynamic names. */
   symbols?: boolean | MaterialSymbolsOptions
 }
@@ -71,15 +79,25 @@ export interface CerMaterialIntegration {
 
 export function cerMaterial(options: CerMaterialOptions = {}): CerMaterialIntegration {
   const includeTheme = options.theme !== false
+  const includeProse = includeTheme && options.prose !== false
   const includeSymbols = options.symbols !== false
   const symbolOptions = typeof options.symbols === 'object' ? options.symbols : undefined
+  let themeImport = '@jasonshimmy/cer-material/theme.css'
+
+  if (typeof options.theme === 'object') {
+    if (!isMaterialThemeFamily(options.theme.family)) {
+      throw new Error(`Unknown CER Material theme family: ${String(options.theme.family)}`)
+    }
+    themeImport = `@jasonshimmy/cer-material/themes/${options.theme.family}.css`
+  }
 
   return {
     name: 'cer-material',
     componentResolver: materialComponentResolver,
     globalImports: [
       ...(includeSymbols ? ['material-symbols/outlined.css'] : []),
-      ...(includeTheme ? ['@jasonshimmy/cer-material/theme.css'] : []),
+      ...(includeTheme ? [themeImport] : []),
+      ...(includeProse ? ['@jasonshimmy/cer-material/prose.css'] : []),
     ],
     plugins: includeSymbols ? [materialSymbols(symbolOptions)] : [],
   }

@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import {
   cerMaterial,
   findMaterialSymbolNames,
+  materialThemeFamilies,
   materialComponentResolver,
   materialSymbols,
 } from '../src/vite';
@@ -50,6 +51,7 @@ describe('CER Material application integration', () => {
     expect(integration.globalImports).toEqual([
       'material-symbols/outlined.css',
       '@jasonshimmy/cer-material/theme.css',
+      '@jasonshimmy/cer-material/prose.css',
     ]);
     expect(integration.componentResolver('md-card')).toBe(
       '@jasonshimmy/cer-material/components/md-card',
@@ -64,6 +66,32 @@ describe('CER Material application integration', () => {
 
     expect(integration.globalImports).toEqual([]);
     expect(integration.plugins).toEqual([]);
+  });
+
+  it('selects a pre-generated family without adding runtime theme code', () => {
+    const integration = cerMaterial({
+      theme: { family: 'violet' },
+      symbols: false,
+    });
+
+    expect(materialThemeFamilies).toHaveLength(25);
+    expect(integration.globalImports).toEqual([
+      '@jasonshimmy/cer-material/themes/violet.css',
+      '@jasonshimmy/cer-material/prose.css',
+    ]);
+    expect(integration.plugins).toEqual([]);
+  });
+
+  it('can disable only the prose bridge', () => {
+    expect(cerMaterial({ prose: false, symbols: false }).globalImports).toEqual([
+      '@jasonshimmy/cer-material/theme.css',
+    ]);
+  });
+
+  it('rejects unknown theme families instead of emitting a broken import', () => {
+    expect(() => cerMaterial({
+      theme: { family: 'not-a-family' },
+    } as never)).toThrow(/unknown CER Material theme family/i);
   });
 });
 

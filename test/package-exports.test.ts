@@ -28,6 +28,15 @@ describe('published package entry points', () => {
     expect(manifest.exports).toHaveProperty('./composables/*');
   });
 
+  it('publishes the prose bridge and static family themes', () => {
+    const manifest = JSON.parse(
+      readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+    ) as PackageManifest;
+
+    expect(manifest.exports).toHaveProperty('./prose.css');
+    expect(manifest.exports).toHaveProperty('./themes/*');
+  });
+
   it('preserves component registration during source and published builds', () => {
     const manifest = JSON.parse(
       readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
@@ -56,5 +65,6 @@ describe('published package entry points', () => {
 
     expect(manifest.scripts?.build).toBe('npm run build:lib');
     expect(manifest.scripts?.['build:lib']).toContain('vite build --mode lib');
+    expect(manifest.scripts?.['build:lib']).toContain('generate:themes');
   });
 });
