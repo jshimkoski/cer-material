@@ -242,11 +242,12 @@ requires no `customColors` configuration:
 <article class="prose prose-(--md-sys-color-primary)"></article>
 ```
 
-`prose.css` maps body, heading, link, code-surface, and border tokens to MD3
+`prose.css` maps body, heading, accent, code-surface, and border tokens to MD3
 semantic roles. Because those tokens inherit through shadow roots, prose tracks
 the chosen family and light/dark preference without JavaScript. The existing
 `@jasonshimmy/cer-material/jit-css` `customColors` aliases remain available for
-applications that prefer names such as `bg-mdprimary`.
+backwards compatibility, but arbitrary custom-property utilities are preferred
+because they do not serialize the Material role table into client JavaScript.
 
 **Available token groups:**
 

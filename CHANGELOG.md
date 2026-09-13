@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## Unreleased
+
+- fix: Expose the Material primary prose color through the lightweight inherited accent token.
+
 ## [v0.10.0] - 2026-09-13
 
 - feat: Add Generated Material Theme Presets (d9fc37a)
@@ -111,5 +115,4 @@ All notable changes to this project will be documented in this file.
 - use transition for animations, use cer css reset (a95b95b)
 - write out full name of colors (1d7f9ff)
 - initial commit (7654f3d)
-
 

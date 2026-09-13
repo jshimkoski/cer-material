@@ -4,8 +4,7 @@
   --cer-prose-body: var(--md-sys-color-on-surface);
   --cer-prose-headings: var(--md-sys-color-on-surface);
   --cer-prose-lead: var(--md-sys-color-on-surface-variant);
-  --cer-prose-links: var(--md-sys-color-primary);
-  --cer-prose-links-hover: var(--md-sys-color-primary);
+  --cer-prose-accent: var(--md-sys-color-primary);
   --cer-prose-bold: var(--md-sys-color-on-surface);
   --cer-prose-quotes: var(--md-sys-color-on-surface-variant);
   --cer-prose-quote-border: var(--md-sys-color-outline-variant);

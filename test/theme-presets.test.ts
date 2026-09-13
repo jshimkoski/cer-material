@@ -88,7 +88,7 @@ describe('Material prose bridge', () => {
 
   it('maps inherited CER prose tokens to semantic Material roles', () => {
     expect(css).toContain('--cer-prose-body: var(--md-sys-color-on-surface);');
-    expect(css).toContain('--cer-prose-links: var(--md-sys-color-primary);');
+    expect(css).toContain('--cer-prose-accent: var(--md-sys-color-primary);');
     expect(css).toContain('--cer-prose-code-bg: var(--md-sys-color-surface-container);');
     expect(css).toContain('--cer-prose-table-border: var(--md-sys-color-outline-variant);');
   });
