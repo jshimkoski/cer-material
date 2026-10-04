@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.10.2] - 2026-10-04
+
+- fix: update dependencies (6b090b5)
+
 ## [v0.10.1] - 2026-09-13
 
 - fix: Expose Material prose accent token (e35bd1e)
