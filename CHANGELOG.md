@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [v0.11.0] - 2026-10-07
+
+- feat: enhance native form controls and add headless composables (08358aa)
+
 ## [v0.10.2] - 2026-10-04
 
 - fix: update dependencies (6b090b5)
