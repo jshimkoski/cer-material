@@ -43,3 +43,6 @@ export * from './composables/useFocusReturn.ts';
 export * from './composables/useFocusTrap.ts';
 export * from './composables/useListKeyNav.ts';
 export * from './composables/useScrollLock.ts';
+
+export * from './composables/useCombobox.ts';
+export * from './composables/useCarousel.ts';

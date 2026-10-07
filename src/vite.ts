@@ -1,3 +1,4 @@
+import { customColors } from './jit-css'
 import type { Plugin } from 'vite'
 import { createRequire } from 'node:module'
 import { createHash } from 'node:crypto'
@@ -72,6 +73,7 @@ export interface CerMaterialOptions {
  */
 export interface CerMaterialIntegration {
   name: 'cer-material'
+  customColors: typeof customColors
   componentResolver: typeof materialComponentResolver
   globalImports: string[]
   plugins: Plugin[]
@@ -93,6 +95,7 @@ export function cerMaterial(options: CerMaterialOptions = {}): CerMaterialIntegr
 
   return {
     name: 'cer-material',
+    customColors,
     componentResolver: materialComponentResolver,
     globalImports: [
       ...(includeSymbols ? ['material-symbols/outlined.css'] : []),

@@ -1,4 +1,6 @@
-import { component, html, css, ref, defineModel, useProps, useStyle, useOnConnected, useExpose, getCurrentComponentContext } from '@jasonshimmy/custom-elements-runtime';
+import { useFormModel } from '../composables/useFormModel';
+import { useNativeFormControl } from '../composables/useNativeFormControl';
+import { component, html, css, ref, useProps, useStyle, useOnConnected, useExpose, getCurrentComponentContext } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 /**
@@ -26,15 +28,17 @@ import { when } from '@jasonshimmy/custom-elements-runtime/directives';
  *   (default)  — the current text value; bindable with :model
  *
  * Exposes:
- *   focus()    — programmatically focus the internal input
+ *   focus(), checkValidity(), reportValidity() — native form helpers
  *
  * Emits:
- *   No component-level events; listen to native input events on the host.
+ *   update:modelValue — model updates; native input events also reach the host.
  */
 
 component('md-text-field', () => {
   const fieldId = `md-field`;
   const props = useProps({
+    name: '',
+
     variant: 'filled' as 'filled' | 'outlined',
     label: 'Label',
     type: 'text',
@@ -54,7 +58,8 @@ component('md-text-field', () => {
     (ctx._host as HTMLElement)?.shadowRoot?.querySelector<HTMLInputElement>('input')?.focus();
   useExpose({ focus: focusInput });
   useOnConnected(() => { if (props.autofocus) focusInput(); });
-  const modelValue = defineModel('');
+  const modelValue = useFormModel('modelValue', '');
+  const formControl = useNativeFormControl(modelValue, props);
   const focused = ref(false);
 
   useStyle(() => css`
@@ -254,7 +259,7 @@ component('md-text-field', () => {
             :id="${fieldId}"
             :type="${props.type}"
             :model="${modelValue}"
-            :disabled="${props.disabled}"
+            :disabled="${formControl.disabled}"
             :readonly="${props.readonly}"
             :required="${props.required}"
             :placeholder="${props.placeholder}"
@@ -275,4 +280,4 @@ component('md-text-field', () => {
       ${when(!!((!props.error) && props.supportingText), () => html`<div :id="${fieldId}-supporting" class="support">${props.supportingText}</div>`)}
     </div>
   `;
-});
+}, { formAssociated: true });

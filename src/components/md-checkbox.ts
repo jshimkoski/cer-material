@@ -1,4 +1,6 @@
-import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { useFormModel } from '../composables/useFormModel';
+import { useNativeFormControl } from '../composables/useNativeFormControl';
+import { component, html, css, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 
 /**
  * md-checkbox
@@ -19,12 +21,17 @@ import { component, html, css, defineModel, useEmit, useProps, useStyle } from '
  */
 component('md-checkbox', () => {
   const props = useProps({
+    name: '',
+    value: 'on',
+    required: false,
+
     indeterminate: false,
     disabled: false,
     label: '',
   });
   const emit = useEmit();
-  const checked = defineModel('checked', false);
+  const checked = useFormModel('checked', false);
+  const formControl = useNativeFormControl(checked, props, true);
 
   useStyle(() => css`
     :host { display: inline-flex; align-items: center; vertical-align: middle; }
@@ -120,7 +127,7 @@ component('md-checkbox', () => {
         <input
           type="checkbox"
           :checked="${checked.value}"
-          :disabled="${props.disabled}"
+          :disabled="${formControl.disabled}"
           :bind="${{ indeterminate: props.indeterminate }}"
           @change="${(e: Event) => { emit('change', (e.target as HTMLInputElement).checked); checked.value = (e.target as HTMLInputElement).checked; }}"
         />
@@ -131,4 +138,4 @@ component('md-checkbox', () => {
       ${props.label}
     </label>
   `;
-});
+}, { formAssociated: true });

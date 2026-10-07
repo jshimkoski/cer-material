@@ -100,6 +100,7 @@ export default defineConfig(({ command, mode }) => {
             resolve(__dirname, 'src/prose.css'),
             resolve(__dirname, 'dist/prose.css'),
           );
+          copyFileSync(resolve(__dirname, 'src/native-controls.css'), resolve(__dirname, 'dist/native-controls.css'));
           const sourceThemes = resolve(__dirname, 'src/themes');
           const outputThemes = resolve(__dirname, 'dist/themes');
           mkdirSync(outputThemes, { recursive: true });

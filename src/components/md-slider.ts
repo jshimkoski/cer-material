@@ -1,4 +1,6 @@
-import { component, html, css, computed, defineModel, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { useFormModel } from '../composables/useFormModel';
+import { useNativeFormControl } from '../composables/useNativeFormControl';
+import { component, html, css, computed, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { each } from '@jasonshimmy/custom-elements-runtime/directives';
 
 /**
@@ -21,6 +23,8 @@ import { each } from '@jasonshimmy/custom-elements-runtime/directives';
  */
 component('md-slider', () => {
   const props = useProps({
+    name: '',
+
     min: 0,
     max: 100,
     step: 1,
@@ -29,7 +33,8 @@ component('md-slider', () => {
     ticks: false,
     ariaLabel: '',
   });
-  const modelValue = defineModel(50);
+  const modelValue = useFormModel('modelValue', 50);
+  const formControl = useNativeFormControl(modelValue, props);
   const percentage = computed(() =>
     ((modelValue.value - props.min) / (props.max - props.min)) * 100,
   );
@@ -177,9 +182,9 @@ component('md-slider', () => {
         :max="${String(props.max)}"
         :step="${String(props.step)}"
         :model="${modelValue}"
-        :disabled="${props.disabled}"
+        :disabled="${formControl.disabled}"
         :bind="${{ 'aria-label': props.ariaLabel || null }}"
       />
     </div>
   `;
-});
+}, { formAssociated: true });

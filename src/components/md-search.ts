@@ -1,4 +1,4 @@
-import { component, html, css, defineModel, useEmit, useProps, useStyle, useExpose, getCurrentComponentContext } from '@jasonshimmy/custom-elements-runtime';
+import { component, html, css, defineModel, ref, useEmit, useProps, useStyle, useExpose, getCurrentComponentContext, useOnConnected, nextTick } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 component('md-search', () => {
@@ -8,6 +8,8 @@ component('md-search', () => {
     showAvatar: false,
     autofocus: false,
     listboxId: '',
+    controlsElement: null as HTMLElement | null,
+    activeDescendantElement: null as HTMLElement | null,
     activeDescendant: '',
     expanded: false,
   });
@@ -17,6 +19,26 @@ component('md-search', () => {
   const focusInput = () =>
     (ctx._host as HTMLElement)?.shadowRoot?.querySelector<HTMLInputElement>('input')?.focus();
   useExpose({ focus: focusInput });
+  const usesElementReferences = ref(false);
+
+  const syncRelationships = () => {
+    const input = (ctx._host as HTMLElement)?.shadowRoot?.querySelector<HTMLInputElement>('input');
+    if (!input) return;
+    // Element references are an explicit mode; leave legacy ID references intact.
+    if (props.controlsElement && 'ariaControlsElements' in input) {
+      usesElementReferences.initSilent(true);
+      input.ariaControlsElements = [props.controlsElement];
+      if ('ariaActiveDescendantElement' in input) input.ariaActiveDescendantElement = props.activeDescendantElement;
+    } else if (usesElementReferences.peek()) {
+      usesElementReferences.initSilent(false);
+      if ('ariaControlsElements' in input) input.ariaControlsElements = [];
+      if ('ariaActiveDescendantElement' in input) input.ariaActiveDescendantElement = null;
+      if (props.listboxId) input.setAttribute('aria-controls', props.listboxId);
+      if (props.activeDescendant) input.setAttribute('aria-activedescendant', props.activeDescendant);
+    }
+  };
+  useOnConnected(syncRelationships);
+  if (ctx?._host) void nextTick().then(syncRelationships);
 
   const handleClear = () => {
     modelValue.value = '';
@@ -141,11 +163,11 @@ component('md-search', () => {
         placeholder="${props.placeholder}"
         :model="${modelValue}"
         :autofocus="${props.autofocus}"
-        :role="${props.listboxId ? 'combobox' : null}"
-        :aria-autocomplete="${props.listboxId ? 'list' : null}"
+        :role="${(props.listboxId || props.controlsElement) ? 'combobox' : null}"
+        :aria-autocomplete="${(props.listboxId || props.controlsElement) ? 'list' : null}"
         :aria-controls="${props.listboxId || null}"
         :aria-activedescendant="${props.activeDescendant || null}"
-        :aria-expanded="${props.listboxId ? String(props.expanded) : null}"
+        :aria-expanded="${(props.listboxId || props.controlsElement) ? String(props.expanded) : null}"
         aria-label="${props.placeholder}"
         @keydown="${(e: KeyboardEvent) => { if (e.key === 'Enter') emit('search', modelValue.value); }}"
       >

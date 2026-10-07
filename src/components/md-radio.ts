@@ -6,11 +6,12 @@ import { component, html, css, defineModel, useEmit, useProps, useStyle } from '
  * MD3 radio button with optional inline label.
  * Spec: https://m3.material.io/components/radio-button
  *
- * Group multiple radio buttons with the same `name` prop to allow only one
- * selection at a time at the native browser level.
+ * Bind grouped radios to shared application state. Native radio grouping does
+ * not cross separate shadow roots; use native radio inputs in one DOM scope
+ * when native form grouping is required.
  *
  * Props:
- *   name     — HTML input name for grouping (required for mutual exclusion)
+ *   name     — internal input name; separate shadow roots require shared state
  *   value    — value emitted on change and used by the native input
  *   label    — visible label text rendered to the right of the radio
  *   disabled — disables interaction

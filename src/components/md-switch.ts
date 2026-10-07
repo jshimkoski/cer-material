@@ -1,4 +1,6 @@
-import { component, html, css, defineModel, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
+import { useFormModel } from '../composables/useFormModel';
+import { useNativeFormControl } from '../composables/useNativeFormControl';
+import { component, html, css, useEmit, useProps, useStyle } from '@jasonshimmy/custom-elements-runtime';
 import { when } from '@jasonshimmy/custom-elements-runtime/directives';
 
 /**
@@ -21,13 +23,18 @@ import { when } from '@jasonshimmy/custom-elements-runtime/directives';
  */
 component('md-switch', () => {
   const props = useProps({
+    name: '',
+    value: 'on',
+    required: false,
+
     disabled: false,
     icons: false,
     label: '',
     ariaLabel: '',
   });
   const emit = useEmit();
-  const selected = defineModel('selected', false);
+  const selected = useFormModel('selected', false);
+  const formControl = useNativeFormControl(selected, props, true);
 
   useStyle(() => css`
     :host { display: inline-flex; align-items: center; vertical-align: middle; gap: 16px; }
@@ -168,7 +175,7 @@ component('md-switch', () => {
         role="switch"
         type="checkbox"
         :checked="${selected.value}"
-        :disabled="${props.disabled}"
+        :disabled="${formControl.disabled}"
         :bind="${{ 'aria-checked': String(selected.value), 'aria-label': props.ariaLabel || props.label || null }}"
         @change="${(e: Event) => { emit('change', (e.target as HTMLInputElement).checked); selected.value = (e.target as HTMLInputElement).checked; }}"
       />
@@ -180,4 +187,4 @@ component('md-switch', () => {
     </div>
     ${when(!!props.label, () => html`<span class="switch-label">${props.label}</span>`)}
   `;
-});
+}, { formAssociated: true });

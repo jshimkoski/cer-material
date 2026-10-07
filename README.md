@@ -188,7 +188,7 @@ All stateful components emit `update:*` events enabling concise two-way data bin
 
 | Syntax | Syncs | Components |
 |---|---|---|
-| `:model="${ref}"` | `value` | `md-text-field`, `md-slider`, `md-search`, `md-date-picker`, `md-time-picker` |
+| `:model="${ref}"` | `modelValue` | `md-text-field`, `md-slider`, `md-search`, `md-date-picker`, `md-time-picker` |
 | `:model:checked="${ref}"` | `checked` | `md-checkbox` |
 | `:model:selected="${ref}"` | `selected` | `md-switch`, `md-chip` (filter), `md-icon-button` (toggle), `md-segmented-button` |
 | `:model:activeTab="${ref}"` | active tab id | `md-tabs` |
@@ -199,13 +199,13 @@ All original `change`, `close`, `tab-change`, and other events still fire for ba
 
 ```ts
 // Verbose (still works)
-<md-text-field :value="${email}" @change="${e => email = e.detail}"></md-text-field>
+<md-text-field :model-value="${email.value}" @update:modelValue="${e => email.value = e.detail}"></md-text-field>
 
 // Concise with :model
 <md-text-field :model="${email}"></md-text-field>
 ```
 
-> **Radio groups**: `:model:checked` writes the radio's `value` string to the ref when selected, but does not derive the `checked` boolean. Use `:checked="${selected === radio.value}"` for the display state alongside `@change` for radio groups.
+> **Radio groups**: `md-radio` has a boolean `checked` model and emits its option value through `change`; multiple instances need application-controlled selection. Use `:checked="${selected === radio.value}"` for the display state alongside `@change` for radio groups.
 
 ---
 
@@ -449,6 +449,9 @@ MD3 checkbox with animated check/dash icon and an optional inline text label.
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
+| `required` | `boolean` | `false` | Must be checked/selected for native validity |
+| `value` | `string` | `'on'` | Submitted value when checked/selected |
+| `name` | `string` | `''` | Host name for native FormData |
 | `checked` | `boolean` | `false` | Checked state |
 | `indeterminate` | `boolean` | `false` | Indeterminate (dash) state |
 | `disabled` | `boolean` | `false` | Disables interaction |
@@ -462,6 +465,8 @@ MD3 checkbox with animated check/dash icon and an optional inline text label.
   :model:checked="${accepted}"
 ></md-checkbox>
 ```
+
+Form-associated after JavaScript registration. Supports native reset, disabled fieldsets, labels, `focus()`, `checkValidity()` and `reportValidity()`. See [native form composition](./docs/native-composition.md) for submission and no-JavaScript requirements.
 
 ---
 
@@ -886,22 +891,22 @@ MD3 progress indicator — linear (with buffer track) or circular — in determi
 
 ### `<md-radio>`
 
-MD3 radio button with animated inner circle, `name`/`value` for grouping, and an optional inline label.
+MD3 radio button with animated inner circle and an optional inline label. Bind grouped instances to shared application state: native mutual exclusion does not cross their separate shadow roots. This control is not form-associated; use native radios in one form scope for native grouping and submission.
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | `checked` | `boolean` | `false` | Selected state |
 | `disabled` | `boolean` | `false` | Disables interaction |
-| `name` | `string` | `''` | Radio group name |
-| `value` | `string` | `''` | Form value |
+| `name` | `string` | `''` | Internal input name; does not group separate shadow roots |
+| `value` | `string` | `''` | Value emitted when selected |
 | `label` | `string` | `''` | Inline label text |
 
 **Events:** `change` `(detail: string)` — the `value` of the selected radio.
 
 ```html
-<md-radio name="size" value="s" label="Small"></md-radio>
-<md-radio name="size" value="m" label="Medium" checked></md-radio>
-<md-radio name="size" value="l" label="Large"></md-radio>
+<md-radio value="s" label="Small" :checked="${size.value === 's'}" @change="${e => size.value = e.detail}"></md-radio>
+<md-radio value="m" label="Medium" :checked="${size.value === 'm'}" @change="${e => size.value = e.detail}"></md-radio>
+<md-radio value="l" label="Large" :checked="${size.value === 'l'}" @change="${e => size.value = e.detail}"></md-radio>
 ```
 
 ---
@@ -912,11 +917,11 @@ MD3 search bar with a leading icon, animated clear button, and optional avatar.
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `value` | `string` | `''` | Current input value |
+| `model-value` | `string` | `''` | Current input value |
 | `placeholder` | `string` | `'Search'` | Placeholder text |
 | `leading-icon` | `string` | `'search'` | Material Symbol for the leading icon |
 | `show-avatar` | `boolean` | `false` | Renders an avatar button on the trailing end |
-| `autofocus` | `boolean` | `false` | Focuses the input on mount; retries after animated containers finish entering |
+| `autofocus` | `boolean` | `false` | Focuses the input on connect |
 
 **Events:** `clear`; `search` `(detail: string)` — the search query when Enter is pressed.
 
@@ -927,6 +932,8 @@ MD3 search bar with a leading icon, animated clear button, and optional avatar.
   @search="${e => runSearch(e.detail)}"
 ></md-search>
 ```
+
+For combobox results, use `listboxId`, `activeDescendant` and `expanded`, or explicit `controlsElement`/`activeDescendantElement` property references where supported. IDs alone cannot cross shadow boundaries; see [native/headless composition](./docs/native-composition.md).
 
 ---
 
@@ -986,9 +993,10 @@ MD3 range slider with a custom-styled track, optional floating value label, and 
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
+| `name` | `string` | `''` | Host name for native FormData |
 | `min` | `number` | `0` | Minimum value |
 | `max` | `number` | `100` | Maximum value |
-| `value` | `number` | `50` | Current value |
+| `model-value` | `number` | `50` | Current model value (`:model`) |
 | `step` | `number` | `1` | Step increment |
 | `disabled` | `boolean` | `false` | Disables the slider |
 | `labeled` | `boolean` | `false` | Shows a floating value bubble on drag |
@@ -998,6 +1006,8 @@ MD3 range slider with a custom-styled track, optional floating value label, and 
 ```html
 <md-slider min="0" max="50" step="5" labeled :model="${vol}"></md-slider>
 ```
+
+Form-associated after JavaScript registration. Supports native reset, disabled fieldsets, labels, `focus()`, `checkValidity()` and `reportValidity()`. See [native form composition](./docs/native-composition.md) for submission and no-JavaScript requirements.
 
 ---
 
@@ -1059,6 +1069,9 @@ MD3 toggle switch with animated thumb, state-layer ripple, and optional check/cl
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
+| `required` | `boolean` | `false` | Must be checked/selected for native validity |
+| `value` | `string` | `'on'` | Submitted value when checked/selected |
+| `name` | `string` | `''` | Host name for native FormData |
 | `selected` | `boolean` | `false` | On/off state |
 | `disabled` | `boolean` | `false` | Disables interaction |
 | `icons` | `boolean` | `false` | Renders a check icon when on and a close icon when off |
@@ -1072,6 +1085,8 @@ MD3 toggle switch with animated thumb, state-layer ripple, and optional check/cl
 <md-switch label="Notifications" :model:selected="${notifs}"></md-switch>
 <md-switch aria-label="Enable dark mode" :model:selected="${darkMode}"></md-switch>
 ```
+
+Form-associated after JavaScript registration. Supports native reset, disabled fieldsets, labels, `focus()`, `checkValidity()` and `reportValidity()`. See [native form composition](./docs/native-composition.md) for submission and no-JavaScript requirements.
 
 ---
 
@@ -1110,9 +1125,10 @@ MD3 text field (filled or outlined) with animated floating label, leading/traili
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
+| `name` | `string` | `''` | Host name for native FormData |
 | `variant` | `'filled' \| 'outlined'` | `'filled'` | Visual style |
 | `label` | `string` | `'Label'` | Floating label text |
-| `value` | `string` | `''` | Input value |
+| `model-value` | `string` | `''` | Input model value (`:model`) |
 | `type` | `string` | `'text'` | Native input type |
 | `placeholder` | `string` | `''` | Placeholder text (shown when no label floats) |
 | `disabled` | `boolean` | `false` | Disables the field |
@@ -1123,7 +1139,7 @@ MD3 text field (filled or outlined) with animated floating label, leading/traili
 | `trailing-icon` | `string` | `''` | Trailing Material Symbol |
 | `required` | `boolean` | `false` | Marks the field as required |
 | `readonly` | `boolean` | `false` | Makes the field read-only |
-| `autofocus` | `boolean` | `false` | Focuses the input on mount; retries after animated containers finish entering |
+| `autofocus` | `boolean` | `false` | Focuses the input on connect |
 
 ```html
 <md-text-field
@@ -1136,6 +1152,8 @@ MD3 text field (filled or outlined) with animated floating label, leading/traili
   :error-text="${emailError}"
 ></md-text-field>
 ```
+
+Form-associated after JavaScript registration. Supports native reset, disabled fieldsets, labels, `focus()`, `checkValidity()` and `reportValidity()`. See [native form composition](./docs/native-composition.md) for submission and no-JavaScript requirements.
 
 ---
 
@@ -1218,3 +1236,5 @@ All evergreen browsers supporting:
 ## License
 
 MIT
+
+See [native forms and headless composition](docs/native-composition.md) for native submission, form-associated inputs, accessible search and responsive galleries.

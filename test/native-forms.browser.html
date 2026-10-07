@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Material native form regression check</title>
+<h1>Native form contract</h1>
+<form>
+  <fieldset>
+    <label for="email">Email via external label</label>
+    <md-text-field id="email" name="email" label="Email" type="email" required></md-text-field>
+    <label for="accepted">Accept via external label</label>
+    <md-checkbox id="accepted" name="accepted" label="Accept" required></md-checkbox>
+    <md-switch name="newsletter" label="Newsletter" required></md-switch>
+    <md-slider name="volume"></md-slider>
+  </fieldset>
+  <button type="submit">Submit</button>
+</form>
+<output id="results" role="status">Running…</output>
+<script type="module">
+  import '../dist/components/md-text-field.js';
+  import '../dist/components/md-checkbox.js';
+  import '../dist/components/md-switch.js';
+  import '../dist/components/md-slider.js';
+  const results = document.querySelector('#results');
+  const tick = () => new Promise(resolve => setTimeout(resolve, 50));
+  const assert = (condition, message) => { if (!condition) throw new Error(message); };
+  try {
+    await Promise.all(['md-text-field', 'md-checkbox', 'md-switch', 'md-slider'].map(tag => customElements.whenDefined(tag)));
+    await tick();
+    const form = document.querySelector('form'), fieldset = form.querySelector('fieldset');
+    const field = form.querySelector('md-text-field'), checkbox = form.querySelector('md-checkbox'), toggle = form.querySelector('md-switch');
+    const input = field.shadowRoot.querySelector('input');
+    const data = () => Object.fromEntries(new FormData(form));
+    let submissions = 0;
+    form.addEventListener('submit', event => { event.preventDefault(); submissions++; });
+    assert(!form.checkValidity(), 'Required controls must initially be invalid');
+    form.querySelector('button').click();
+    assert(submissions === 0, 'Invalid native submission must be blocked');
+    input.value = 'person@example.com'; input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+    checkbox.shadowRoot.querySelector('input').click(); toggle.shadowRoot.querySelector('input').click(); await tick();
+    assert(form.checkValidity(), 'Filled required controls must be valid');
+    assert(data().email === 'person@example.com' && data().accepted === 'on' && data().newsletter === 'on' && data().volume === '50', 'FormData must contain standalone control values');
+    form.querySelector('button').click();
+    assert(submissions === 1, 'Valid native submission must reach the form');
+    form.reset(); await tick();
+    assert(input.value === '' && !form.checkValidity() && !('accepted' in data()) && !('newsletter' in data()), 'Reset must restore initial state and validity');
+    field.setAttribute('disabled', ''); await tick();
+    assert(!('email' in data()), 'Disabled hosts must omit submitted values');
+    field.removeAttribute('disabled'); fieldset.disabled = true; await tick();
+    assert(input.disabled && Object.keys(data()).length === 0, 'Disabled fieldsets must disable and omit every control');
+    fieldset.disabled = false; await tick();
+    assert(!input.disabled, 'Re-enabled fieldsets must restore controls');
+    form.querySelector('label[for=email]').click();
+    assert(field.shadowRoot.activeElement === input, 'External labels must focus text fields');
+    form.querySelector('label[for=accepted]').click(); await tick();
+    assert(checkbox.shadowRoot.querySelector('input').checked, 'External labels must toggle checkboxes');
+    field.formStateRestoreCallback('restored@example.com', 'restore');
+    checkbox.formStateRestoreCallback('false', 'restore');
+    toggle.formStateRestoreCallback('true', 'restore');
+    form.querySelector('md-slider').formStateRestoreCallback('75', 'restore'); await tick();
+    assert(input.value === 'restored@example.com' && !checkbox.shadowRoot.querySelector('input').checked, 'Restoration must update native values');
+    assert(data().newsletter === 'on' && data().volume === '75', 'Boolean and numeric restoration must update submitted values');
+    results.dataset.status = 'passed'; results.textContent = 'Passed: validity, submit, FormData, reset, disabled hosts/fieldsets, labels and restoration.';
+  } catch (error) {
+    results.dataset.status = 'failed'; results.textContent = error.message; console.error(error);
+  }
+</script>
+</html>
